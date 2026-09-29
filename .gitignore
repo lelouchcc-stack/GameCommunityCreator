@@ -1,0 +1,14 @@
+### 编辑器 / 系统 ###
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+### Qwen Code 本地临时文件 ###
+.qwen/tmp/
+.qwen/worktrees/
+
+### 构建产物（各子项目内另有 .gitignore，此处兜底）###
+node_modules/
+dist/
+target/
