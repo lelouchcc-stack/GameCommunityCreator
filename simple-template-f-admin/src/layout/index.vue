@@ -1,7 +1,7 @@
 <template>
     <el-container class="layout">
         <el-aside class="layout__aside" :width="collapsed ? '64px' : '220px'">
-            <div class="layout__brand">{{ collapsed ? "社" : "游戏社区" }}</div>
+            <div class="layout__brand">{{ collapsed ? siteName.slice(0, 1) : siteName }}</div>
             <el-scrollbar class="layout__scroll">
                 <el-menu
                     :default-active="route.path"
@@ -34,15 +34,26 @@
 </template>
 
 <script lang="ts" setup>
-import { ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRoute } from "vue-router";
 import AppHeader from "./components/AppHeader.vue";
 import SidebarItem from "./components/SidebarItem.vue";
 import { usePermissionStore } from "../store/permissionStore";
+import useSiteStore from "../store/siteStore";
 
 const route = useRoute();
 const permissionStore = usePermissionStore();
+const siteStore = useSiteStore();
 const collapsed = ref(false);
+
+const siteName = computed(() => siteStore.theme?.siteName || "游戏社区");
+
+// 进后台外壳才拉站点配置：登录页不需要主题，且此时带令牌才不会撞 401
+onMounted(() => {
+    siteStore.load().catch(() => {
+        // 失败时保留默认站点名与默认主色，不影响后台使用
+    });
+});
 </script>
 
 <style scoped>
