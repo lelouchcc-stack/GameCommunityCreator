@@ -24,8 +24,10 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/admin/**")
                 .excludePathPatterns("/admin/login");
 
+        // /app/site/config 是匿名可读的站点外观配置（站点名/Logo/主题/首页模块），
+        // 不放行的话未登录用户打开用户端会先撞 401。该路径下只允许存在读接口。
         registry.addInterceptor(new AuthInterceptor(jwtUtils, UserType.MEMBER))
                 .addPathPatterns("/app/**")
-                .excludePathPatterns("/app/login", "/app/register");
+                .excludePathPatterns("/app/login", "/app/register", "/app/site/config");
     }
 }

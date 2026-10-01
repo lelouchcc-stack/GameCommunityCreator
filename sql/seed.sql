@@ -64,6 +64,7 @@ INSERT INTO sys_role_menu (role_id, menu_id) SELECT 1, id FROM sys_menu;
 
 INSERT INTO site_config (config_key, config_value, remark) VALUES
 ('site_name',     '游戏社区',           '站点名称，显示在浏览器标题与导航栏'),
+('site_intro',    '面向独立游戏开发者与玩家的游戏社区', '站点简介，显示在页脚与关于区块'),
 ('logo',          '/static/logo.png',   '站点 Logo 地址'),
 ('primary_color', '#3B82F6',            '主题主色，注入用户端 CSS 变量'),
 ('dark_mode',     'false',              '是否默认深色模式'),
