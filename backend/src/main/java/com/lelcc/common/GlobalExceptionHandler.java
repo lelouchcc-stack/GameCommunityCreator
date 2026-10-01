@@ -4,6 +4,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -20,6 +21,12 @@ public class GlobalExceptionHandler {
                 .map(FieldError::getDefaultMessage)
                 .orElse("请求参数不合法");
         return Result.fail(400, message);
+    }
+
+    /** 路径没匹配到任何接口时返回 404，否则会被下面的 Exception 兜底吞成 500 */
+    @ExceptionHandler(value = NoResourceFoundException.class)
+    public Result<Void> notFoundException() {
+        return Result.fail(404, "请求的接口不存在");
     }
 
     @ExceptionHandler(value = Exception.class)
