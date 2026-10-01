@@ -16,5 +16,7 @@ public record MenuVO(
         String perms,
         String icon,
         Integer sort,
+        Integer visible,
+        Integer status,
         List<MenuVO> children) {
 }

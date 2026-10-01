@@ -3,9 +3,16 @@ package com.lelcc.controller;
 import com.lelcc.common.Result;
 import com.lelcc.common.UserContext;
 import com.lelcc.dto.MenuVO;
+import com.lelcc.dto.SysMenuDTO;
 import com.lelcc.service.SysMenuService;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,9 +31,27 @@ public class AdminMenuController {
         return Result.success(sysMenuService.listMenuTree(UserContext.getId()));
     }
 
-    /** 完整菜单树（含按钮与停用项），供角色分配权限时勾选 */
+    /** 完整菜单树（含按钮与停用项），供角色分配权限时勾选、以及菜单管理页展示 */
     @GetMapping("/options")
     public Result<List<MenuVO>> options() {
         return Result.success(sysMenuService.listAllMenuTree());
+    }
+
+    @PostMapping
+    public Result<Void> create(@Valid @RequestBody SysMenuDTO dto) {
+        sysMenuService.create(dto);
+        return Result.success(null);
+    }
+
+    @PutMapping("/{id}")
+    public Result<Void> update(@PathVariable Long id, @Valid @RequestBody SysMenuDTO dto) {
+        sysMenuService.update(id, dto);
+        return Result.success(null);
+    }
+
+    @DeleteMapping("/{id}")
+    public Result<Void> delete(@PathVariable Long id) {
+        sysMenuService.delete(id);
+        return Result.success(null);
     }
 }
