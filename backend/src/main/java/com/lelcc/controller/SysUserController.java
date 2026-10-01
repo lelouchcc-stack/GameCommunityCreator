@@ -1,5 +1,6 @@
 package com.lelcc.controller;
 
+import com.lelcc.annotation.OperLog;
 import com.lelcc.common.PageResult;
 import com.lelcc.common.Result;
 import com.lelcc.dto.PasswordResetDTO;
@@ -42,30 +43,35 @@ public class SysUserController {
         return Result.success(sysUserService.listRoleIds(id));
     }
 
+    @OperLog(module = "用户管理", operation = "新增账号")
     @PostMapping
     public Result<Void> create(@Valid @RequestBody SysUserDTO dto) {
         sysUserService.create(dto);
         return Result.success(null);
     }
 
+    @OperLog(module = "用户管理", operation = "修改账号")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody SysUserDTO dto) {
         sysUserService.update(id, dto);
         return Result.success(null);
     }
 
+    @OperLog(module = "用户管理", operation = "修改账号状态")
     @PutMapping("/{id}/status")
     public Result<Void> changeStatus(@PathVariable Long id, @RequestParam Integer status) {
         sysUserService.changeStatus(id, status);
         return Result.success(null);
     }
 
+    @OperLog(module = "用户管理", operation = "重置账号密码")
     @PutMapping("/{id}/password")
     public Result<Void> resetPassword(@PathVariable Long id, @Valid @RequestBody PasswordResetDTO dto) {
         sysUserService.resetPassword(id, dto.password());
         return Result.success(null);
     }
 
+    @OperLog(module = "用户管理", operation = "删除账号")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         sysUserService.delete(id);

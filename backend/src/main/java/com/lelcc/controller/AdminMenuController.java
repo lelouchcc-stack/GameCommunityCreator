@@ -1,5 +1,6 @@
 package com.lelcc.controller;
 
+import com.lelcc.annotation.OperLog;
 import com.lelcc.common.Result;
 import com.lelcc.common.UserContext;
 import com.lelcc.dto.MenuVO;
@@ -37,18 +38,21 @@ public class AdminMenuController {
         return Result.success(sysMenuService.listAllMenuTree());
     }
 
+    @OperLog(module = "菜单管理", operation = "新增菜单")
     @PostMapping
     public Result<Void> create(@Valid @RequestBody SysMenuDTO dto) {
         sysMenuService.create(dto);
         return Result.success(null);
     }
 
+    @OperLog(module = "菜单管理", operation = "修改菜单")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody SysMenuDTO dto) {
         sysMenuService.update(id, dto);
         return Result.success(null);
     }
 
+    @OperLog(module = "菜单管理", operation = "删除菜单")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         sysMenuService.delete(id);

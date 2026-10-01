@@ -1,5 +1,6 @@
 package com.lelcc.controller;
 
+import com.lelcc.annotation.OperLog;
 import com.lelcc.common.PageResult;
 import com.lelcc.common.Result;
 import com.lelcc.dto.RoleMenuAssignDTO;
@@ -41,12 +42,14 @@ public class SysRoleController {
         return Result.success(sysRoleService.options());
     }
 
+    @OperLog(module = "角色管理", operation = "新增角色")
     @PostMapping
     public Result<Void> create(@Valid @RequestBody SysRoleDTO dto) {
         sysRoleService.create(dto);
         return Result.success(null);
     }
 
+    @OperLog(module = "角色管理", operation = "修改角色")
     @PutMapping("/{id}")
     public Result<Void> update(@PathVariable Long id, @Valid @RequestBody SysRoleDTO dto) {
         sysRoleService.update(id, dto);
@@ -59,12 +62,14 @@ public class SysRoleController {
         return Result.success(sysRoleService.listMenuIds(id));
     }
 
+    @OperLog(module = "角色管理", operation = "分配角色权限")
     @PutMapping("/{id}/menus")
     public Result<Void> assignMenus(@PathVariable Long id, @RequestBody RoleMenuAssignDTO dto) {
         sysRoleService.assignMenus(id, dto.menuIds());
         return Result.success(null);
     }
 
+    @OperLog(module = "角色管理", operation = "删除角色")
     @DeleteMapping("/{id}")
     public Result<Void> delete(@PathVariable Long id) {
         sysRoleService.delete(id);
