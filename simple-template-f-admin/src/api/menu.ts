@@ -5,3 +5,8 @@ import type { MenuNode } from "../types/menu";
 export function getMenuTree() {
     return http.get<MenuNode[], MenuNode[]>("/admin/menu/tree");
 }
+
+/** 完整菜单树（含按钮与停用项），供角色分配权限时勾选 */
+export function getMenuOptions() {
+    return http.get<MenuNode[], MenuNode[]>("/admin/menu/options");
+}

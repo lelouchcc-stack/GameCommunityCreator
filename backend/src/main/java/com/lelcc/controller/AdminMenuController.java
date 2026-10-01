@@ -23,4 +23,10 @@ public class AdminMenuController {
     public Result<List<MenuVO>> tree() {
         return Result.success(sysMenuService.listMenuTree(UserContext.getId()));
     }
+
+    /** 完整菜单树（含按钮与停用项），供角色分配权限时勾选 */
+    @GetMapping("/options")
+    public Result<List<MenuVO>> options() {
+        return Result.success(sysMenuService.listAllMenuTree());
+    }
 }

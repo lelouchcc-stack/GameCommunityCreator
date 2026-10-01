@@ -23,6 +23,11 @@ public class SysMenuServiceImpl implements SysMenuService {
         return buildTree(sysMenuMapper.selectVisibleMenusByUserId(userId), ROOT_PARENT_ID);
     }
 
+    @Override
+    public List<MenuVO> listAllMenuTree() {
+        return buildTree(sysMenuMapper.selectAll(), ROOT_PARENT_ID);
+    }
+
     /** 一次查出扁平列表，在内存里按 parentId 递归成树，避免每层查一次库 */
     private List<MenuVO> buildTree(List<SysMenu> all, long parentId) {
         return all.stream()

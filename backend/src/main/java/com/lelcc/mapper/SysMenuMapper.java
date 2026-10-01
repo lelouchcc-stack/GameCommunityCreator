@@ -28,4 +28,14 @@ public interface SysMenuMapper extends BaseMapper<SysMenu> {
             ORDER BY m.parent_id, m.sort
             """)
     List<SysMenu> selectVisibleMenusByUserId(@Param("userId") Long userId);
+
+    /**
+     * 全部菜单，含按钮(F)与停用项，且不按角色过滤——供"为角色分配权限"时勾选。
+     */
+    @Select("""
+            SELECT id, parent_id, menu_name, menu_type, path, component, perms, icon, sort, visible, status
+            FROM sys_menu
+            ORDER BY parent_id, sort
+            """)
+    List<SysMenu> selectAll();
 }
