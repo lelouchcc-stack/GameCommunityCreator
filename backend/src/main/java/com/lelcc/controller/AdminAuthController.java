@@ -3,9 +3,11 @@ package com.lelcc.controller;
 import com.lelcc.common.Result;
 import com.lelcc.dto.AdminLoginDTO;
 import com.lelcc.dto.AdminLoginVO;
+import com.lelcc.dto.AdminUserInfoVO;
 import com.lelcc.service.AdminAuthService;
 import jakarta.annotation.Resource;
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,5 +24,11 @@ public class AdminAuthController {
     @PostMapping("/login")
     public Result<AdminLoginVO> login(@Valid @RequestBody AdminLoginDTO dto) {
         return Result.success(adminAuthService.login(dto));
+    }
+
+    /** 当前登录账号信息，前端刷新页面后用它恢复账号信息 */
+    @GetMapping("/me")
+    public Result<AdminUserInfoVO> me() {
+        return Result.success(adminAuthService.currentUser());
     }
 }

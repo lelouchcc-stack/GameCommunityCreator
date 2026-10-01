@@ -3,6 +3,7 @@ package com.lelcc.service.impl;
 import cn.hutool.crypto.digest.BCrypt;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lelcc.common.BusinessException;
+import com.lelcc.common.UserContext;
 import com.lelcc.common.UserType;
 import com.lelcc.dto.AdminLoginDTO;
 import com.lelcc.dto.AdminLoginVO;
@@ -45,14 +46,25 @@ public class AdminAuthServiceImpl implements AdminAuthService {
             throw new BusinessException(403, "该账号已被停用，请联系管理员");
         }
 
+        String token = jwtUtils.createToken(user.getId(), UserType.ADMIN);
+        return new AdminLoginVO(token, toUserInfo(user));
+    }
+
+    @Override
+    public AdminUserInfoVO currentUser() {
+        SysUser user = sysUserMapper.selectById(UserContext.getId());
+        if (user == null || !Integer.valueOf(STATUS_ENABLED).equals(user.getStatus())) {
+            throw new BusinessException(401, "登录状态已失效，请重新登录");
+        }
+        return toUserInfo(user);
+    }
+
+    private AdminUserInfoVO toUserInfo(SysUser user) {
         List<String> roles = sysRoleMapper.selectEnabledByUserId(user.getId())
                 .stream()
                 .map(SysRole::getRoleKey)
                 .toList();
-
-        String token = jwtUtils.createToken(user.getId(), UserType.ADMIN);
-        AdminUserInfoVO userInfo = new AdminUserInfoVO(
+        return new AdminUserInfoVO(
                 user.getId(), user.getUsername(), user.getNickname(), user.getAvatar(), roles);
-        return new AdminLoginVO(token, userInfo);
     }
 }
