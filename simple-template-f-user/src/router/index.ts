@@ -1,16 +1,18 @@
-
 import { createRouter, createWebHistory } from "vue-router";
-import HelloWorld from "../components/HelloWorld.vue";
+import type { RouteRecordRaw } from "vue-router";
 
-const routes = [
-    {path:'',component:HelloWorld}
-]
-
-const router = createRouter(
+const routes: RouteRecordRaw[] = [
     {
-        history:createWebHistory(),
-        routes,
-    }
-)
+        path: "/",
+        name: "Home",
+        component: () => import("../views/home/index.vue"),
+        meta: { title: "首页" },
+    },
+];
 
-export default router
+const router = createRouter({
+    history: createWebHistory(),
+    routes,
+});
+
+export default router;

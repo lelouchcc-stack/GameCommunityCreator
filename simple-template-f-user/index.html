@@ -1,10 +1,24 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>simple-template-f-user</title>
+    <title>游戏社区</title>
+    <script>
+      // 挂载前先用缓存的站点主题注上主色与深浅模式，避免闪一下默认色（站点名与 favicon 由接口返回后更新）
+      try {
+        var cached = JSON.parse(localStorage.getItem('site_theme') || 'null');
+        if (cached) {
+          if (cached.primaryColor) {
+            document.documentElement.style.setProperty('--site-primary', cached.primaryColor);
+          }
+          document.documentElement.dataset.theme = cached.darkMode ? 'dark' : 'light';
+        }
+      } catch (e) {
+        /* 缓存损坏就当没有缓存 */
+      }
+    </script>
   </head>
   <body>
     <div id="app"></div>
