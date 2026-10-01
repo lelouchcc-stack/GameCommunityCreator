@@ -1,15 +1,35 @@
-import { createRouter, createWebHistory } from "vue-router"
+import { createRouter, createWebHistory } from "vue-router";
+import type { RouteRecordRaw } from "vue-router";
 
-import login from "../views/login.vue"
-import home from "../views/home.vue"
-const routes = [
-    {path:'/user/login',component:login},
-    {path:'/',component:home}
-]
-const router = createRouter(
+/**
+ * 静态路由：登录页 + 后台外壳。
+ * 业务页面由 router/guard.ts 在登录后按菜单动态注册到名为 Layout 的路由下。
+ */
+export const constantRoutes: RouteRecordRaw[] = [
     {
-        history:createWebHistory(),
-        routes,
-    }
-)
-export default router
+        path: "/login",
+        name: "Login",
+        component: () => import("../views/login.vue"),
+    },
+    {
+        path: "/",
+        name: "Layout",
+        component: () => import("../layout/index.vue"),
+        redirect: "/dashboard",
+        children: [
+            {
+                path: "dashboard",
+                name: "Dashboard",
+                component: () => import("../views/dashboard/index.vue"),
+                meta: { title: "工作台", icon: "HomeFilled" },
+            },
+        ],
+    },
+];
+
+const router = createRouter({
+    history: createWebHistory(),
+    routes: constantRoutes,
+});
+
+export default router;

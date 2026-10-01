@@ -31,8 +31,8 @@ http.interceptors.response.use(
             ElMessage.error(result.message || "请求失败");
             if (result.code === 401) {
                 useUserStore().clear();
-                if (window.location.pathname !== "/user/login") {
-                    window.location.href = "/user/login";
+                if (window.location.pathname !== "/login") {
+                    window.location.href = "/login";
                 }
             }
             return Promise.reject(new Error(result.message || "请求失败"));

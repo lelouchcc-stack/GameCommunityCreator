@@ -4,10 +4,14 @@ export interface LoginParams {
     password: string;
 }
 
-/** 登录用户信息，字段随后端返回的 UserVO 扩展 */
+/** 登录用户信息，对应后端 AdminUserInfoVO */
 export interface UserInfo {
     id: number;
     username: string;
+    nickname?: string | null;
+    avatar?: string | null;
+    /** 角色标识，如 ["admin"] */
+    roles?: string[];
 }
 
 /** 登录成功时 Result.data 的数据结构 */
