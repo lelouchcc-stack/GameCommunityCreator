@@ -7,6 +7,7 @@
 --   5. report 增加 uk_post_member(post_id, member_id)  —— 防同一用户重复举报同一帖子
 --   6. post 增加 audit_remark                   —— 记录审核驳回原因
 --   7. member_game_progress 增加 version_id / is_public，stage_id 改为可空 —— 游玩版本为可选上传
+--   8. report 增加 handle_remark —— 用例要求"驳回举报时需填写驳回说明"，原表没有可存说明的列
 --
 -- 执行方式：整份复制到 Navicat 查询窗口执行即可。库已存在，用 IF NOT EXISTS 不会重建。
 -- 未包含 DROP TABLE，重复执行会因表已存在而报错，这是有意的（避免误删数据）。
@@ -258,6 +259,7 @@ CREATE TABLE report (
   status         TINYINT NOT NULL DEFAULT 0 COMMENT '0待处理 1已处理 2已驳回',
   handle_user_id BIGINT  COMMENT '处理人(后台账号)',
   handle_time    DATETIME COMMENT '处理时间',
+  handle_remark  VARCHAR(500) COMMENT '处理/驳回说明',
   create_time    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   KEY idx_status (status),
   UNIQUE KEY uk_post_member (post_id, member_id)
