@@ -1,5 +1,13 @@
 package com.lelcc.common;
 
+import lombok.Getter;
+import lombok.Setter;
+
+/**
+ * 统一响应体。字段必须有 getter，否则 Jackson 找不到可读属性、序列化时直接报错。
+ */
+@Getter
+@Setter
 public class Result<T> {
     private T data;
     private String message;
