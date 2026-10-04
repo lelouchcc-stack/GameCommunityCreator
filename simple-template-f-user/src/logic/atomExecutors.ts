@@ -80,6 +80,8 @@ function apiAtom(spec: string, ports: string[], options: { savesToken?: boolean 
         const data = await request(host, spec, inputs);
         if (options.savesToken && data && typeof data === "object" && typeof data.token === "string") {
             state.session.token = data.token;
+            // 引擎内存里的令牌刷新即失效，必须让宿主把它落到真正的登录态事实源
+            host.onLoginSuccess?.(data);
         }
         return mapApiOutputs(ports, data);
     };

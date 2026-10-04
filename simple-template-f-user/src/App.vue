@@ -2,13 +2,16 @@
 import { onMounted, provide } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import useSiteStore from "./store/siteStore";
+import useMemberStore from "./store/memberStore";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime } from "./blocks/blockRuntime";
 import { GRAPH_RUNTIME_KEY, createGraphBridge } from "./blocks/graphBridge";
 import type { GraphHost } from "./logic/types";
 import http from "./utils/request";
 import { toast } from "./utils/toast";
+import { clearSession, currentMemberId, isLoggedIn, saveSession } from "./utils/session";
 
 const siteStore = useSiteStore();
+const memberStore = useMemberStore();
 const router = useRouter();
 const route = useRoute();
 
@@ -81,12 +84,12 @@ const graphHost: GraphHost = {
         query: route.query,
         page: 1,
     }),
-    // 玩家侧登录注册（含用户态）还没做，这里先按令牌判断
-    isLoggedIn: () => Boolean(localStorage.getItem("token")),
-    currentMemberId: () => null,
-    logout: () => {
-        localStorage.removeItem("token");
-    },
+    // 登录态统一走 session.ts（唯一事实源）：引擎、localStorage、页面读到的是同一份
+    isLoggedIn: () => isLoggedIn(),
+    currentMemberId: () => currentMemberId(),
+    logout: () => clearSession(),
+    // 走图的登录（preset.login 这类组合流）拿到令牌后同样落盘
+    onLoginSuccess: (data) => saveSession(data?.token, data?.member),
     onError: (message) => toast(message, "error"),
 };
 
@@ -96,6 +99,10 @@ provide(BLOCK_RUNTIME_KEY, blockRuntime);
 provide(GRAPH_RUNTIME_KEY, graphBridge);
 
 onMounted(async () => {
+    // 有令牌就先校验并恢复登录态，让"进入页面"的图（如首页 init 演示图）按真实登录态分支
+    if (isLoggedIn()) {
+        await memberStore.loadMe();
+    }
     try {
         // 站点外观 + 首页组件树 + 首页逻辑图一次拿全
         await siteStore.loadConfig();

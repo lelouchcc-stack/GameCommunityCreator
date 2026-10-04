@@ -80,6 +80,11 @@ export interface GraphHost {
     isLoggedIn(): boolean
     currentMemberId(): number | null
     logout(): void
+    /**
+     * 登录原子（act.login / act.register）拿到令牌后通知宿主落盘。
+     * 不接也可以：令牌只留在引擎内存里，本页有效、刷新即失效。
+     */
+    onLoginSuccess?(data: any): void
     /** 运行期出错的兜底提示（未接 error 出口时） */
     onError?(message: string): void
 }

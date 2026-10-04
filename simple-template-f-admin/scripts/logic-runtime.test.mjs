@@ -269,6 +269,33 @@ try {
         check("没写过显隐默认可见", runtime.isVisible(31), true);
     }
 
+    // 8 登录原子把令牌交给宿主落盘（onLoginSuccess）
+    {
+        const loginPayload = { token: "jwt-abc", member: { id: 7, username: "p1" } };
+        const persisted = [];
+        const { host } = makeHost({
+            callApi: async () => loginPayload,
+            onLoginSuccess: (data) => persisted.push(data),
+        });
+        const { runtime, state } = makeRuntime(
+            {
+                submit: {
+                    nodes: [
+                        { id: "s1", typeCode: "on.submit", config: { nodeId: 30 } },
+                        { id: "s2", typeCode: "act.login", config: { username: "p1", password: "x" } },
+                    ],
+                    edges: [{ from: { node: "s1", port: "out" }, to: { node: "s2", port: "signal" } }],
+                },
+            },
+            {},
+            host,
+        );
+        await runtime.triggerEvent("submit", 30);
+        console.log("\n— 8 登录令牌落盘 —");
+        check("引擎内存里写入了令牌", state.session.token, "jwt-abc");
+        check("宿主收到落盘回调且带完整载荷", persisted, [loginPayload]);
+    }
+
     console.log(failures === 0 ? "\n全部通过" : `\n有 ${failures} 项不符合预期`);
     process.exitCode = failures === 0 ? 0 : 1;
 } finally {
