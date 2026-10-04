@@ -1,0 +1,554 @@
+{
+  "doc": "用户端图形化搭建 v3（组件库 + 节点树 + 样式/内容/行为 schema + 逻辑连线编排）",
+  "version": "3.0",
+  "supersedes": "2.0（v2 只有页面搭建，没有逻辑编排）",
+  "date": "2026-10-04",
+  "goal": "用户端不写前端代码：页面结构与外观由管理端搭组件树，业务逻辑由管理端连逻辑图（数据管道 + 流程分支）。可编排的能力全部来自已实现的后端原子；常见社区功能以『原子团/预设』模板提供。新增组件内核与新增逻辑原子才需要写代码",
+  "visionStatement": "用户 2026-10-04 明确：脚本内容与业务逻辑也要图形化创建，参照 MaaFramework/MaaPipeline 与 ComfyUI，走连线式编排而非在管理端写脚本；能实现的逻辑来自管理端本身已实现的能力；登录、查看个人信息这类通用社区功能直接给模板；节点要原子化，常见逻辑做成『原子团』预设库供调用；服务范围人为限定在『游戏社区』搭建这一块",
+  "decisionsSettled": [
+    { "id": "L", "decision": "能力分层做到 L4（数据管道 + 流程编排）", "excluded": "L5 通用计算/表达式/循环/自定义脚本；L6 事务与鉴权（代码保证）" },
+    { "id": "E", "decision": "执行位置：前端跑图（编排 + UI 动作），后端只提供原子，不做后端执行器" },
+    { "id": "G", "decision": "图形态：一个画布两类节点（数据流 DAG + 控制流分支）" },
+    { "id": "P", "decision": "预设引用语义：引用实例化 + 版本化（页面锁定版本，升级手动确认）" },
+    { "id": "T", "decision": "引入端口类型系统，连线做类型校验" },
+    { "id": "A", "decision": "原子粒度只切领域操作（如『按我的版本过滤帖子』），不切通用计算（加减/循环/赋值）" },
+    { "id": "D", "decision": "D2（属性编辑）沿用：组件与原子属性一律『从属性库/端口库勾选生成编辑器』，JSON 为高级选项" }
+  ],
+  "requirementSource": {
+    "spec": "pit.md 表2-13 站点配置模块用例描述表（18、19）——本设计是它的能力升级，不新增用例表",
+    "databaseDesignDoc": "16-毕设数据库设计.md 扩展指南：『首页新模块 = 加一行 + 写组件 + 注册 = 半天』→ 本设计降为『往组件库/原子库加一行』",
+    "references": [
+      "Godot：Node 类 / 场景树 / Inspector(@export) / .tscn / Theme / Signal / 子场景实例化",
+      "ComfyUI：节点库 + 子图(Node Template) + DAG 求值（数据流）",
+      "MaaPipeline：pipeline 节点(next/on_error/识别条件) + 状态机执行（控制流）"
+    ],
+    "commonThread": "参照物的共同结构——节点类型/算法是代码，图是数据，运行时是解释器。图形化不消灭代码，而是把代码收拢成原语，用户只连线"
+  },
+  "scopeBoundary": {
+    "domainLimit": "人为限定在『游戏社区』搭建这一块：限的是领域不是功能数量，目的是让业务逻辑可穷举成有限原语词表",
+    "builtVisually": "站点展示型页面（首页/关于/活动）与页面内的交互与取数逻辑",
+    "builtByCode": "业务能力本身的实现：登录接口、发帖接口、点赞事务、版本过期判定——这些是原子，是代码",
+    "principle": "图形化是一层编排；底座是白名单化的后端能力。图灵完备与数据库不变量永远在代码里",
+    "antiPattern": "不滑向『通用低代码平台 + 可视化编程语言』"
+  },
+  "capabilityLayers": {
+    "note": "答辩级的边界表。L0-L4 零代码，L5 排除，L6 代码保证，扩展层给开发者",
+    "levels": [
+      { "level": "L0", "capability": "改样式（颜色/圆角/质感/点击效果）", "codeNeeded": "零代码", "status": "部分已具备" },
+      { "level": "L1", "capability": "结构编排（增删/嵌套/排序组件）", "codeNeeded": "零代码" },
+      { "level": "L2", "capability": "交互（打开弹窗/跳转/提示等动作节点）", "codeNeeded": "零代码" },
+      { "level": "L3", "capability": "数据管道（取数 → 过滤/排序/分页 → 绑定到组件）", "codeNeeded": "零代码" },
+      { "level": "L4", "capability": "流程编排（触发 → 校验 → 分支 → 动作）", "codeNeeded": "零代码" },
+      { "level": "L5", "capability": "通用计算/表达式/循环/自定义脚本", "codeNeeded": "明确不做", "reason": "等于自研可视化编程语言，工期与答辩风险不可控" },
+      { "level": "L6", "capability": "事务/并发/数据库不变量/鉴权边界", "codeNeeded": "代码保证", "reason": "正确性与安全，编排层碰不得" },
+      { "level": "EXT", "capability": "开发者扩展：新增组件内核、新增逻辑原子（节点包/组件包）", "codeNeeded": "写代码", "reason": "两个受众：运营连线，开发者扩原语" }
+    ]
+  },
+  "concepts": {
+    "page": "用户端页面（ui_page）：首页 / 自定义页",
+    "node": "组件节点（ui_node）：页面上一个组件实例，parent_id+sort 成树，容器可嵌套",
+    "componentType": "组件类型（ui_component_type，组件库）：声明渲染内核、是否容器、开放的样式/内容/行为 schema",
+    "atom": "逻辑原子（ui_logic_node_type，原子库）：一次不可再分的领域操作，代码实现（调后端接口或前端 UI 动作）",
+    "preset": "原子团/预设（ui_preset，预设库）：常见逻辑的预置子图，有入参/出参口、带版本，可被页面引用",
+    "flow": "逻辑图（ui_flow）：某页面的编排结果，节点+连线，含触发根；一个页面可有多张图（如 init / submit）",
+    "port": "端口：原子的输入/输出口，带类型；连线按类型匹配",
+    "binding": "数据绑定：组件通过 $ref 引用图节点输出（如帖子列表组件的 dataSource = $flow.n3.out）",
+    "renderKind": "渲染内核（组件层）：决定用哪个前端组件画；组件类型可加，内核是有限枚举",
+    "atomKind": "原子类别：trigger/source/operator/condition/action/ui",
+    "extensionLayers": "两个受众：运营用组件库+预设+图（零代码）；开发者加内核与原子（代码，节点包/组件包）"
+  },
+  "uiModel": {
+    "note": "呈现层：页面 + 组件树。表见 database.tables 的 ui_page/ui_component_type/ui_node",
+    "tables": ["ui_page", "ui_component_type", "ui_node"],
+    "styleTwoLevels": "组件类型给 default_style，节点给 style_json 覆盖；渲染时合并，未覆盖项回落 var(--site-*) 主题 token",
+    "bindingBridge": "ui_node.content_json 可含 $ref 指向图节点输出端口，由渲染器解析（见 dataBinding）"
+  },
+  "componentCatalog": {
+    "note": "预置组件（『提前写好』）。新增同类组件加一行即可；新增渲染内核才写代码",
+    "categories": [
+      { "key": "base", "label": "基础" },
+      { "key": "layout", "label": "布局" },
+      { "key": "display", "label": "展示" },
+      { "key": "interactive", "label": "交互" },
+      { "key": "business", "label": "业务（代码组件）" }
+    ],
+    "items": [
+      { "typeCode": "text", "typeName": "文本", "category": "base", "renderKind": "text", "isContainer": false, "isBuiltin": false, "stage": 1, "openProps": "width,align,padding,fontSize,fontWeight,textColor,textAlign,lineHeight,letterSpacing,text" },
+      { "typeCode": "heading", "typeName": "标题", "category": "base", "renderKind": "heading", "isContainer": false, "isBuiltin": false, "stage": 1, "openProps": "align,padding,fontSize,fontWeight,textColor,textAlign,text" },
+      { "typeCode": "image", "typeName": "图片", "category": "base", "renderKind": "image", "isContainer": false, "isBuiltin": false, "stage": 1, "openProps": "width,maxWidth,align,radius,opacity,imageUrl,imageFit,linkType,linkUrl" },
+      { "typeCode": "icon", "typeName": "图标", "category": "base", "renderKind": "icon", "isContainer": false, "isBuiltin": false, "stage": 2, "openProps": "width,height,textColor,align,icon,linkType,linkUrl" },
+      { "typeCode": "button", "typeName": "按钮", "category": "base", "renderKind": "button", "isContainer": false, "isBuiltin": false, "stage": 1, "openProps": "width,height,padding,align,backgroundColor,texture,radius,fontSize,fontWeight,textColor,hoverEffect,clickEffect,boxShadow,transitionMs,cursor,text,icon,emit" },
+      { "typeCode": "divider", "typeName": "分割线", "category": "base", "renderKind": "divider", "isContainer": false, "isBuiltin": false, "stage": 1, "openProps": "width,borderWidth,borderStyle,borderColor,marginTop,marginBottom" },
+      { "typeCode": "spacer", "typeName": "间距", "category": "base", "renderKind": "spacer", "isContainer": false, "isBuiltin": false, "stage": 1, "openProps": "height" },
+      { "typeCode": "container", "typeName": "容器", "category": "layout", "renderKind": "container", "isContainer": true, "isBuiltin": false, "stage": 1, "openProps": "width,maxWidth,padding,marginTop,marginBottom,backgroundColor,backgroundImage,texture,radius,borderWidth,borderStyle,borderColor,boxShadow,flexDirection,justify,alignItems,gap,wrap" },
+      { "typeCode": "card", "typeName": "卡片", "category": "layout", "renderKind": "container", "isContainer": true, "isBuiltin": false, "stage": 1, "openProps": "width,maxWidth,padding,marginTop,marginBottom,backgroundColor,texture,radius,boxShadow,hoverEffect,flexDirection,gap" },
+      { "typeCode": "modal", "typeName": "弹窗", "category": "interactive", "renderKind": "modal", "isContainer": true, "isBuiltin": false, "stage": 2, "openProps": "width,height,padding,backgroundColor,texture,radius,boxShadow,overlayClosable,showClose,animation,zIndex,title" },
+      { "typeCode": "carousel", "typeName": "轮播图", "category": "display", "renderKind": "carousel", "isContainer": false, "isBuiltin": false, "stage": 4, "openProps": "width,height,radius,marginBottom,autoplay,interval,items" },
+      { "typeCode": "list", "typeName": "列表", "category": "display", "renderKind": "list", "isContainer": false, "isBuiltin": false, "stage": 4, "openProps": "width,padding,backgroundColor,radius,fontSize,textColor,itemsTemplate,emptyText" },
+      { "typeCode": "tabs", "typeName": "选项卡", "category": "interactive", "renderKind": "tabs", "isContainer": true, "isBuiltin": false, "stage": 4, "openProps": "width,padding,backgroundColor,radius,fontSize,textColor,activeColor,tabs" },
+      { "typeCode": "banner", "typeName": "首页轮播(业务)", "category": "business", "renderKind": "builtin:banner", "isContainer": false, "isBuiltin": true, "stage": 4, "openProps": "height,radius,marginBottom" },
+      { "typeCode": "notice", "typeName": "公告(业务)", "category": "business", "renderKind": "builtin:notice", "isContainer": false, "isBuiltin": true, "stage": 4, "openProps": "padding,backgroundColor,radius,fontSize,limit" },
+      { "typeCode": "hot_post", "typeName": "热门帖子(业务)", "category": "business", "renderKind": "builtin:hot_post", "isContainer": false, "isBuiltin": true, "stage": 4, "openProps": "padding,backgroundColor,radius,limit" },
+      { "typeCode": "board_nav", "typeName": "板块导航(业务)", "category": "business", "renderKind": "builtin:board_nav", "isContainer": false, "isBuiltin": true, "stage": 4, "openProps": "padding,backgroundColor,radius" }
+    ],
+    "keyAddition": "list 组件是『迭代』的承载体：图里没有循环节点，列表型数据由 list/卡片组件内部迭代渲染（见 graphRuntime.noLoop）"
+  },
+  "propertyCatalog": {
+    "note": "组件属性库（唯一事实源）。后端 Java 侧镜像一份用于校验",
+    "valueTypes": [
+      { "type": "length", "pattern": "^(auto|0|\\d+(\\.\\d+)?(px|%|rem|em|vh|vw))$", "defaultUnit": "px" },
+      { "type": "number" },
+      { "type": "color", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$", "allowEmptyMeansThemeToken": true },
+      { "type": "image", "pattern": "^(https?://|/).*" },
+      { "type": "url", "pattern": "^(https?://|/).*" },
+      { "type": "enum", "needsOptions": true },
+      { "type": "bool" },
+      { "type": "text" },
+      { "type": "jsonArray", "label": "结构数组" },
+      { "type": "binding", "label": "数据绑定", "note": "值形如 $flow.<nodeId>.<port>" }
+    ],
+    "styleGroups": [
+      {
+        "group": "layout",
+        "label": "布局",
+        "properties": [
+          { "key": "width", "type": "length", "default": "auto", "css": "width" },
+          { "key": "height", "type": "length", "default": "auto", "css": "height" },
+          { "key": "maxWidth", "type": "length", "default": "100%", "css": "max-width" },
+          { "key": "padding", "type": "length", "default": "0", "css": "padding" },
+          { "key": "marginTop", "type": "length", "default": "0", "css": "margin-top" },
+          { "key": "marginBottom", "type": "length", "default": "0", "css": "margin-bottom" },
+          { "key": "align", "type": "enum", "options": ["left", "center", "right", "full"], "default": "left", "apply": "special", "specialHandler": "align" },
+          { "key": "flexDirection", "type": "enum", "options": ["row", "column"], "default": "column", "css": "flex-direction", "forContainer": true },
+          { "key": "justify", "type": "enum", "options": ["start", "center", "end", "space-between", "space-around"], "default": "start", "css": "justify-content", "forContainer": true },
+          { "key": "alignItems", "type": "enum", "options": ["start", "center", "end", "stretch"], "default": "stretch", "css": "align-items", "forContainer": true },
+          { "key": "gap", "type": "length", "default": "12px", "css": "gap", "forContainer": true },
+          { "key": "wrap", "type": "bool", "default": true, "css": "flex-wrap", "forContainer": true }
+        ]
+      },
+      {
+        "group": "appearance",
+        "label": "外观",
+        "properties": [
+          { "key": "backgroundColor", "type": "color", "default": "", "inheritsFrom": "--site-bg-card", "css": "background-color" },
+          { "key": "backgroundImage", "type": "image", "default": "", "css": "background-image" },
+          { "key": "backgroundSize", "type": "enum", "options": ["cover", "contain", "auto"], "default": "cover", "css": "background-size" },
+          { "key": "opacity", "type": "number", "min": 0, "max": 1, "step": 0.05, "default": 1, "css": "opacity" },
+          { "key": "texture", "type": "enum", "options": ["none", "frosted", "transparent", "glass"], "default": "none", "apply": "class", "classPrefix": "ui-texture-" },
+          { "key": "borderWidth", "type": "length", "default": "0", "css": "border-width" },
+          { "key": "borderStyle", "type": "enum", "options": ["solid", "dashed", "none"], "default": "solid", "css": "border-style" },
+          { "key": "borderColor", "type": "color", "default": "", "inheritsFrom": "--site-border", "css": "border-color" },
+          { "key": "radius", "type": "length", "default": "8px", "css": "border-radius" }
+        ]
+      },
+      {
+        "group": "typography",
+        "label": "文字",
+        "properties": [
+          { "key": "fontSize", "type": "length", "default": "14px", "css": "font-size" },
+          { "key": "fontWeight", "type": "enum", "options": ["400", "500", "600", "700"], "default": "400", "css": "font-weight" },
+          { "key": "textColor", "type": "color", "default": "", "inheritsFrom": "--site-text-primary", "css": "color" },
+          { "key": "textAlign", "type": "enum", "options": ["left", "center", "right"], "default": "left", "css": "text-align" },
+          { "key": "lineHeight", "type": "number", "min": 1, "max": 3, "step": 0.1, "default": 1.5, "css": "line-height" },
+          { "key": "letterSpacing", "type": "length", "default": "0", "css": "letter-spacing" }
+        ]
+      },
+      {
+        "group": "effect",
+        "label": "效果",
+        "properties": [
+          { "key": "boxShadow", "type": "enum", "options": ["none", "sm", "md", "lg", "glow"], "default": "sm", "apply": "class", "classPrefix": "ui-shadow-" },
+          { "key": "hoverEffect", "type": "enum", "options": ["none", "lift", "glow", "scale", "underline"], "default": "none", "apply": "class", "classPrefix": "ui-hover-" },
+          { "key": "clickEffect", "type": "enum", "options": ["none", "scale", "press", "ripple", "opacity"], "default": "none", "apply": "class", "classPrefix": "ui-click-" },
+          { "key": "transitionMs", "type": "number", "min": 0, "max": 1000, "step": 50, "default": 150, "apply": "cssvar", "cssVar": "--ui-transition" },
+          { "key": "cursor", "type": "enum", "options": ["default", "pointer", "text"], "default": "default", "css": "cursor" }
+        ]
+      }
+    ],
+    "contentGroups": [
+      {
+        "group": "content",
+        "label": "内容",
+        "properties": [
+          { "key": "text", "type": "text", "maxLength": 200, "default": "", "bindable": true },
+          { "key": "title", "type": "text", "maxLength": 100, "default": "" },
+          { "key": "linkType", "type": "enum", "options": ["none", "internal", "external"], "default": "none" },
+          { "key": "linkUrl", "type": "url", "default": "", "requires": "linkType!=none" },
+          { "key": "openInNewTab", "type": "bool", "default": true },
+          { "key": "imageUrl", "type": "image", "default": "", "bindable": true },
+          { "key": "imageFit", "type": "enum", "options": ["cover", "contain", "fill"], "default": "cover", "css": "object-fit" },
+          { "key": "icon", "type": "image", "default": "" },
+          { "key": "limit", "type": "number", "min": 1, "max": 20, "default": 5 },
+          { "key": "autoplay", "type": "bool", "default": true },
+          { "key": "interval", "type": "number", "min": 1000, "max": 10000, "step": 500, "default": 3000 },
+          { "key": "items", "type": "jsonArray", "default": [], "note": "轮播:[{imageUrl,linkType,linkUrl}]" },
+          { "key": "itemsSource", "type": "binding", "default": "", "note": "列表数据源：$flow.<nodeId>.<port>，列表型" },
+          { "key": "itemsTemplate", "type": "jsonArray", "default": [], "note": "列表项模板：字段->展示方式（标题/图片/简介/跳转），列表组件据此迭代渲染" },
+          { "key": "emptyText", "type": "text", "default": "暂无内容", "maxLength": 40 },
+          { "key": "visibleWhen", "type": "binding", "default": "", "note": "布尔绑定：为 false 时隐藏该节点" }
+        ]
+      }
+    ],
+    "behaviorGroups": [
+      {
+        "group": "behavior",
+        "label": "交互",
+        "properties": [
+          { "key": "emit", "type": "text", "default": "", "note": "该节点被点击/提交时向外发出的信号名；逻辑图用 on.click(节点id) 或 on.signal(名) 接住" },
+          { "key": "onClickAction", "type": "action", "default": { "action": "none" }, "note": "简单动作可免画图直接配（打开弹窗/跳转/提示），复杂逻辑走逻辑图" },
+          { "key": "overlayClosable", "type": "bool", "default": true, "forComponent": "modal" },
+          { "key": "showClose", "type": "bool", "default": true, "forComponent": "modal" },
+          { "key": "animation", "type": "enum", "options": ["fade", "zoom", "slide-down"], "default": "fade", "forComponent": "modal" },
+          { "key": "zIndex", "type": "number", "min": 1000, "max": 9999, "default": 2000, "forComponent": "modal" }
+        ]
+      }
+    ],
+    "effectClasses": [
+      { "class": "ui-texture-frosted", "css": "background: color-mix(in srgb, var(--ui-bg,#fff) 60%, transparent); backdrop-filter: blur(10px)" },
+      { "class": "ui-texture-transparent", "css": "background: transparent; border-color: transparent" },
+      { "class": "ui-texture-glass", "css": "background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25); backdrop-filter: blur(8px)" },
+      { "class": "ui-shadow-sm|md|lg", "css": "预置三档 box-shadow" },
+      { "class": "ui-shadow-glow", "css": "0 0 16px var(--site-primary)" },
+      { "class": "ui-hover-lift|glow|scale|underline", "css": ":hover 位移/发光/放大/下划线" },
+      { "class": "ui-click-scale|press|opacity", "css": ":active 缩放/位移/变淡" },
+      { "class": "ui-click-ripple", "css": ".ui-click-ripple::after 水波扩散（纯 CSS）" }
+    ],
+    "themeFallback": {
+      "rule": "color 类属性留空时取 inheritsFrom 指向的主题 token（如 textColor 空 -> var(--site-text-primary)）",
+      "reason": "否则一调样式，站点主题主色与深色模式对该节点就失效"
+    }
+  },
+  "logicModel": {
+    "note": "逻辑层三层：原子（代码）→ 原子团/预设（数据，可复用）→ 图（数据，页面编排）",
+    "layers": [
+      { "layer": "原子", "table": "ui_logic_node_type", "who": "代码（封装已实现的后端能力或前端 UI 动作）", "example": "data.postList / op.filterByVersion / act.like / cond.isLogin" },
+      { "layer": "原子团(预设)", "table": "ui_preset", "who": "平台预置 + 管理端自组", "example": "preset.login / preset.profile / preset.publishPost" },
+      { "layer": "图", "table": "ui_flow", "who": "管理端连线", "example": "home 页的 init 图与 submit 图" }
+    ],
+    "granularityPrinciple": "原子 = 一次不可再分的领域语义操作（『按我的版本过滤帖子』『提交举报』），不是『相减/赋值/循环/拼接』。这条线是 L4 与 L5 的分界",
+    "capabilitySource": "每个数据/动作原子都对应一个已实现的后端接口（/app/**）或一个前端动作；图只能编排这些能力，不能发明新能力。新增领域能力 = 写后端接口 + 注册新原子（L4/EXT）"
+  },
+  "portTypes": {
+    "note": "端口类型系统：连线按类型匹配，杜绝运行期才炸",
+    "types": [
+      { "key": "signal", "label": "信号", "note": "控制流：触发与分支用" },
+      { "key": "text", "label": "文本" },
+      { "key": "number", "label": "数字" },
+      { "key": "boolean", "label": "布尔" },
+      { "key": "member", "label": "用户", "fields": ["id", "username", "nickname", "avatar", "intro", "status"] },
+      { "key": "board", "label": "板块", "fields": ["id", "name", "intro", "cover", "status", "currentVersionId"] },
+      { "key": "boardVersion", "label": "版本", "fields": ["id", "versionNo", "versionName", "releaseTime"] },
+      { "key": "progressStage", "label": "进度阶段", "fields": ["id", "stageName"] },
+      { "key": "post", "label": "帖子", "fields": ["id", "title", "content", "cover", "status", "versionId", "stageId", "memberId", "likeCount", "favoriteCount", "commentCount", "viewCount"] },
+      { "key": "comment", "label": "评论", "fields": ["id", "content", "memberId", "parentId", "rootId"] },
+      { "key": "notice", "label": "公告", "fields": ["id", "title", "content"] },
+      { "key": "listPost", "label": "帖子列表" },
+      { "key": "listBoard", "label": "板块列表" },
+      { "key": "listComment", "label": "评论列表" },
+      { "key": "listNotice", "label": "公告列表" },
+      { "key": "pageInfo", "label": "分页信息", "fields": ["page", "size", "total", "pages"] },
+      { "key": "result", "label": "动作结果", "fields": ["ok", "message", "data"] },
+      { "key": "any", "label": "任意", "note": "仅少数透传原子使用" }
+    ],
+    "matchRule": "源端口类型 === 目标端口类型，或目标为 any；listX 只接 listX；signal 只接 signal",
+    "checkTiming": "编辑器连线时即时校验 + 保存时后端复校验"
+  },
+  "atomCatalog": {
+    "note": "游戏社区 DSL 词表。runner=api 表示前端编排器调后端接口（接口已在或将在对应模块实现）；runner=ui 表示前端本地动作。原子由代码/种子提供，管理端只读",
+    "categories": [
+      { "key": "trigger", "label": "触发", "outputs": "signal" },
+      { "key": "source", "label": "数据源", "outputs": "领域类型/列表" },
+      { "key": "operator", "label": "算子", "outputs": "同输入类型" },
+      { "key": "condition", "label": "条件", "outputs": "boolean 或 signal 两支" },
+      { "key": "action", "label": "动作", "outputs": "result/signal" },
+      { "key": "ui", "label": "界面动作", "outputs": "signal" }
+    ],
+    "items": [
+      { "typeCode": "on.pageEnter", "typeName": "进入页面", "kind": "trigger", "runner": "ui", "inputs": [], "outputs": ["signal"], "config": [] },
+      { "typeCode": "on.click", "typeName": "点击组件", "kind": "trigger", "runner": "ui", "inputs": [], "outputs": ["signal"], "config": [{ "key": "nodeId", "type": "nodeRef", "required": true }] },
+      { "typeCode": "on.submit", "typeName": "提交表单", "kind": "trigger", "runner": "ui", "inputs": [], "outputs": ["signal"], "config": [{ "key": "nodeId", "type": "nodeRef", "required": true }] },
+      { "typeCode": "data.boardList", "typeName": "板块列表", "kind": "source", "runner": "api", "sourceApi": "GET /app/board/list", "inputs": [{ "key": "onlyOpen", "type": "boolean" }], "outputs": ["listBoard"] },
+      { "typeCode": "data.boardDetail", "typeName": "板块详情", "kind": "source", "runner": "api", "sourceApi": "GET /app/board/{id}", "inputs": [{ "key": "boardId", "type": "number", "required": true }], "outputs": ["board", "listBoardVersion", "listProgressStage"] },
+      { "typeCode": "data.postList", "typeName": "帖子列表", "kind": "source", "runner": "api", "sourceApi": "GET /app/post/page", "inputs": [{ "key": "boardId", "type": "number" }, { "key": "versionId", "type": "number" }, { "key": "stageId", "type": "number" }, { "key": "tagId", "type": "number" }, { "key": "keyword", "type": "text" }, { "key": "sort", "type": "text", "options": ["latest", "hot"] }, { "key": "page", "type": "number" }, { "key": "size", "type": "number" }], "outputs": ["listPost", "pageInfo"] },
+      { "typeCode": "data.postDetail", "typeName": "帖子详情", "kind": "source", "runner": "api", "sourceApi": "GET /app/post/{id}", "inputs": [{ "key": "postId", "type": "number", "required": true }], "outputs": ["post"] },
+      { "typeCode": "data.commentList", "typeName": "评论列表", "kind": "source", "runner": "api", "sourceApi": "GET /app/comment/page", "inputs": [{ "key": "postId", "type": "number", "required": true }, { "key": "page", "type": "number" }, { "key": "size", "type": "number" }], "outputs": ["listComment", "pageInfo"] },
+      { "typeCode": "data.noticeList", "typeName": "公告列表", "kind": "source", "runner": "api", "sourceApi": "GET /app/notice/list", "inputs": [{ "key": "limit", "type": "number" }], "outputs": ["listNotice"] },
+      { "typeCode": "data.currentMember", "typeName": "当前用户", "kind": "source", "runner": "api", "sourceApi": "GET /app/member/me", "inputs": [], "outputs": ["member"] },
+      { "typeCode": "data.myPosts", "typeName": "我的帖子", "kind": "source", "runner": "api", "sourceApi": "GET /app/member/my-posts", "inputs": [{ "key": "page", "type": "number" }, { "key": "size", "type": "number" }], "outputs": ["listPost", "pageInfo"] },
+      { "typeCode": "data.myFavorites", "typeName": "我的收藏", "kind": "source", "runner": "api", "sourceApi": "GET /app/member/my-favorites", "inputs": [{ "key": "page", "type": "number" }, { "key": "size", "type": "number" }], "outputs": ["listPost", "pageInfo"] },
+      { "typeCode": "data.myReports", "typeName": "我的举报", "kind": "source", "runner": "api", "sourceApi": "GET /app/member/my-reports", "inputs": [{ "key": "page", "type": "number" }], "outputs": ["listReport", "pageInfo"] },
+      { "typeCode": "data.myProgress", "typeName": "我的游戏进度", "kind": "source", "runner": "api", "sourceApi": "GET /app/member/progress", "inputs": [{ "key": "boardId", "type": "number" }], "outputs": ["any"] },
+      { "typeCode": "data.runtime", "typeName": "运行环境", "kind": "source", "runner": "ui", "inputs": [], "outputs": ["any"], "config": [{ "key": "key", "type": "text", "options": ["routeParam.id", "query.k", "page"] }] },
+      { "typeCode": "op.filterByVersion", "typeName": "按版本过滤", "kind": "operator", "runner": "api", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "versionId", "type": "number" }], "outputs": ["listPost"] },
+      { "typeCode": "op.filterByStage", "typeName": "按阶段过滤", "kind": "operator", "runner": "api", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "stageId", "type": "number" }], "outputs": ["listPost"] },
+      { "typeCode": "op.filterByKeyword", "typeName": "关键字过滤", "kind": "operator", "runner": "ui", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "keyword", "type": "text" }], "outputs": ["listPost"] },
+      { "typeCode": "op.sort", "typeName": "排序", "kind": "operator", "runner": "ui", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "by", "type": "text", "options": ["latest", "hot"] }], "outputs": ["listPost"] },
+      { "typeCode": "op.take", "typeName": "取前N", "kind": "operator", "runner": "ui", "inputs": [{ "key": "list", "type": "any", "required": true }, { "key": "n", "type": "number" }], "outputs": ["any"] },
+      { "typeCode": "op.markExpired", "typeName": "标记版本过期", "kind": "operator", "runner": "api", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "currentVersionId", "type": "number" }], "outputs": ["listPost"], "note": "前端亦可按 post.versionId!==currentVersionId 判定角标" },
+      { "typeCode": "cond.isLogin", "typeName": "是否登录", "kind": "condition", "runner": "ui", "inputs": [], "outputs": ["boolean"] },
+      { "typeCode": "cond.isEmpty", "typeName": "是否为空", "kind": "condition", "runner": "ui", "inputs": [{ "key": "value", "type": "any", "required": true }], "outputs": ["boolean"] },
+      { "typeCode": "cond.isOwner", "typeName": "是否本人", "kind": "condition", "runner": "ui", "inputs": [{ "key": "memberId", "type": "number", "required": true }], "outputs": ["boolean"] },
+      { "typeCode": "cond.isBoardOpen", "typeName": "板块是否开放", "kind": "condition", "runner": "ui", "inputs": [{ "key": "board", "type": "board", "required": true }], "outputs": ["boolean"] },
+      { "typeCode": "cond.isPostVisible", "typeName": "帖子是否可见", "kind": "condition", "runner": "ui", "inputs": [{ "key": "post", "type": "post", "required": true }], "outputs": ["boolean"], "note": "status=1 已发布" },
+      { "typeCode": "cond.isValid", "typeName": "字段是否合法", "kind": "condition", "runner": "ui", "inputs": [{ "key": "value", "type": "any", "required": true }, { "key": "rule", "type": "text", "options": ["notBlank", "maxLen", "isNumber"] }, { "key": "arg", "type": "number" }], "outputs": ["boolean"] },
+      { "typeCode": "branch", "typeName": "分支", "kind": "condition", "runner": "ui", "inputs": [{ "key": "cond", "type": "boolean", "required": true }], "outputs": ["signal:true", "signal:false"] },
+      { "typeCode": "act.login", "typeName": "登录", "kind": "action", "runner": "api", "sourceApi": "POST /app/login", "inputs": [{ "key": "username", "type": "text", "required": true }, { "key": "password", "type": "text", "required": true }], "outputs": ["result"] },
+      { "typeCode": "act.register", "typeName": "注册", "kind": "action", "runner": "api", "sourceApi": "POST /app/register", "inputs": [{ "key": "username", "type": "text", "required": true }, { "key": "password", "type": "text", "required": true }, { "key": "nickname", "type": "text" }], "outputs": ["result"] },
+      { "typeCode": "act.logout", "typeName": "退出登录", "kind": "action", "runner": "ui", "inputs": [], "outputs": ["signal"] },
+      { "typeCode": "act.updateProfile", "typeName": "修改个人资料", "kind": "action", "runner": "api", "sourceApi": "PUT /app/member/profile", "inputs": [{ "key": "nickname", "type": "text" }, { "key": "intro", "type": "text" }, { "key": "avatar", "type": "image" }], "outputs": ["result"] },
+      { "typeCode": "act.setGameProgress", "typeName": "设置游戏进度", "kind": "action", "runner": "api", "sourceApi": "PUT /app/member/progress", "inputs": [{ "key": "boardId", "type": "number", "required": true }, { "key": "versionId", "type": "number" }, { "key": "stageId", "type": "number" }, { "key": "isPublic", "type": "boolean" }], "outputs": ["result"] },
+      { "typeCode": "act.submitPost", "typeName": "发布帖子", "kind": "action", "runner": "api", "sourceApi": "POST /app/post", "inputs": [{ "key": "boardId", "type": "number", "required": true }, { "key": "title", "type": "text", "required": true }, { "key": "content", "type": "text", "required": true }, { "key": "cover", "type": "image" }, { "key": "versionId", "type": "number", "required": true }, { "key": "stageId", "type": "number" }, { "key": "tagIds", "type": "any" }], "outputs": ["result"] },
+      { "typeCode": "act.like", "typeName": "点赞(可取消)", "kind": "action", "runner": "api", "sourceApi": "POST /app/post/{id}/like", "inputs": [{ "key": "postId", "type": "number", "required": true }], "outputs": ["result"] },
+      { "typeCode": "act.favorite", "typeName": "收藏(可取消)", "kind": "action", "runner": "api", "sourceApi": "POST /app/post/{id}/favorite", "inputs": [{ "key": "postId", "type": "number", "required": true }], "outputs": ["result"] },
+      { "typeCode": "act.comment", "typeName": "发表评论/回复", "kind": "action", "runner": "api", "sourceApi": "POST /app/comment", "inputs": [{ "key": "postId", "type": "number", "required": true }, { "key": "content", "type": "text", "required": true }, { "key": "parentId", "type": "number" }], "outputs": ["result"] },
+      { "typeCode": "act.report", "typeName": "提交举报", "kind": "action", "runner": "api", "sourceApi": "POST /app/report", "inputs": [{ "key": "postId", "type": "number", "required": true }, { "key": "reason", "type": "text", "required": true }, { "key": "remark", "type": "text" }], "outputs": ["result"] },
+      { "typeCode": "act.navigate", "typeName": "跳转", "kind": "ui", "runner": "ui", "inputs": [{ "key": "to", "type": "text", "required": true, "options": ["/", "/board/:id", "/post/:id", "/profile", "back"] }], "outputs": ["signal"] },
+      { "typeCode": "act.openModal", "typeName": "打开弹窗", "kind": "ui", "runner": "ui", "inputs": [{ "key": "nodeId", "type": "nodeRef", "required": true }], "outputs": ["signal"] },
+      { "typeCode": "act.closeModal", "typeName": "关闭弹窗", "kind": "ui", "runner": "ui", "inputs": [{ "key": "nodeId", "type": "nodeRef" }], "outputs": ["signal"] },
+      { "typeCode": "act.toast", "typeName": "提示", "kind": "ui", "runner": "ui", "inputs": [{ "key": "message", "type": "text", "required": true }, { "key": "type", "type": "text", "options": ["info", "success", "warning", "error"] }], "outputs": ["signal"] },
+      { "typeCode": "act.setVisible", "typeName": "显示/隐藏组件", "kind": "ui", "runner": "ui", "inputs": [{ "key": "nodeId", "type": "nodeRef", "required": true }, { "key": "visible", "type": "boolean", "required": true }], "outputs": ["signal"] },
+      { "typeCode": "act.scrollTo", "typeName": "滚动到组件", "kind": "ui", "runner": "ui", "inputs": [{ "key": "nodeId", "type": "nodeRef", "required": true }], "outputs": ["signal"] }
+    ],
+    "count": 44,
+    "authoringNote": "以上为种子原子。原子由开发者实现（后端接口 + 前端执行器映射），管理端只读"
+  },
+  "presetLibrary": {
+    "note": "原子团/预设：常见业务逻辑的预置子图，放预设库供调用（≈ ComfyUI Node Template）。is_builtin=1 的官方预设只读，可『复制为自定义』再改",
+    "builtinPresets": [
+      { "presetCode": "preset.login", "presetName": "用户登录", "version": 1, "inputs": [{ "key": "username", "type": "text" }, { "key": "password", "type": "text" }], "outputs": ["result"], "graph": "on.submit -> cond.isValid(非空) -> branch -> true: act.login -> result | false: act.toast('请填写用户名密码')" },
+      { "presetCode": "preset.profile", "presetName": "查看个人信息", "version": 1, "inputs": [], "outputs": ["member", "listPost"], "graph": "on.pageEnter -> cond.isLogin -> branch -> true: data.currentMember -> data.myPosts | false: act.navigate(登录页)" },
+      { "presetCode": "preset.boardBrowse", "presetName": "板块浏览取数", "version": 1, "inputs": [{ "key": "boardId", "type": "number" }], "outputs": ["board", "listPost", "pageInfo"], "graph": "on.pageEnter -> data.boardDetail(boardId) -> cond.isBoardOpen -> branch -> true: data.postList(boardId, 我的版本) -> op.markExpired | false: act.toast('该板块暂未开放')" },
+      { "presetCode": "preset.postDetail", "presetName": "帖子详情取数", "version": 1, "inputs": [{ "key": "postId", "type": "number" }], "outputs": ["post", "listComment"], "graph": "on.pageEnter -> data.postDetail(postId) -> cond.isPostVisible -> branch -> true: data.commentList(postId) | false: act.toast('内容不可见')" },
+      { "presetCode": "preset.publishPost", "presetName": "发布攻略帖", "version": 1, "inputs": [{ "key": "boardId", "type": "number" }], "outputs": ["result"], "graph": "on.submit -> cond.isValid(标题非空) -> branch -> true: act.submitPost -> result -> 成功: act.navigate(我的帖子) | false: act.toast('标题不能为空')" },
+      { "presetCode": "preset.interact", "presetName": "点赞与收藏", "version": 1, "inputs": [{ "key": "postId", "type": "number" }], "outputs": ["result"], "graph": "on.click -> cond.isLogin -> branch -> true: act.like/act.favorite -> act.toast('已更新') | false: act.navigate(登录页)" },
+      { "presetCode": "preset.report", "presetName": "提交举报", "version": 1, "inputs": [{ "key": "postId", "type": "number" }], "outputs": ["result"], "graph": "on.click -> act.openModal(举报弹窗) ; 弹窗内 on.submit -> act.report -> act.toast('已提交，待处理')" }
+    ],
+    "reuse": "管理端可自组图并存为预设（is_builtin=0），带 remark 与时间；引用方默认锁定该版本"
+  },
+  "graphModel": {
+    "note": "图 = 端上数据，存 ui_flow.graph_json。编辑器『一个画布两类节点』：数据节点走值，控制节点走信号",
+    "graphJson": {
+      "nodes": [
+        { "id": "n1", "typeCode": "on.pageEnter", "label": "进入页面" },
+        { "id": "n2", "typeCode": "preset", "presetCode": "preset.boardBrowse", "presetVersion": 1, "label": "板块浏览取数", "config": { "boardId": "$param.boardId" } },
+        { "id": "n3", "typeCode": "data.postList", "config": { "boardId": "$ref.n2.board.id", "sort": "hot", "page": 1, "size": 10 } }
+      ],
+      "edges": [
+        { "from": { "node": "n1", "port": "out" }, "to": { "node": "n2", "port": "signal" } },
+        { "from": { "node": "n2", "port": "listPost" }, "to": { "node": "n3", "port": "list" } }
+      ]
+    },
+    "valueRefs": {
+      "literal": "直接写值",
+      "$param.x": "预设入参（仅预设内部使用）",
+      "$ref.<nodeId>.<port>[.<field>]": "引用上游输出",
+      "$runtime.x": "运行环境（路由参数/查询参数/页码）"
+    },
+    "presetRef": "图里以 { typeCode:'preset', presetCode, presetVersion } 引用预设；编辑器折叠显示，保存保留引用语义",
+    "noLoop": "图里没有循环节点。迭代由『列表型数据 -> list/卡片组件的 itemsSource + itemsTemplate』承担：组件内部遍历，图只提供列表"
+  },
+  "graphRuntime": {
+    "note": "前端图执行器（logicRuntime）。控制流推、数据流拉，参考 ComfyUI 的惰性求值 + Maa 的触发推进",
+    "model": "控制流推 + 数据流拉：trigger 触发后沿 signal 边推进控制；某节点执行时若输入来自数据节点，则惰性求值上游数据节点并缓存（一次运行内缓存 nodeId->{port:value}）",
+    "execution": [
+      "页面加载：执行 flowKey='init' 的图，触发 on.pageEnter 根",
+      "组件交互：按钮/表单 emit 信号 -> 匹配 on.click(nodeId)/on.submit(nodeId) 根，执行该图",
+      "节点就绪条件：signal 边到达 且 所有必填输入端口有值",
+      "异步：api 型原子异步调用后端；执行器维护运行上下文（runId/缓存/可见性表/令牌）",
+      "分支：branch 节点按 boolean 输入决定 true/false 出口，未选中的分支不执行（短路）",
+      "错误：节点可选 error 出口；未接 error 时抛到运行级 -> 提示 + 记录执行轨迹",
+      "结束：所有可达节点执行完或触达终点；无循环，故必然终止"
+    ],
+    "stateMap": "运行上下文维护：outputs（nodeId->port->value）、componentVisible（nodeId->bool）、session（令牌由 act.login 原子写入）",
+    "bindingResolution": "组件渲染时解析 $ref -> 运行上下文 outputs；未就绪时渲染占位/加载态",
+    "noTransaction": "一次图跨多次 HTTP，无跨原子事务；每个原子自证一致性。跨原子的『全成/全败』只能表达为错误分支（如失败就提示并停在原地）"
+  },
+  "dataBinding": {
+    "note": "呈现层与逻辑层的桥。组件不直接取数，只引用图节点输出",
+    "mechanism": "ui_node.content_json 里 bindable 字段（如 itemsSource/text/imageUrl/visibleWhen）可填 $ref.<nodeId>.<port>",
+    "resolution": "渲染器从运行上下文读取；列表组件用 itemsSource 驱动 itemsTemplate 渲染",
+    "benefit": "取数/过滤/排序/分页都集中在图里，组件只负责画；改逻辑不用动组件树"
+  },
+  "database": {
+    "note": "6 张新表，均带 create_time/update_time/remark（用户要求）。home_module 迁入 ui_node 后弃用",
+    "tables": [
+      {
+        "name": "ui_page",
+        "comment": "用户端页面表",
+        "columns": ["id BIGINT PK", "page_key VARCHAR(30) UNIQUE", "page_name VARCHAR(50)", "route_path VARCHAR(100)", "is_home TINYINT DEFAULT 0", "status TINYINT DEFAULT 1", "remark VARCHAR(200)", "create_time", "update_time"]
+      },
+      {
+        "name": "ui_component_type",
+        "comment": "组件库（新建一个按钮模板=插1行）",
+        "columns": ["id BIGINT PK", "type_code VARCHAR(40) UNIQUE", "type_name VARCHAR(50)", "category VARCHAR(20)", "render_kind VARCHAR(40)", "is_container TINYINT", "is_builtin TINYINT", "style_schema TEXT", "content_schema TEXT", "behavior_schema TEXT", "default_style TEXT", "default_content TEXT", "preview_icon VARCHAR(50)", "sort INT", "status TINYINT", "remark VARCHAR(200)", "create_time", "update_time"]
+      },
+      {
+        "name": "ui_node",
+        "comment": "页面节点表（树）——取代 home_module",
+        "columns": ["id BIGINT PK", "page_id BIGINT", "parent_id BIGINT NULL", "type_code VARCHAR(40)", "node_name VARCHAR(50)", "sort INT", "visible TINYINT", "style_json TEXT", "content_json TEXT", "behavior_json TEXT", "remark VARCHAR(200)", "create_time", "update_time"],
+        "indexes": ["KEY idx_page_parent (page_id, parent_id)"]
+      },
+      {
+        "name": "ui_logic_node_type",
+        "comment": "原子库（逻辑节点类型）",
+        "columns": ["id BIGINT PK", "type_code VARCHAR(60) UNIQUE", "type_name VARCHAR(50)", "kind VARCHAR(20)", "runner VARCHAR(10)", "source_api VARCHAR(120)", "inputs_schema TEXT", "outputs_schema TEXT", "config_schema TEXT", "category VARCHAR(20)", "preview_icon VARCHAR(50)", "sort INT", "status TINYINT", "remark VARCHAR(200)", "create_time", "update_time"]
+      },
+      {
+        "name": "ui_preset",
+        "comment": "原子团/预设库",
+        "columns": ["id BIGINT PK", "preset_code VARCHAR(60)", "preset_name VARCHAR(50)", "version INT", "is_builtin TINYINT", "inputs_schema TEXT", "outputs_schema TEXT", "graph_json TEXT", "category VARCHAR(20)", "status TINYINT", "remark VARCHAR(200)", "create_time", "update_time"],
+        "indexes": ["UNIQUE KEY uk_preset_ver (preset_code, version)"]
+      },
+      {
+        "name": "ui_flow",
+        "comment": "页面逻辑图",
+        "columns": ["id BIGINT PK", "page_id BIGINT", "flow_key VARCHAR(30)", "flow_name VARCHAR(50)", "graph_json TEXT", "status TINYINT", "remark VARCHAR(200)", "create_time", "update_time"],
+        "indexes": ["UNIQUE KEY uk_page_flow (page_id, flow_key)"]
+      }
+    ],
+    "migration": [
+      "INSERT ui_page(home, 首页, /, is_home=1)",
+      "home_module 每行 -> ui_node(page_id=首页, parent_id=null, type_code=module_type, node_name=module_name, sort=sort, visible=enabled, content_json=config_json)",
+      "home_module 表保留结构但代码不再引用",
+      "ui_logic_node_type 灌 atomCatalog.items；ui_preset 灌 presetLibrary.builtinPresets"
+    ]
+  },
+  "api": {
+    "admin": [
+      { "group": "组件库", "endpoints": [
+        { "method": "GET", "path": "/admin/site/component-types", "perms": "site:component:list" },
+        { "method": "POST", "path": "/admin/site/component-types", "perms": "site:component:add", "note": "type_code 后端生成；校验 renderKind 已注册、schema 项在属性库内" },
+        { "method": "PUT", "path": "/admin/site/component-types/{id}", "perms": "site:component:edit" },
+        { "method": "DELETE", "path": "/admin/site/component-types/{id}", "perms": "site:component:remove", "note": "is_builtin=1 或被引用 -> 拒绝，提示改为停用" }
+      ]},
+      { "group": "页面与节点", "endpoints": [
+        { "method": "GET", "path": "/admin/site/pages", "perms": "site:page:list" },
+        { "method": "POST", "path": "/admin/site/pages", "perms": "site:page:add" },
+        { "method": "PUT", "path": "/admin/site/pages/{id}", "perms": "site:page:edit" },
+        { "method": "DELETE", "path": "/admin/site/pages/{id}", "perms": "site:page:remove" },
+        { "method": "GET", "path": "/admin/site/pages/{id}/nodes", "perms": "site:node:list" },
+        { "method": "PUT", "path": "/admin/site/pages/{id}/nodes", "perms": "site:node:edit", "note": "整树保存（含新增/更新/删除）" }
+      ]},
+      { "group": "逻辑", "endpoints": [
+        { "method": "GET", "path": "/admin/site/logic-nodes", "perms": "site:logic:list", "note": "原子库，只读（由代码/种子提供）" },
+        { "method": "GET", "path": "/admin/site/presets", "perms": "site:preset:list" },
+        { "method": "POST", "path": "/admin/site/presets", "perms": "site:preset:add", "note": "自组预设；code 后端生成，version 从1起" },
+        { "method": "PUT", "path": "/admin/site/presets/{id}", "perms": "site:preset:edit", "note": "修改已引用预设 = 产生新版本（or 仅草稿），不原地改旧版本" },
+        { "method": "DELETE", "path": "/admin/site/presets/{id}", "perms": "site:preset:remove", "note": "is_builtin=1 或被引用 -> 拒绝" },
+        { "method": "GET", "path": "/admin/site/pages/{id}/flows", "perms": "site:flow:list" },
+        { "method": "PUT", "path": "/admin/site/pages/{id}/flows/{flowKey}", "perms": "site:flow:edit", "note": "整图保存；校验节点存在、端口类型匹配、无环（数据子图）、预设引用存在且版本有效、nodeRef 指向本页节点" }
+      ]},
+      { "group": "调试", "endpoints": [
+        { "method": "POST", "path": "/admin/site/flows/{id}/dry-run", "perms": "site:flow:debug", "note": "可选：用 mock 输入跑一遍图，返回每个节点的输入/输出与耗时，供『执行轨迹』面板" }
+      ]}
+    ],
+    "user": [
+      { "method": "GET", "path": "/app/site/config", "auth": "匿名只读（保持现状放行）", "resp": "{ theme, homePage:{ pageKey, nodes:[树] }, flows:{ <flowKey>: { graph } }, presets:{ <code>@<version>: { graph } } }", "behavior": "只下发 status=1 页面、visible=1 节点；style=default_style⊕style_json；content 解析 $ref 交由前端运行时；flow 及被引用的预设定义一并下发供前端图执行器使用（也可在保存时把预设展开存储以简化下发）" },
+      { "method": "GET", "path": "/app/site/page/{pageKey}", "auth": "匿名只读", "resp": "单页面的 nodes + flows（+ 引用到的 presets）", "note": "自定义页用它；首页可走 /app/site/config 一次拿全" }
+    ],
+    "authWiring": "会员拦截器只放行 /app/site/** 与 /app/login、/app/register；原子调用的业务接口（/app/post 等）仍需登录态，权限在后端接口内校验"
+  },
+  "frontend": {
+    "sharedArtifacts": {
+      "note": "管理端与用户端两套独立 Vite 工程，同源文件各存一份、结构一致、文件头注明『与另一端同源』",
+      "files": [
+        "blocks/NodeRenderer.vue — 递归渲染组件树（含容器、modal、$ref 绑定解析）",
+        "blocks/widgets/*.vue — 每种 render_kind 一个薄组件（text/heading/image/button/container/modal/list/...）",
+        "blocks/builtinWidgets.ts — 业务组件注册表（builtin:xxx）",
+        "blocks/styleRegistry.ts — 属性 key -> CSS/类名",
+        "blocks/ui-blocks.css — 质感/阴影/hover/click 类",
+        "logic/atomExecutors.ts — 原子 -> 实际执行（调用 /app 接口 或 前端 UI 动作）",
+        "logic/graphRuntime.ts — 图执行器（控制流推 + 数据流拉 + 缓存 + 分支 + 错误）",
+        "logic/presetExpand.ts — 预设引用按版本展开",
+        "logic/valueRef.ts — $param/$ref/$runtime 求值"
+      ]
+    },
+    "adminEditor": {
+      "pages": [
+        "views/site/componentType/index.vue — 组件库管理（勾选属性生成 schema）",
+        "views/site/logicNode/index.vue — 原子库（只读浏览，展示入参出参与对应接口）",
+        "views/site/preset/index.vue — 预设库（内置只读 + 自定义；『复制为自定义』）",
+        "views/site/page/index.vue — 页面管理",
+        "views/site/pageBuilder/index.vue — 搭建器：左=组件库面板；中=画布（NodeRenderer 预览，点选节点）；右=属性面板（样式/内容/行为 tab，schema 驱动）；上方=节点树（父子/排序/删除/复制/显隐）",
+        "views/site/pageBuilder/FlowEditor.vue — 逻辑图画布（一个画布两类节点：数据节点走值、控制节点走信号；连按端口类型校验；预设折叠节点）+ 执行轨迹/调试面板"
+      ],
+      "bridge": "组件属性面板里 bindable 字段可选『绑定到图节点输出』（下拉列出本页图节点端口），生成 $ref",
+      "preview": "保存即预览：画布用同一 NodeRenderer + graphRuntime 就地重绘；调试图可 dry-run 看每个节点输入输出"
+    },
+    "userSide": {
+      "pageHost": "views/page/index.vue 按 route 从 siteStore 取 pageKey -> 渲染 NodeRenderer 组件树；挂载时 graphRuntime 跑 init 图",
+      "runtime": "logicRuntime 提供运行上下文给渲染器解析 $ref；组件 emit 信号交给 graphRuntime 触发对应图",
+      "unknown": "未知 renderKind / 未知 atom / 未注册业务组件 -> 跳过并 console.warn，绝不白屏"
+    }
+  },
+  "validation": {
+    "note": "白名单优先，双向校验",
+    "uiLayer": [
+      "style/content/behavior JSON 合法；键必须在组件类型对应 schema 内",
+      "逐值按属性库类型校验（length 正则 / color 正则 / enum 命中 / number 区间 / text 长度 / image·url 正则）",
+      "单 JSON <= 4000 字符；节点数 <= 200/页；嵌套深度 <= 5"
+    ],
+    "logicLayer": [
+      "graph_json 合法；每个 node.typeCode 必须存在于原子库，typeCode='preset' 时 presetCode+version 必须存在",
+      "每条 edge 的 from/to 端口必须存在，且端口类型匹配（signal 只接 signal；listX 只接 listX 或 any）",
+      "数据子图无环（DAG）；控制流允许分支但不允许回环（本期不做循环）",
+      "config 中 $ref 目标节点存在且端口存在；$param 必须在预设 inputs_schema 内",
+      "nodeRef 必须指向本页 ui_node；action 目标节点存在",
+      "preset 被引用时不允许原地改该版本（只能新建版本）"
+    ],
+    "security": [
+      "原子白名单：执行器只实现已知 type_code，图上填不了任意 URL/表名/SQL",
+      "危险字符拦截：拒绝含 { } ; < > 或 javascript: / expression( / data:text/html 的值",
+      "文本一律 Vue 插值渲染，禁止 v-html；不提供自定义 HTML/CSS/JS",
+      "业务接口权限在后端原子内校验（是否登录/是否本人），不依赖图"
+    ]
+  },
+  "noCodeBoundary": {
+    "note": "L0-L4 零代码，L5 不做，L6 代码保证，EXT 由开发者扩原语",
+    "levels": [
+      { "level": "L0", "change": "改样式", "codeNeeded": "零代码" },
+      { "level": "L1", "change": "结构编排", "codeNeeded": "零代码" },
+      { "level": "L2", "change": "交互动作", "codeNeeded": "零代码" },
+      { "level": "L3", "change": "数据管道", "codeNeeded": "零代码" },
+      { "level": "L4", "change": "流程编排（触发/校验/分支/动作）", "codeNeeded": "零代码" },
+      { "level": "L5", "change": "通用计算/表达式/循环/自定义脚本", "codeNeeded": "不做" },
+      { "level": "L6", "change": "事务/不变量/鉴权", "codeNeeded": "代码保证" },
+      { "level": "EXT", "change": "新增组件内核 / 新增逻辑原子 / 新增预设（内置）", "codeNeeded": "写代码" }
+    ]
+  },
+  "staging": {
+    "note": "按模块闭环推进，每阶段可独立验证并提交",
+    "phases": [
+      { "phase": 1, "name": "呈现层核心闭环", "deliverables": ["ui_page/ui_component_type/ui_node 建表 + 组件库种子 + home_module 迁移", "基础与布局组件 text/heading/image/button/divider/spacer/container/card", "样式与内容 schema 动态编辑器 + 节点树增删排序 + 保存即预览", "用户端 NodeRenderer 替换 home/index.vue"] },
+      { "phase": 2, "name": "交互层", "deliverables": ["behavior schema 与简单动作（onClickAction）+ 动作执行器", "modal 弹窗组件 + Teleport/遮罩/动画", "icon 组件"] },
+      { "phase": 3, "name": "逻辑层（创新点核心）", "deliverables": ["ui_logic_node_type/ui_preset/ui_flow 建表 + 原子库与内置预设种子", "graphRuntime 图执行器（触发/惰性数据流/分支/错误/缓存）", "FlowEditor 逻辑图画布 + 端口类型校验 + 预设折叠节点", "dataBinding：$ref 绑定到组件 itemsSource/text/visibleWhen", "内置预设 preset.login/profile/postDetail/publishPost", "调试面板（执行轨迹 / dry-run）"] },
+      { "phase": 4, "name": "进阶与业务接入", "deliverables": ["carousel/list/tabs 组件", "业务组件 builtin:banner/notice/hot_post/board_nav（随对应业务模块接入）", "自定义页面(/about)路由与渲染", "预设自组保存与版本升级确认"] }
+    ],
+    "dependency": "阶段4 的业务组件与原子（发帖/评论/点赞等）依赖玩家侧业务模块（05-12）实现后端接口；没有接口时原子先占位（runner=api 指向待实现接口）"
+  },
+  "risks": [
+    { "risk": "编辑器复杂度（组件树画布 + 逻辑图画布 + 图执行器 + 调试）开发量大", "mitigation": "阶段化；逻辑图先支持线性+分支，不做自由导航；预设覆盖常见场景降低连线需求" },
+    { "risk": "端口类型漂移 / 连线错乱", "mitigation": "端口类型系统 + 编辑器即时校验 + 保存后端复校验" },
+    { "risk": "预设改动连锁（改一个预设多页受影响）", "mitigation": "预设版本化，页面锁定版本，升级手动确认；内置预设只读可复制" },
+    { "risk": "图无跨原子事务", "mitigation": "原子自证一致性；跨原子只能错误分支；明确写进边界与答辩" },
+    { "risk": "性能：一张图 N 次请求", "mitigation": "过滤/排序/分页尽量下推后端原子（data.postList 直接带条件），前端算子只做轻量变换；同一图内数据节点结果缓存" },
+    { "risk": "安全：图上能调任意能力 = 越权入口", "mitigation": "原子白名单 + 后端接口内权限校验 + 危险字符拦截 + 无自定义代码" },
+    { "risk": "范围膨胀成通用平台", "mitigation": "领域限定在游戏社区；L5 与自定义脚本明确不做；提新原子先问『是否只是编排已有后端能力』" },
+    { "risk": "两端同源文件不同步（预览与线上不一致）", "mitigation": "同源文件结构固定、文件头标注、可加哈希比对脚本" }
+  ],
+  "outOfScope": [
+    "通用计算/表达式/条件表达式引擎（L5）",
+    "循环/递归节点（迭代由列表组件承担）",
+    "自定义 HTML/CSS/JS 注入；在管理端写脚本并由服务端沙箱执行",
+    "后端图执行器与定时/后台自动化（Maa 式机器人）",
+    "自由绝对定位画布",
+    "跨原子事务保证",
+    "多租户 / 插件市场 / 在线分享预设",
+    "SSR/SEO 与用户端自助换肤"
+  ],
+  "narrative": {
+    "thesisLine": "面向游戏社区的可视化编排：页面结构与外观、数据管道与业务逻辑均可由管理端图形化配置，新增展示组件与常见流程模板无需改代码",
+    "honesty": "必须讲清三条——图形化是编排层不是编程语言；数据库不变量与鉴权由代码保证；业务能力本身仍需代码实现（原子）",
+    "whyDomainLimit": "限定在游戏社区，才能把业务逻辑穷举成有限原子与预设，使零代码覆盖率高且可控"
+  }
+}
