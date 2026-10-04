@@ -67,6 +67,6 @@ node page-kit/pagekit.mjs --base http://your-host:9331 pages   # 换后端地址
 |---|---|
 | 组件是否开放该属性、值类型（颜色/长度/枚举…）、父节点是否容器 | **后端保存接口**（权威；失败原子回滚，不会写半套） |
 | 由组件库快照决定的结构规则 + 树的引用完整性 | 本脚本 `validate`（离线，不复制值类型规则，因此不会漂移） |
-| 排版与观感（页面根竖排、横排用「行」、builtin 组件暂不渲染…） | [references/layout-rules.md](references/layout-rules.md) + 你在浏览器里看 |
+| 排版与观感（页面根竖排、横排用「行」、业务组件取数…） | [references/layout-rules.md](references/layout-rules.md) + 你在浏览器里看 |
 
 细则与坑见 [references/](references/)，可照抄的样例见 [examples/](examples/)。

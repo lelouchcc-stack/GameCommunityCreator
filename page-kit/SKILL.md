@@ -92,9 +92,8 @@ node $P save home home.json                      # 5. 落库（失败会给出�
 
 - [ ] `validate` 无错误，提醒逐条想清楚
 - [ ] 文案是中文、面向玩家、没有占位符残留
-- [ ] `builtin:banner` / `builtin:notice` / `builtin:hot_post` 用户端**暂时不渲染**，
-      想要"看得见"的效果就用基础与布局组件；`builtin:board_nav` 已接真实数据
-      （开放板块卡片，点击进 `/board/:id`），可放心使用
+- [ ] `banner` / `notice` / `hot_post` / `board_nav` 四个业务组件都已接渲染内核、取真数据，
+      可以放心用；想"看得见"的静态内容用基础与布局组件
 - [ ] 已 `save` 并回读确认（或 `get` 一次看结果）
 - [ ] 把页面路径与检查点交给用户
 

@@ -23,16 +23,27 @@
 后端先全量校验再落库，且在一个事务里；校验失败会直接返回原因，页面保持原样。
 所以"save 报错"不是灾难，照提示改完再 save 即可。
 
-## 4. `builtin:*` 业务组件大多在用户端**什么都不渲染**（board_nav 除外）
+## 4. 业务组件（`builtin:*`）取真数据，四个都已接入
 
-`banner` / `notice` / `hot_post` 是内置业务组件，渲染内核（阶段 4）还没写：
-在管理端画布里能看到占位框，在用户端看不到任何内容。想要"看得见"的效果，用
-基础与布局组件（文本/标题/图片/按钮/分隔/间距/容器/卡片/图标/行/弹窗）自己搭。
+`banner`（轮播）/ `notice`（公告）/ `hot_post`（热门帖子）/ `board_nav`（板块导航）四个内置业务组件
+在用户端**都渲染真实数据**，画布上也是所见即所得（两端各有一份同源副本）：
 
-**例外：`board_nav`（板块导航）已接入**（2026-10-04）——它直接取 `/app/board/list`
-的开放板块，渲染成卡片网格；内容属性 `limit`（数量）/`columns`（列数 1-4）/
-`showCover`/`showIntro` 可配，用户端点击卡片进入 `/board/:id`。
-（板块详情页本身属 pit.md 模块 03/04，目前是占位页。）
+| 组件 | 数据来源 | 可用内容属性 |
+|---|---|---|
+| `banner` | `/app/banner/list`（后台「站点配置 → 轮播图管理」） | `autoplay` / `interval` / `limit` |
+| `notice` | `/app/notice/list`（notice 表已发布公告） | `limit` |
+| `hot_post` | `/app/post/hot`（置顶优先，再按点赞、浏览降序） | `limit` |
+| `board_nav` | `/app/board/list`（开放板块，点击进 `/board/:id`） | `limit` / `columns` / `showCover` / `showIntro` |
+
+这些接口都放行了匿名访问，未登录也能看见首页内容。注意：
+
+- 组件自己的卡片样式不多，**外层节点的 `padding` / `backgroundColor` / `radius` 才是它的盒子**；
+  放进已经有内边距的容器里时，记得把组件的 `padding` 配成 `0`，否则会多一层留白。
+- 组件内部没有内容时显示「暂无…」提示，不会白屏。
+- 数据为空是数据问题（比如没有轮播图 / 没有开放板块），不是页面问题——先去后台补数据再看页面。
+
+**以后新增内置业务组件时**：前端 `blocks/builtinWidgets.ts` 注册之后，
+还要在 `pagekit.mjs` 的 `RENDERED_BUILTINS` 里登记，否则 `validate` 会提醒它只会显示占位。
 
 ## 5. 图片：只写引用，不要编造 objectKey
 

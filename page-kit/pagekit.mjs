@@ -21,6 +21,18 @@ const DEFAULT_CATALOG = join(KIT_ROOT, "references", "component-catalog.json");
 const DEFAULT_TOKEN_FILE = join(process.cwd(), ".qwen", "tmp", "pagekit-token.json");
 const DEFAULT_BASE = "http://localhost:9331";
 
+/**
+ * 用户端已经接了渲染内核的业务组件（两端 blocks/builtinWidgets.ts 里的注册表）。
+ * 组件库目录里查不出「前端注册了没有」，所以这份名单要跟着注册表手工维护：
+ * 组件库新增内置业务组件后，在这里登记之前，validate 会提醒它只会显示占位。
+ */
+const RENDERED_BUILTINS = new Set([
+    "builtin:banner",
+    "builtin:notice",
+    "builtin:hot_post",
+    "builtin:board_nav",
+]);
+
 /* ------------------------------- 参数解析 ------------------------------- */
 
 function parseArgs(argv) {
@@ -286,8 +298,8 @@ function validateNodes(nodes, catalog) {
         if (type.status !== undefined && type.status !== 1) {
             errors.push(`${at}：组件 ${node.typeCode} 已停用（status=${type.status}）`);
         }
-        if (type.isBuiltin === 1) {
-            warnings.push(`${at}：${node.typeCode} 是内置业务组件，用户端暂不渲染（阶段 4 才接内核），页面里只会看到占位`);
+        if (type.isBuiltin === 1 && !RENDERED_BUILTINS.has(type.renderKind)) {
+            warnings.push(`${at}：${node.typeCode} 是内置业务组件，用户端渲染内核还没接入，页面里只会看到占位`);
         }
 
         for (const [field, schemaField] of Object.entries(schemaOf)) {
@@ -444,12 +456,16 @@ async function cmdCatalog() {
     writeFileSync(file, JSON.stringify(catalog, null, 2) + "\n");
     const containers = catalog.types.filter((type) => type.isContainer === 1).map((type) => type.typeCode);
     const builtins = catalog.types.filter((type) => type.isBuiltin === 1).map((type) => type.typeCode);
+    const renderedBuiltins = catalog.types
+        .filter((type) => type.isBuiltin === 1 && RENDERED_BUILTINS.has(type.renderKind))
+        .map((type) => type.typeCode);
     print(
         { file, ...catalog },
         [
             `已导出 ${catalog.count} 个组件到 ${file}`,
             `容器组件：${containers.join(", ") || "（无）"}`,
-            `内置业务组件（用户端暂不渲染）：${builtins.join(", ") || "（无）"}`,
+            `内置业务组件：${builtins.join(", ") || "（无）"}`,
+            `其中用户端已接渲染内核：${renderedBuiltins.join(", ") || "（无）"}`,
         ].join("\n"),
     );
 }

@@ -9,7 +9,7 @@ description: 生成、校验并落库用户端「符合本项目规则的页面�
 
 1. `page-kit/SKILL.md` —— 工作流与铁律（**先读这个**）
 2. `page-kit/references/layout-rules.md` —— 排版与嵌套约定（后端不拦但必须遵守）
-3. `page-kit/references/pitfalls.md` —— 已知坑（length 单值、整树替换语义、builtin 不渲染、图片引用…）
+3. `page-kit/references/pitfalls.md` —— 已知坑（length 单值、整树替换语义、业务组件取数、图片引用…）
 4. `page-kit/references/component-catalog.json` —— 组件库快照，**typeCode 与每个组件开放的属性以它为准**
 5. `page-kit/examples/` —— 可照抄的合规样例 + 一个会被拦住的 反例
 
@@ -32,7 +32,7 @@ node $P create-page --key about --name 关于 --route /about
 - 只有容器能放子节点：`container` / `card` / `modal` / `row`。
 - `styleJson`/`contentJson`/`behaviorJson` 的 key 必须在该组件类型的 schema 内；尺寸值**只能单值**（`"8px"`，不是 `"8px 18px"`）。
 - 保存＝**整树替换**：先 `get` 再改再 `save`，否则会删掉没写进去的旧节点。
-- `builtin:*`（banner / notice / hot_post / board_nav）用户端**暂不渲染**，别指望它在页面上出现。
+- `builtin:*`（banner / notice / hot_post / board_nav）四个业务组件在用户端**都渲染真实数据**，可以放心用。
 - 图片只写引用（objectKey 或完整地址），上传在管理端界面做，不要编造 key。
 
 **完成定义**：`validate` 无错误 + `save` 成功 + 把「哪个页面、用户端哪个路径看、要检查哪几点」
