@@ -1,0 +1,142 @@
+{
+  "doc": "AI 生成页面工具包设计（page-kit）",
+  "version": "v1.0",
+  "date": "2026-10-04",
+  "status": "已定稿：形态与范围经用户拍板，可开工",
+  "goal": [
+    "让任意 AI agent 能生成『符合本项目规则的页面』——产出 ui_node 节点树数据（落进管理端页面搭建器），而不是写 Vue 代码。",
+    "随项目开源，目标用户就是使用 agent 的人：不绑定某个 agent 客户端，也不引入 MCP 进程。"
+  ],
+  "decisions": [
+    { "id": 1, "topic": "交付形态", "chosen": "Skill + CLI 脚本（不做 MCP）", "why": "受众是任意 agent，MCP 会引入一个要维护/要起/要带 token 的进程，收益不抵成本；skill 文本 + 直连后端的脚本足够" },
+    { "id": 2, "topic": "范围", "chosen": "只做呈现层（ui_page + ui_node 组件树）", "why": "逻辑图（ui_flow）还要端口类型、预设引用、$ref 绑定，等 3.7/3.8 画布稳定后再加" },
+    { "id": 3, "topic": "规则权威", "chosen": "值类型校验不复制到脚本，交后端", "why": "ComponentPropertyRegistry 的值类型规则复制到 JS 必然漂移；保存接口本身是权威校验器且失败原子回滚" }
+  ],
+  "currentState": {
+    "verifiedAt": "2026-10-04",
+    "endpoints": [
+      "GET /admin/site/component-types —— 组件库（typeCode/typeName/renderKind/isContainer/isBuiltin/styleSchema/contentSchema/behaviorSchema/defaultStyle/defaultContent）",
+      "GET /admin/site/pages —— 页面列表（id/pageKey/pageName/routePath/isHome/status/nodeCount）",
+      "POST|PUT|DELETE /admin/site/pages[/{id}] —— 页面增改删（pageKey 唯一；首页不可删）",
+      "GET /admin/site/pages/{id}/nodes —— 读整棵树（VO 形态，带 children）",
+      "PUT /admin/site/pages/{id}/nodes —— 整树保存（扁平数组；负数 id 为新增、parentId 指向临时 id；未出现的旧节点视为删除）"
+    ],
+    "backendAlreadyGuards": [
+      "typeCode 必须在组件库；父节点必须是容器（isContainer=1）",
+      "style/content/behavior 的 key 必须在该组件类型的 schema 白名单内；值按属性库类型校验",
+      "父子关系存在环或引用不存在的父节点 → 拒绝",
+      "整树保存是 @Transactional 且先全量校验再落库：校验失败不写半套"
+    ],
+    "backendDoesNotGuard": [
+      "页面根固定竖排、要横排须加「行」容器（flexDirection=row + wrap）——纯约定",
+      "组件选得对不对、好不好看、文案是否合理"
+    ]
+  },
+  "ruleLayers": [
+    {
+      "layer": 1,
+      "name": "机器可校验·后端已有",
+      "who": "后端保存接口（唯一权威）",
+      "kit": "脚本 save 直接调它；失败返回中文原因"
+    },
+    {
+      "layer": 2,
+      "name": "机器可校验·由目录数据决定",
+      "who": "本工具包的本地预检（不复制任何值类型规则）",
+      "items": ["typeCode 存在于组件库且启用", "style/content/behavior 的 key ⊆ 该组件类型 schema", "父节点必须是容器类型", "id 唯一、parentId 可解析、无环", "sort ≥ 0、visible ∈ {0,1}"],
+      "note": "这些规则的事实源是 GET /admin/site/component-types 导出的目录快照，不写死在脚本里"
+    },
+    {
+      "layer": 3,
+      "name": "机器管不了 / 项目惯例",
+      "who": "references/ 成文 + 用户浏览器确认",
+      "items": ["页面根竖排、横排用「行」容器", "空容器在画布要有占位提示才有得选", "builtin:* 业务组件在用户端暂不渲染", "图片填 objectKey 或绝对地址"],
+      "note": "脚本把其中可判定的部分做成 warning（如根节点直接 flexDirection=row），不阻断保存"
+    }
+  ],
+  "deliverables": {
+    "canonicalDir": "page-kit/（仓库根，随项目开源）",
+    "files": [
+      "page-kit/README.md —— 人/agent 的入口：怎么跑、能做什么、怎么接到别的 agent",
+      "page-kit/SKILL.md —— 技能体：何时用、工作流、规则要点（带 YAML frontmatter，任何支持 skill 的 agent 都能读）",
+      "page-kit/pagekit.mjs —— 零依赖 CLI（Node 内置 fetch/fs）",
+      "page-kit/references/component-catalog.json —— 组件库快照（脚本一键刷新，唯一事实源）",
+      "page-kit/references/layout-rules.md —— 排版与嵌套约定（第 3 层规则成文）",
+      "page-kit/references/pitfalls.md —— 已知坑（值类型、图片、整树保存语义、builtin 不渲染）",
+      "page-kit/examples/landing-page.json —— 合规示例：可直接 validate 通过并 save",
+      "page-kit/examples/invalid-page.json —— 故意不合规，用于演示 validate 能拦住",
+      ".qwen/skills/page-authoring/SKILL.md —— 薄壳：让本仓库的 Qwen Code 能模型调用同一份内容（不复制正文，只指路）"
+    ],
+    "whyNotInsideQwenDir": "技能的 canonical 内容放 page-kit/ 而不是 .qwen/skills/：.qwen/ 只有 Qwen Code 认识，其他 agent 不会扫；薄壳承担『本 CLI 里可被模型自动调用』这一件事。"
+  },
+  "authoringFormat": {
+    "shape": "扁平节点数组（与保存接口一致），文件可以是裸数组，也可以是 { pageKey, nodes:[...] }",
+    "node": {
+      "id": "既有节点用真实正数 id；新增节点用负数临时 id（-1、-2…）或省略",
+      "parentId": "父节点的 id（可以是本次新增节点的临时 id）；根节点为 null",
+      "typeCode": "组件库里的 typeCode",
+      "nodeName": "可选，节点名",
+      "sort": "同级排序，≥ 0",
+      "visible": "1 可见 / 0 隐藏，缺省 1",
+      "styleJson": "key 必须在该组件类型 styleSchema 内",
+      "contentJson": "key 必须在该组件类型 contentSchema 内",
+      "behaviorJson": "key 必须在该组件类型 behaviorSchema 内",
+      "remark": "可选备注"
+    },
+    "whyFlat": "后端整树保存就是扁平数组 + parentId，脚本让 agent 直接产出可提交形态，不做树/扁平的来回翻译"
+  },
+  "cli": {
+    "file": "page-kit/pagekit.mjs",
+    "deps": "零依赖，Node 18+（内置 fetch）",
+    "global": [
+      "--base <url> 后端地址，默认 http://localhost:9331",
+      "--token <jwt> 或环境变量 PAGEKIT_TOKEN；也支持 --token-file（默认 .qwen/tmp/pagekit-token.json，该目录已 gitignore，避免把令牌写进仓库）",
+      "--json 机器可读输出（agent 用）；退出码 0 成功 / 1 失败"
+    ],
+    "commands": [
+      { "cmd": "login --user admin --password ***", "does": "POST /admin/login，把 JWT 写入 token 文件（也可只回显）" },
+      { "cmd": "catalog [--out <file>]", "does": "GET 组件库并规范化导出快照；默认写 references/component-catalog.json" },
+      { "cmd": "pages", "does": "列出页面（id/pageKey/pageName/routePath/isHome/status/nodeCount）" },
+      { "cmd": "get <pageId|pageKey> [--out <file>]", "does": "读页面节点并输出为可回灌保存的扁平数组（去掉只读 VO 字段）" },
+      { "cmd": "validate <file>", "does": "离线结构预检（第 2 层规则）；错误阻断、约定类问题给 warning" },
+      { "cmd": "save <pageId|pageKey> <file>", "does": "整树保存（权威校验）；失败打印后端原因，退出码 1" },
+      { "cmd": "create-page --key <k> --name <n> [--route <r>]", "does": "新建页面，回显新 id，便于后续 save" },
+      { "cmd": "delete-page <pageId|pageKey>", "does": "删除页面（首页会被后端拒绝）" }
+    ],
+    "notIncluded": ["改逻辑图（ui_flow）", "改组件库（ui_component_type）", "改样式 token / 站点配置"]
+  },
+  "validationStrategy": {
+    "local": "只查由目录快照决定的结构规则 + 树的引用完整性（第 2 层），不实现任何值类型正则",
+    "authoritative": "save 调后端；后端先全量校验再落库，失败不留半套（已核实 UiPageServiceImpl.saveNodes 的结构）",
+    "rationale": "原先设想的『后端补 dry-run 接口』在 v1 不必要：值类型交后端即可；本地预检只覆盖能由数据推导的部分，因此不存在规则漂移",
+    "warnings": ["根节点直接设 flexDirection=row（应加「行」容器）", "节点类型 isBuiltin=1（用户端暂不渲染，只能看到占位）", "图片类节点内容为空", "同级 sort 重复"]
+  },
+  "agentPortability": {
+    "qwenCode": "已放薄壳 .qwen/skills/page-authoring/SKILL.md，项目内可被模型自动调用（项目技能目录已纳入 git）",
+    "others": "page-kit/SKILL.md 是普通 markdown + frontmatter：Claude Code / Codex 等可把 page-kit 目录挂到自己的技能目录，或直接让 agent 读 SKILL.md；脚本与 agent 无关",
+    "noMcp": "不提供 MCP server；若日后需要，把 pagekit.mjs 的能力包一层即可，语料不用动"
+  },
+  "verification": {
+    "steps": [
+      "pagekit catalog 对着运行中的后端导出快照，人工核对组件数与 typeCode",
+      "pagekit validate examples/landing-page.json 通过；validate examples/invalid-page.json 报错并指出具体原因",
+      "E2E：create-page 建一张临时页 → save 示例节点 → get 回读一致 → delete-page 清理",
+      "node --check 语法检查 + 无依赖（脚本内不 import 任何包）"
+    ],
+    "notCovered": "页面观感（排版/颜色/动效）——按项目惯例由用户在浏览器确认"
+  },
+  "risks": [
+    { "risk": "目录快照过期（组件库改了没刷新）", "mitigation": "脚本 catalog 一键刷新；validate 在快照不存在时提示先跑 catalog；SKILL.md 把『先刷新目录』写进工作流第一步" },
+    { "risk": "本地预检与后端规则不一致", "mitigation": "本地只做数据驱动规则；值类型与容器嵌套的最终判定权在后端" },
+    { "risk": "agent 拿令牌写文件泄密", "mitigation": "默认令牌文件落在 .qwen/tmp/（已 gitignore）；文档要求优先用环境变量；示例里不出现真实凭据" },
+    { "risk": "agent 误删/覆盖既有页面", "mitigation": "整树保存=未提交的旧节点会被删除，文档与 SKILL.md 显式警告『先 get 再改』；不提供批量删除能力" }
+  ],
+  "outOfScope": [
+    "逻辑图 ui_flow 的生成与校验",
+    "新增组件内核（renderKind 分支 / builtinWidgets.ts 渲染注册表）——那是写代码",
+    "结构化截图/视觉回归、浏览器自动化",
+    "MCP server",
+    "后端 dry-run 校验接口（v1 不需要，留作后续可选增强）"
+  ],
+  "openDecisions": []
+}
