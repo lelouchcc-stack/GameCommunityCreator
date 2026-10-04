@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, provide } from "vue";
+import { onMounted, provide, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import useSiteStore from "./store/siteStore";
 import useMemberStore from "./store/memberStore";
@@ -98,17 +98,32 @@ const graphBridge = createGraphBridge(graphHost);
 provide(BLOCK_RUNTIME_KEY, blockRuntime);
 provide(GRAPH_RUNTIME_KEY, graphBridge);
 
+/**
+ * 按当前路由把该页的图装进执行器，再跑一次"进入页面"。
+ * 多页下发后图是按页给的：切换路由必须换图，否则会拿上一页的图去跑。
+ */
+async function syncRouteGraphs() {
+    const page = siteStore.pageByPath(route.path);
+    graphBridge.setBundle(page?.flows ?? {}, siteStore.presets);
+    await graphBridge.triggerEvent("enter");
+}
+
+watch(
+    () => route.path,
+    () => {
+        void syncRouteGraphs();
+    }
+);
+
 onMounted(async () => {
     // 有令牌就先校验并恢复登录态，让"进入页面"的图（如首页 init 演示图）按真实登录态分支
     if (isLoggedIn()) {
         await memberStore.loadMe();
     }
     try {
-        // 站点外观 + 首页组件树 + 首页逻辑图一次拿全
+        // 站点外观 + 全部启用页面（各自节点树与图）+ 被引用的预设，一次拿全
         await siteStore.loadConfig();
-        graphBridge.setBundle(siteStore.flows, siteStore.presets);
-        // 页面加载跑"进入页面"的图（flowKey=init 的那张就在其中）
-        await graphBridge.triggerEvent("enter");
+        await syncRouteGraphs();
     } catch {
         // 拉取失败时保留缓存或默认主题，页面照常渲染
     }

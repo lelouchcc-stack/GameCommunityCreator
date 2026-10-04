@@ -8,6 +8,7 @@ import com.lelcc.common.SiteConfigRegistry;
 import com.lelcc.common.UiJsonUtils;
 import com.lelcc.dto.HomeModuleDTO;
 import com.lelcc.dto.HomeModuleVO;
+import com.lelcc.dto.PageBundleVO;
 import com.lelcc.dto.PageTreeVO;
 import com.lelcc.dto.SiteBundleVO;
 import com.lelcc.dto.SiteConfigDTO;
@@ -43,7 +44,6 @@ import java.util.Map;
 public class SiteServiceImpl implements SiteService {
 
     private static final int ENABLED = 1;
-    private static final String HOME_PAGE_KEY = "home";
     /** 图里引用预设用的伪 typeCode（不是原子库里的原子） */
     private static final String PRESET_TYPE = "preset";
 
@@ -137,25 +137,32 @@ public class SiteServiceImpl implements SiteService {
 
     @Override
     public SiteBundleVO userBundle() {
-        Map<String, Map<String, Object>> flows = userFlows();
+        // 只下发启用页面；首页排最前，前端可据此取默认落点
+        List<UiPage> pages = pageMapper.selectList(Wrappers.<UiPage>lambdaQuery()
+                .eq(UiPage::getStatus, ENABLED)
+                .orderByDesc(UiPage::getIsHome)
+                .orderByAsc(UiPage::getId));
+
+        List<PageBundleVO> bundles = new ArrayList<>();
+        List<Map<String, Object>> allGraphs = new ArrayList<>();
+        for (UiPage page : pages) {
+            PageTreeVO tree = pageService.userTree(page.getPageKey());
+            Map<String, Map<String, Object>> flows = pageFlows(page.getId());
+            allGraphs.addAll(flows.values());
+            bundles.add(new PageBundleVO(tree.getPageKey(), tree.getPageName(), tree.getRoutePath(),
+                    page.getIsHome(), tree.getNodes(), flows));
+        }
         return new SiteBundleVO(getConfig(),
                 new StorageConfigVO(fileStorage.provider(), fileStorage.publicBaseUrl()),
-                pageService.userTree(HOME_PAGE_KEY),
-                flows,
-                referencedPresets(flows.values()));
+                referencedPresets(allGraphs),
+                bundles);
     }
 
     /** 用户端只拿启用中的图；键即 flowKey，前端按触发器（on.click/on.submit）对应的 flowKey 找图 */
-    private Map<String, Map<String, Object>> userFlows() {
-        UiPage page = pageMapper.selectOne(Wrappers.<UiPage>lambdaQuery()
-                .eq(UiPage::getPageKey, HOME_PAGE_KEY)
-                .eq(UiPage::getStatus, ENABLED));
-        if (page == null) {
-            return Map.of();
-        }
+    private Map<String, Map<String, Object>> pageFlows(Long pageId) {
         Map<String, Map<String, Object>> flows = new LinkedHashMap<>();
         for (UiFlow flow : flowMapper.selectList(Wrappers.<UiFlow>lambdaQuery()
-                .eq(UiFlow::getPageId, page.getId())
+                .eq(UiFlow::getPageId, pageId)
                 .eq(UiFlow::getStatus, ENABLED)
                 .orderByAsc(UiFlow::getFlowKey))) {
             flows.put(flow.getFlowKey(), UiJsonUtils.toMap(flow.getGraphJson()));

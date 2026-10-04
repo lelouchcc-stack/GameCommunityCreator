@@ -1,9 +1,9 @@
+import { computed, ref } from "vue";
 import { defineStore } from "pinia";
-import { ref } from "vue";
 import { getSiteBundle } from "../api/site";
 import { resolveAssetUrl, setAssetBaseUrl } from "../utils/asset";
 import { applySiteTheme } from "../utils/theme";
-import type { LogicGraph, PageTree, SiteConfig } from "../types/site";
+import type { LogicGraph, PageEntry, SiteConfig } from "../types/site";
 
 const THEME_CACHE_KEY = "site_theme";
 
@@ -19,12 +19,22 @@ export function readCachedTheme(): SiteConfig | null {
 
 const useSiteStore = defineStore("site", () => {
     const theme = ref<SiteConfig | null>(null);
-    /** 后端只返回启用页面的可见节点，且样式已与组件默认值合并，前端直接渲染 */
-    const homePage = ref<PageTree | null>(null);
-    /** 首页的逻辑图（flowKey -> 图）与图里引用到的预设（code@version -> 子图） */
-    const flows = ref<Record<string, LogicGraph>>({});
+    /** 后端下发的所有启用页面：每页带自己的可见节点树与逻辑图 */
+    const pages = ref<PageEntry[]>([]);
+    /** 所有页的图引用到的预设（code@version -> 子图） */
     const presets = ref<Record<string, LogicGraph>>({});
     const loaded = ref(false);
+
+    /** 首页页面：站点外壳（页头/页脚）按它渲染；没有标记首页时退回第一个页面 */
+    const homePage = computed<PageEntry | null>(
+        () => pages.value.find((page) => page.isHome === 1) ?? pages.value[0] ?? null,
+    );
+
+    /** 按路由地址找页面；找不到返回 null，调用方据此给 404 占位 */
+    function pageByPath(path: string): PageEntry | null {
+        const normalized = path.replace(/\/+$/, "") || "/";
+        return pages.value.find((page) => (page.routePath ?? "") === normalized) ?? null;
+    }
 
     async function loadConfig() {
         const bundle = await getSiteBundle();
@@ -33,15 +43,14 @@ const useSiteStore = defineStore("site", () => {
         // Logo 在这里就解析成可访问地址：页头图片、favicon 与本地缓存都直接可用
         const resolvedTheme: SiteConfig = { ...bundle.theme, logo: resolveAssetUrl(bundle.theme.logo) };
         theme.value = resolvedTheme;
-        homePage.value = bundle.homePage;
-        flows.value = bundle.flows ?? {};
+        pages.value = bundle.pages ?? [];
         presets.value = bundle.presets ?? {};
         applySiteTheme(resolvedTheme, { title: true, favicon: true });
         localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(resolvedTheme));
         loaded.value = true;
     }
 
-    return { theme, homePage, flows, presets, loaded, loadConfig };
+    return { theme, pages, presets, loaded, homePage, pageByPath, loadConfig };
 });
 
 export default useSiteStore;

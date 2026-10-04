@@ -67,3 +67,22 @@ SELECT p.id, NULL, 'register_form', '注册表单', 0, 1,
 FROM ui_page p
 WHERE p.page_key = 'register'
   AND NOT EXISTS (SELECT 1 FROM ui_node n WHERE n.page_id = p.id);
+
+-- ==================== 四、把登录页地址接进逻辑层 ====================
+-- 前面三节只解决"页面能搭、能下发"；这一节让逻辑图里的跳转也知道登录页存在。
+-- 两处都用精确字符串替换，重复执行不会二次生效（第二次匹配不到）。
+
+-- 1) act.navigate 的候选地址加上 /login、/register（下拉 options 存在 inputs_schema 里）
+UPDATE ui_logic_node_type
+SET inputs_schema = REPLACE(inputs_schema,
+        '["/","/board/:id","/post/:id","/profile","back"]',
+        '["/","/login","/register","/board/:id","/post/:id","/profile","back"]')
+WHERE type_code = 'act.navigate';
+
+-- 2) 内置预设的"去登录"分支：登录页路由已落地，目标由 / 改为 /login
+UPDATE ui_preset
+SET graph_json = REPLACE(graph_json, '"config":{"to":"/"}', '"config":{"to":"/login"}'),
+    remark = '未登录分支跳 /login'
+WHERE preset_code IN ('preset.profile', 'preset.interact')
+  AND version = 1;
+

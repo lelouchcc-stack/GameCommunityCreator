@@ -1,3 +1,7 @@
+/** 一段逻辑图：直接复用逻辑层的类型，避免同一个形状在两处各写一份后走样 */
+import type { LogicGraph } from "../logic/types";
+export type { LogicGraph };
+
 import type { UiNode } from "./uiBuilder";
 
 /** 与后端 SiteConfigVO 对应 */
@@ -10,18 +14,6 @@ export interface SiteConfig {
     darkMode: boolean
 }
 
-/** 与后端 PageTreeVO 对应：页面信息 + 组件节点树 */
-export interface PageTree {
-    pageKey: string
-    pageName: string
-    routePath: string | null
-    nodes: UiNode[]
-}
-
-/** 一段逻辑图：直接复用逻辑层的类型，避免同一个形状在两处各写一份后走样 */
-import type { LogicGraph } from "../logic/types";
-export type { LogicGraph };
-
 /** 与后端 StorageConfigVO 对应：图片存在哪个存储、对外基址是什么 */
 export interface StorageConfig {
     provider: string
@@ -29,15 +21,26 @@ export interface StorageConfig {
 }
 
 /**
- * 与后端 SiteBundleVO 对应：用户端首屏一次拿全主题、首页组件树、首页逻辑图、
- * 以及图里引用到的预设定义（键为 "presetCode@version"，供执行器展开预设节点）。
+ * 与后端 PageBundleVO 对应：一个页面 + 它的可见节点树 + 它自己的逻辑图。
+ * 图按页挂是因为 flowKey（init/submit...）只在页内唯一，平铺会键冲撞。
+ */
+export interface PageEntry {
+    pageKey: string
+    pageName: string
+    routePath: string | null
+    isHome: number
+    nodes: UiNode[]
+    flows: Record<string, LogicGraph>
+}
+
+/**
+ * 与后端 SiteBundleVO 对应（v2 多页）：用户端首屏一次拿全主题、所有启用页面、
+ * 以及这些页的图引用到的预设定义（键为 "presetCode@version"，供执行器展开预设节点）。
  * storage 用于把页面里存的 objectKey 现拼成图片地址。
  */
 export interface SiteBundle {
     theme: SiteConfig
     storage: StorageConfig
-    homePage: PageTree
-    flows: Record<string, LogicGraph>
     presets: Record<string, LogicGraph>
+    pages: PageEntry[]
 }
-
