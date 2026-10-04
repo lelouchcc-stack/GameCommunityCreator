@@ -287,7 +287,7 @@
       "JDK21 mvn -B -DskipTests clean compile",
       "两段 vue-tsc -b --force 与 vite build",
       "curl /app/site/config 检查 nodes 与 flows",
-      "管理端接口整树回存（验证新增属性 key 过白名单）"
+      "把**种子写过的页面节点树与逻辑图**都从管理端接口读出再原样存回（整树校验：组件存在 / 属性白名单 / 值类型 / 父节点是容器；图校验：GraphValidator + nodeRef 指向本页组件）——种子是直接 INSERT 的、绕过校验，只有回存才能证明它在搭建器里存得回去。v1.1 首次实现时只对登录页做了人工构造的回存，漏掉了按钮的 textAlign，用户一保存就报错，因此这一条改为必须对实际种子数据逐个回存"
     ],
     "manual": "浏览器点击级验证（打开 /login 输入并登录、回车提交、页头显示用户、退出、注册重名提示、管理端改输入框样式后用户端生效）由用户手工点",
     "note": "本次不改 src/logic（on.submit / data.componentValue / preset 展开都是既有实现），因此不需要跑 test:logic；若实现中发现必须改 src/logic，则补跑 25 条回归"

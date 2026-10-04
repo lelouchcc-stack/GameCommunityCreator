@@ -90,7 +90,7 @@ INSERT INTO ui_component_type
  '{"imageUrl":"","imageFit":"cover","linkType":"none"}',
  'Picture', 3, 1),
 ('button', '按钮', 'base', 'button', 0, 0,
- '["width","height","padding","align","backgroundColor","texture","radius","fontSize","fontWeight","textColor","hoverEffect","clickEffect","boxShadow","transitionMs","cursor"]',
+ '["width","height","padding","align","backgroundColor","texture","radius","fontSize","fontWeight","textColor","textAlign","hoverEffect","clickEffect","boxShadow","transitionMs","cursor"]',
  '["text","icon","buttonType","visibleWhen"]',
  '["emit","onClickAction"]',
  '{"width":"auto","height":"auto","padding":"8px 18px","align":"left","backgroundColor":"var(--site-primary)","textColor":"#FFFFFF","fontSize":"14px","fontWeight":"600","radius":"8px","texture":"none","hoverEffect":"lift","clickEffect":"scale","boxShadow":"sm","transitionMs":150,"cursor":"pointer"}',
