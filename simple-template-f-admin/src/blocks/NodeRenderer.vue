@@ -70,6 +70,9 @@
         <div v-else-if="node.renderKind === 'spacer'" class="ui-spacer"></div>
 
         <template v-else-if="node.isContainer === 1">
+            <div v-if="interactive && !node.children?.length" class="ui-placeholder">
+                {{ node.typeName || node.typeCode }}：点击左侧组件加入这里
+            </div>
             <NodeRenderer
                 v-for="child in node.children"
                 :key="child.id"

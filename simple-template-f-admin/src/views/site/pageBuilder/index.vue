@@ -81,8 +81,8 @@
                             <el-switch v-model="selectedNode.visible" :active-value="1" :inactive-value="0" />
                         </el-form-item>
                         <el-form-item label="排序">
-                            <el-button size="small" @click="moveSelected(-1)">上移</el-button>
-                            <el-button size="small" @click="moveSelected(1)">下移</el-button>
+                            <el-button size="small" @click="moveSelected(-1)">{{ moveLabels[0] }}</el-button>
+                            <el-button size="small" @click="moveSelected(1)">{{ moveLabels[1] }}</el-button>
                             <el-button size="small" type="danger" plain @click="removeSelected">删除</el-button>
                         </el-form-item>
                         <el-alert
@@ -246,6 +246,23 @@ const actionTargetOptions = computed<ActionTargetOption[]>(() =>
         };
     }),
 );
+
+/**
+ * 同级是横排还是竖排：决定排序按钮说"左右"还是"上下"。
+ * 页面根固定竖排（行要显式加「行」组件），所以顶层节点一律按上下。
+ */
+const siblingAxis = computed<"row" | "column">(() => {
+    const node = selectedNode.value;
+    if (!node || node.parentId === null) {
+        return "column";
+    }
+    const parent = nodes.value.find((item) => item.id === node.parentId);
+    const parentType = parent ? types.value.find((type) => type.typeCode === parent.typeCode) : null;
+    const direction = { ...(parentType?.defaultStyle ?? {}), ...(parent?.style ?? {}) }.flexDirection;
+    return direction === "row" ? "row" : "column";
+});
+
+const moveLabels = computed(() => (siblingAxis.value === "row" ? ["左移", "右移"] : ["上移", "下移"]));
 
 /** 组装成 NodeRenderer 需要的树，并把组件类型默认值合并进来做预览 */
 const canvasTree = computed<UiNode[]>(() => buildTree(null));

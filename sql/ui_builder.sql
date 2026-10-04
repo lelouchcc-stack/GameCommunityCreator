@@ -228,3 +228,30 @@ ON DUPLICATE KEY UPDATE
   default_content = VALUES(default_content),
   sort = VALUES(sort);
 
+-- ==================== 六、「行」布局组件（一行多组件 + 左右排序） ====================
+-- 页面根与「容器」默认都是竖排；想横向排一行时加「行」，把组件点进它里面。
+-- 行内同级按 sort 从左到右排，管理端的排序按钮在行内显示成「左移 / 右移」。
+
+INSERT INTO ui_component_type
+(type_code, type_name, category, render_kind, is_container, is_builtin,
+ style_schema, content_schema, behavior_schema, default_style, default_content, preview_icon, sort, status) VALUES
+('row', '行', 'layout', 'container', 1, 0,
+ '["width","maxWidth","padding","marginTop","marginBottom","backgroundColor","texture","radius","borderWidth","borderStyle","borderColor","boxShadow","flexDirection","justify","alignItems","gap","wrap"]',
+ '["visibleWhen"]',
+ '[]',
+ '{"width":"100%","padding":"0","flexDirection":"row","justify":"start","alignItems":"stretch","gap":"12px","wrap":true}',
+ '{}',
+ 'Operation', 11, 1)
+ON DUPLICATE KEY UPDATE
+  type_name = VALUES(type_name),
+  category = VALUES(category),
+  render_kind = VALUES(render_kind),
+  is_container = VALUES(is_container),
+  is_builtin = VALUES(is_builtin),
+  style_schema = VALUES(style_schema),
+  content_schema = VALUES(content_schema),
+  behavior_schema = VALUES(behavior_schema),
+  default_style = VALUES(default_style),
+  default_content = VALUES(default_content),
+  sort = VALUES(sort);
+
