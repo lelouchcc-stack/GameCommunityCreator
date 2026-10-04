@@ -157,3 +157,19 @@ ON DUPLICATE KEY UPDATE
   outputs_schema = VALUES(outputs_schema),
   graph_json = VALUES(graph_json),
   remark = VALUES(remark);
+
+-- ==================== 四、逻辑层菜单 ====================
+-- 与页面一起加（视图不存在时挂菜单会变成点不开的死菜单）
+
+INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, component, perms, icon, sort, visible, status) VALUES
+(17, 6, '原子库', 'C', 'logic-node', 'site/logicNode/index', 'site:logic:list', 'Cpu', 4, 1, 1),
+(18, 6, '预设库', 'C', 'preset', 'site/preset/index', 'site:preset:list', 'Files', 5, 1, 1)
+ON DUPLICATE KEY UPDATE
+  menu_name = VALUES(menu_name), parent_id = VALUES(parent_id), path = VALUES(path),
+  component = VALUES(component), perms = VALUES(perms), icon = VALUES(icon),
+  sort = VALUES(sort), visible = VALUES(visible), status = VALUES(status);
+
+INSERT INTO sys_role_menu (role_id, menu_id)
+SELECT 1, m.id FROM sys_menu m
+WHERE m.id IN (17, 18)
+  AND NOT EXISTS (SELECT 1 FROM sys_role_menu rm WHERE rm.role_id = 1 AND rm.menu_id = m.id);
