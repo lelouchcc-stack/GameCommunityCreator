@@ -1,6 +1,8 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { getSiteConfig } from "../api/site";
+import { getUploadConfig } from "../api/upload";
+import { setAssetBaseUrl } from "../utils/asset";
 import { applySiteTheme } from "../utils/theme";
 import type { SiteConfig } from "../types/site";
 
@@ -14,7 +16,15 @@ const useSiteStore = defineStore("site", () => {
     }
 
     async function load() {
-        apply(await getSiteConfig());
+        // 存储基址决定「库里的 key 能不能显示成图片」，没它图片字段预览不出来
+        const [config, storage] = await Promise.all([
+            getSiteConfig(),
+            getUploadConfig().catch(() => null),
+        ]);
+        if (storage) {
+            setAssetBaseUrl(storage.publicBaseUrl);
+        }
+        apply(config);
     }
 
     return { theme, apply, load };

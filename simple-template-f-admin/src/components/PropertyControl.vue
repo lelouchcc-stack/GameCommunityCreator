@@ -38,6 +38,12 @@
             placeholder="JSON"
             @blur="commitJson"
         />
+        <!-- 图片类字段走上传组件；已绑定成 $ref 时仍用文本框显示绑定表达式（由下面的绑定下拉管理） -->
+        <ImageUpload
+            v-else-if="meta.type === 'image' && !bindingValue"
+            :model-value="modelValue ?? ''"
+            @update:model-value="(v: any) => emit('update:modelValue', v)"
+        />
         <el-input
             v-else
             :model-value="modelValue ?? ''"
@@ -65,6 +71,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
+import ImageUpload from "./ImageUpload.vue";
 import type { PropertyMeta } from "../blocks/propertyMeta";
 
 const props = defineProps<{
@@ -92,7 +99,7 @@ const placeholder = computed(() => {
         case "length":
             return "如 16px / 100% / auto";
         case "image":
-            return "图片地址（URL 或 / 开头）";
+            return "图片地址或对象键";
         case "url":
             return "https://... 或 /post/1";
         case "binding":

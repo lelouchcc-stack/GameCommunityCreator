@@ -80,7 +80,7 @@
                     <el-input v-model="form.intro" type="textarea" :rows="3" maxlength="500" show-word-limit />
                 </el-form-item>
                 <el-form-item label="封面" prop="cover">
-                    <el-input v-model.trim="form.cover" placeholder="图片地址（图片上传模块完成前先填 URL）" />
+                    <ImageUpload v-model="form.cover" />
                 </el-form-item>
                 <el-form-item label="排序" prop="sort">
                     <el-input-number v-model="form.sort" :min="0" :max="9999" />
@@ -98,6 +98,7 @@
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage, ElMessageBox } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
+import ImageUpload from "../../../components/ImageUpload.vue";
 import {
     changeBoardStatus,
     createBoard,

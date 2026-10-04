@@ -34,7 +34,7 @@
                     />
                 </el-form-item>
                 <el-form-item label="站点 Logo" prop="logo">
-                    <el-input v-model.trim="form.logo" placeholder="图片地址（图片上传模块完成前先填 URL）" />
+                    <ImageUpload v-model="form.logo" />
                 </el-form-item>
                 <el-form-item label="版权文案" prop="copyright">
                     <el-input v-model="form.copyright" maxlength="100" show-word-limit />
@@ -59,6 +59,7 @@
 import { onMounted, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import type { FormInstance, FormRules } from "element-plus";
+import ImageUpload from "../../../components/ImageUpload.vue";
 import { getSiteConfig, updateSiteConfig } from "../../../api/site";
 import useSiteStore from "../../../store/siteStore";
 import type { SiteConfig } from "../../../types/site";
