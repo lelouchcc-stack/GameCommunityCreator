@@ -18,6 +18,12 @@ export interface EvalContext {
     params: Record<string, any>
     /** 运行环境：routeParam.id / query.k / page */
     runtime: Record<string, any>
+    /**
+     * 预设展开时内层节点的键前缀（页面图为空）。
+     * $ref 里写的是"本层图内"的节点 id，而 outputs 存的是加过前缀的键（如 s4/p1），
+     * 所以解析 $ref 必须补上这个前缀——否则预设内部节点之间的 $ref 一律解析不出来。
+     */
+    prefix?: string
 }
 
 export function isBinding(value: unknown): boolean {
@@ -42,7 +48,7 @@ export function evalValue(value: unknown, ctx: EvalContext): unknown {
     }
     const ref = REF.exec(value);
     if (ref?.[1] && ref[2]) {
-        const ports = ctx.outputs[ref[1]];
+        const ports = ctx.outputs[(ctx.prefix ?? "") + ref[1]];
         const port = ref[2];
         if (!ports || !hasOwn(ports, port)) {
             return UNRESOLVED;

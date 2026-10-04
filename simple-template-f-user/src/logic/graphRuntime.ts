@@ -95,6 +95,8 @@ export function createGraphRuntime(options: GraphRuntimeOptions): GraphRuntime {
             outputs: state.outputs,
             params: ctx.params,
             runtime: host.runtimeValues(),
+            // 预设内部节点：outputs 的键带前缀，$ref 要按同一前缀去找（见 EvalContext.prefix）
+            prefix: ctx.prefix,
         });
         const result: Record<string, any> = values === UNRESOLVED ? {} : { ...values };
         for (const edge of ctx.graph.edges) {

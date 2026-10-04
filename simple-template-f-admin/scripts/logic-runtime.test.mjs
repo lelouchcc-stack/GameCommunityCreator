@@ -296,6 +296,43 @@ try {
         check("宿主收到落盘回调且带完整载荷", persisted, [loginPayload]);
     }
 
+    // 9 预设内部节点之间的 $ref（内层 outputs 的键带前缀，$ref 必须按同一前缀解析）
+    {
+        const { host, calls } = makeHost();
+        const presets = {
+            "preset.inner@1": {
+                nodes: [
+                    { id: "p1", typeCode: "cond.isValid", config: { value: "$param.name", rule: "notBlank" } },
+                    { id: "p2", typeCode: "branch", config: { cond: "$ref.p1.boolean" } },
+                    { id: "p3", typeCode: "act.toast", config: { message: "有名字" } },
+                    { id: "p4", typeCode: "act.toast", config: { message: "没名字" } },
+                ],
+                edges: [
+                    { from: { node: "p1", port: "out" }, to: { node: "p2", port: "signal" } },
+                    { from: { node: "p2", port: "true" }, to: { node: "p3", port: "signal" } },
+                    { from: { node: "p2", port: "false" }, to: { node: "p4", port: "signal" } },
+                ],
+            },
+        };
+        const { runtime, state } = makeRuntime(
+            {
+                init: {
+                    nodes: [
+                        { id: "n1", typeCode: "on.pageEnter" },
+                        { id: "n2", typeCode: "preset", presetCode: "preset.inner", presetVersion: 1, config: { name: "张三" } },
+                    ],
+                    edges: [{ from: { node: "n1", port: "out" }, to: { node: "n2", port: "signal" } }],
+                },
+            },
+            presets,
+            host,
+        );
+        await runtime.runFlow("init");
+        console.log("\n— 9 预设内部 $ref（前缀作用域）—");
+        check("预设内部节点之间的 $ref 能解析（走 true 支）", calls.toasts.map((t) => t.message), ["有名字"]);
+        check("内部节点 outputs 带预设前缀", state.outputs["n2/p1"].boolean, true);
+    }
+
     console.log(failures === 0 ? "\n全部通过" : `\n有 ${failures} 项不符合预期`);
     process.exitCode = failures === 0 ? 0 : 1;
 } finally {
