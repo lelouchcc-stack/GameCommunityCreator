@@ -1,0 +1,36 @@
+[
+  {
+    "id": -1,
+    "parentId": null,
+    "typeCode": "text",
+    "nodeName": "故意写错的节点",
+    "sort": 0,
+    "styleJson": { "flexDirection": "row" },
+    "contentJson": { "textt": "字段名拼错了" }
+  },
+  {
+    "id": -2,
+    "parentId": -1,
+    "typeCode": "button",
+    "nodeName": "挂在非容器下",
+    "sort": 0,
+    "contentJson": { "text": "父节点不是容器" }
+  },
+  {
+    "id": -3,
+    "parentId": -99,
+    "typeCode": "heading",
+    "nodeName": "悬空父节点",
+    "sort": -1,
+    "visible": 2,
+    "contentJson": { "text": "parentId 指向不存在的临时 id" }
+  },
+  {
+    "id": -1,
+    "parentId": null,
+    "typeCode": "not-exist",
+    "nodeName": "重复临时 id + 不存在的组件",
+    "sort": 1,
+    "contentJson": {}
+  }
+]
