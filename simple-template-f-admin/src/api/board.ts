@@ -24,3 +24,11 @@ export function changeBoardStatus(id: number, status: number) {
 export function deleteBoard(id: number) {
     return http.delete<void, void>(`/admin/board/${id}`);
 }
+
+/** 用户端板块导航用的开放板块项：与后端 BoardVO 对应（管理端预览板导航时也走这个接口） */
+export type BoardItem = Board;
+
+/** 开放板块列表：匿名可读（后端已对会员拦截器放行 /app/board/list） */
+export function listBoards() {
+    return http.get<BoardItem[], BoardItem[]>("/app/board/list");
+}

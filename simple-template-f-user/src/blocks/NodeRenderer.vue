@@ -37,8 +37,9 @@
         :data-node-id="node.id"
         @click.stop="onClick"
     >
-        <!-- 业务组件：随对应业务模块接入后替换为真实组件；占位仅在管理端编辑态显示 -->
-        <div v-if="node.isBuiltin === 1 && interactive" class="ui-placeholder">
+        <!-- 业务组件：注册表里有就渲染真实组件，没有则（仅编辑态）显示占位 -->
+        <component v-if="builtinWidget" :is="builtinWidget" :node="node" :interactive="interactive" />
+        <div v-else-if="node.isBuiltin === 1 && interactive" class="ui-placeholder">
             {{ node.typeName || node.typeCode }}（业务组件，待接入）
         </div>
 
@@ -96,6 +97,7 @@ import { toClasses, toCss } from "./styleRegistry";
 import { resolveAssetUrl } from "../utils/asset";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockAction, type BlockRuntime } from "./blockRuntime";
 import { GRAPH_RUNTIME_KEY, type GraphBridge } from "./graphBridge";
+import { resolveBuiltin } from "./builtinWidgets";
 
 defineOptions({ name: "NodeRenderer" });
 
@@ -106,6 +108,9 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{ (e: "select", id: number): void }>();
+
+/** 业务组件（builtin:*）走注册表；未接入的返回 null，回落到占位 */
+const builtinWidget = computed(() => resolveBuiltin(props.node.renderKind));
 
 /** 没有宿主注入时的兜底运行时，保证组件单独使用也不报错 */
 const fallbackRuntime = createBlockRuntime();
