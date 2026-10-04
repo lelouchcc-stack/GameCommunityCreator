@@ -39,6 +39,8 @@ export interface BlockRuntime {
     openModal: (id?: number | null) => void
     closeModal: (id?: number | null) => void
     toggleVisible: (id?: number | null) => void
+    /** 显式设置显隐（逻辑图的 act.setVisible 用；与 toggleVisible 共用 hidden 表） */
+    setVisible: (id?: number | null, visible?: boolean) => void
     isHidden: (id: number) => boolean
     isModalOpen: (id: number) => boolean
     run: (action?: BlockAction | null) => void
@@ -87,6 +89,12 @@ export function createBlockRuntime(host?: Partial<BlockHost>): BlockRuntime {
         }
     }
 
+    function setVisible(id?: number | null, visible = true) {
+        if (id !== null && id !== undefined) {
+            hidden[id] = !visible;
+        }
+    }
+
     function isHidden(id: number) {
         return hidden[id] === true;
     }
@@ -127,5 +135,5 @@ export function createBlockRuntime(host?: Partial<BlockHost>): BlockRuntime {
         }
     }
 
-    return { modalVisible, hidden, openModal, closeModal, toggleVisible, isHidden, isModalOpen, run };
+    return { modalVisible, hidden, openModal, closeModal, toggleVisible, setVisible, isHidden, isModalOpen, run };
 }

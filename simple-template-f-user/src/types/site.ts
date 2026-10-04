@@ -18,12 +18,9 @@ export interface PageTree {
     nodes: UiNode[]
 }
 
-/** 一段逻辑图：nodes + edges + （预设才有）exports */
-export interface LogicGraph {
-    nodes: Array<Record<string, any>>
-    edges: Array<Record<string, any>>
-    exports?: Record<string, string>
-}
+/** 一段逻辑图：直接复用逻辑层的类型，避免同一个形状在两处各写一份后走样 */
+import type { LogicGraph } from "../logic/types";
+export type { LogicGraph };
 
 /**
  * 与后端 SiteBundleVO 对应：用户端首屏一次拿全主题、首页组件树、首页逻辑图、

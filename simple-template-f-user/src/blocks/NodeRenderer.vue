@@ -16,7 +16,7 @@
                 >
                     ×
                 </button>
-                <div v-if="node.content.title" class="ui-modal__title">{{ node.content.title }}</div>
+                <div v-if="textOf(node.content.title)" class="ui-modal__title">{{ textOf(node.content.title) }}</div>
                 <NodeRenderer
                     v-for="child in node.children"
                     :key="child.id"
@@ -43,26 +43,26 @@
         </div>
 
         <template v-else-if="node.renderKind === 'text'">
-            <span v-if="node.content.text">{{ node.content.text }}</span>
+            <span v-if="textOf(node.content.text)">{{ textOf(node.content.text) }}</span>
             <span v-else-if="interactive" class="ui-placeholder ui-placeholder--inline">文本</span>
         </template>
 
         <div v-else-if="node.renderKind === 'heading'" class="ui-heading">
-            {{ node.content.text || (interactive ? "标题" : "") }}
+            {{ textOf(node.content.text) || (interactive ? "标题" : "") }}
         </div>
 
         <template v-else-if="node.renderKind === 'image'">
-            <img v-if="node.content.imageUrl" class="ui-image" :src="node.content.imageUrl" alt="" />
+            <img v-if="urlOf(node.content.imageUrl)" class="ui-image" :src="urlOf(node.content.imageUrl)" alt="" />
             <div v-else-if="interactive" class="ui-placeholder">图片</div>
         </template>
 
         <template v-else-if="node.renderKind === 'icon'">
-            <img v-if="node.content.icon" class="ui-icon" :src="node.content.icon" alt="" />
+            <img v-if="urlOf(node.content.icon)" class="ui-icon" :src="urlOf(node.content.icon)" alt="" />
             <span v-else-if="interactive" class="ui-placeholder ui-placeholder--inline">图标</span>
         </template>
 
         <button v-else-if="node.renderKind === 'button'" type="button" class="ui-button">
-            {{ node.content.text || (interactive ? "按钮" : "") }}
+            {{ textOf(node.content.text) || (interactive ? "按钮" : "") }}
         </button>
 
         <div v-else-if="node.renderKind === 'divider'" class="ui-divider" :style="dividerStyle"></div>
@@ -94,6 +94,7 @@ import { computed, inject } from "vue";
 import type { UiNode } from "../types/uiBuilder";
 import { toClasses, toCss } from "./styleRegistry";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockAction, type BlockRuntime } from "./blockRuntime";
+import { GRAPH_RUNTIME_KEY, type GraphBridge } from "./graphBridge";
 
 defineOptions({ name: "NodeRenderer" });
 
@@ -108,9 +109,45 @@ const emit = defineEmits<{ (e: "select", id: number): void }>();
 /** 没有宿主注入时的兜底运行时，保证组件单独使用也不报错 */
 const fallbackRuntime = createBlockRuntime();
 const runtime = inject<BlockRuntime>(BLOCK_RUNTIME_KEY, fallbackRuntime);
+/** 图执行器（用户端才注入；管理端画布没有，绑定就当字面量） */
+const graphBridge = inject<GraphBridge | null>(GRAPH_RUNTIME_KEY, null);
+
+/** 内容里的绑定值（$ref / $runtime）交给图执行器解析；不是绑定或没注入就原样返回 */
+function bound(value: unknown): unknown {
+    if (!graphBridge || typeof value !== "string" || !value.startsWith("$")) {
+        return value;
+    }
+    return graphBridge.evaluate(value);
+}
+
+function textOf(value: unknown): string {
+    const resolved = bound(value);
+    return resolved === undefined || resolved === null ? "" : String(resolved);
+}
+
+function urlOf(value: unknown): string {
+    const resolved = bound(value);
+    return typeof resolved === "string" ? resolved : "";
+}
+
+/** 可见条件（visibleWhen）也是个绑定：解析不出来时先当可见，免得数据没回来整块闪掉 */
+const whenVisible = computed(() => {
+    const raw = props.node.content?.visibleWhen;
+    if (!graphBridge || typeof raw !== "string" || !raw) {
+        return true;
+    }
+    const resolved = graphBridge.evaluate(raw);
+    return resolved === undefined ? true : Boolean(resolved);
+});
 
 const isModal = computed(() => props.node.renderKind === "modal");
-const shown = computed(() => props.node.visible !== 0 && !runtime.isHidden(props.node.id));
+const shown = computed(
+    () =>
+        props.node.visible !== 0 &&
+        !runtime.isHidden(props.node.id) &&
+        (graphBridge ? graphBridge.isVisible(props.node.id) : true) &&
+        whenVisible.value,
+);
 const cssStyle = computed(() => toCss(props.node.style));
 
 const nodeClasses = computed(() => [
@@ -165,6 +202,11 @@ const effectiveAction = computed<BlockAction | null>(() => {
 function onClick() {
     if (props.interactive) {
         emit("select", props.node.id);
+        return;
+    }
+    // 该组件挂了"点击组件"的图就走图（L4 编排）；没有才回落到简单动作（L2）
+    if (graphBridge?.hasClickGraph(props.node.id)) {
+        graphBridge.triggerEvent("click", props.node.id).catch(() => undefined);
         return;
     }
     if (effectiveAction.value) {

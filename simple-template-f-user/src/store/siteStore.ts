@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { getSiteBundle } from "../api/site";
 import { applySiteTheme } from "../utils/theme";
-import type { PageTree, SiteConfig } from "../types/site";
+import type { LogicGraph, PageTree, SiteConfig } from "../types/site";
 
 const THEME_CACHE_KEY = "site_theme";
 
@@ -20,18 +20,23 @@ const useSiteStore = defineStore("site", () => {
     const theme = ref<SiteConfig | null>(null);
     /** 后端只返回启用页面的可见节点，且样式已与组件默认值合并，前端直接渲染 */
     const homePage = ref<PageTree | null>(null);
+    /** 首页的逻辑图（flowKey -> 图）与图里引用到的预设（code@version -> 子图） */
+    const flows = ref<Record<string, LogicGraph>>({});
+    const presets = ref<Record<string, LogicGraph>>({});
     const loaded = ref(false);
 
     async function loadConfig() {
         const bundle = await getSiteBundle();
         theme.value = bundle.theme;
         homePage.value = bundle.homePage;
+        flows.value = bundle.flows ?? {};
+        presets.value = bundle.presets ?? {};
         applySiteTheme(bundle.theme, { title: true, favicon: true });
         localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(bundle.theme));
         loaded.value = true;
     }
 
-    return { theme, homePage, loaded, loadConfig };
+    return { theme, homePage, flows, presets, loaded, loadConfig };
 });
 
 export default useSiteStore;
