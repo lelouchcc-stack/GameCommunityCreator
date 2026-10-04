@@ -1,59 +1,54 @@
 {
   "doc": "用户端登录 / 注册 —— 用管理端搭建能力实现",
-  "version": "1.0",
+  "version": "1.1",
   "date": "2026-10-04",
-  "status": "已定稿：4 项残留细节随方案一并拍板（见 decisions.tail），可开工",
+  "status": "v1.1 修订：登录/注册页由『自包含业务组件』改回『基础组件组合 + 页面逻辑图编排』（用户要求样式可逐项自定义），v1.0 的 decisions.head[1] 与 tail[5] 作废",
+  "revisionHistory": [
+    {
+      "version": "1.0",
+      "date": "2026-10-04",
+      "change": "首版：登录页用业务组件 builtin:login_form（自包含），不接 preset.login"
+    },
+    {
+      "version": "1.1",
+      "date": "2026-10-04",
+      "change": "用户验收时指出：登录/注册必须拆成基础组件组合，否则样式不可自定义。改为「输入框/表单/按钮等基础组件 + 页面逻辑图（preset.login / preset.register）」；删除两个业务组件。已落盘的 v1.0 四个提交中，v2 多页下发、session.ts 事实源、memberStore、路由与页面记录全部继续有效，只重做『页面怎么搭、值怎么读、提交怎么触发』"
+    }
+  ],
   "goal": [
     "玩家能在用户端 /login、/register 两页完成登录与注册；登录态跨刷新保持、页头可显示当前用户、可退出。",
-    "登录页/注册页本身是管理端「页面搭建」搭出来的 ui_page（外观、文案、位置都在搭建器里配、改样式不改代码），只有表单控件是代码实现的业务组件 builtin:login_form / builtin:register_form。",
-    "解开玩家侧最大阻塞：03–12 全部模块的前置条件『玩家已登录』首次成立。",
-    "顺带立起『自定义页路由』地基（阶段 4 第 1 块提前）：用户端不再只有硬编码首页，能按 ui_page.route_path 渲染任意搭建页；登录页只是它第一个使用者。"
+    "登录页/注册页的**每个元素都是基础组件**（容器 / 标题 / 输入框 / 按钮 / 文本），宽度、内边距、边框、圆角、字号、颜色、间距等逐项在属性面板可配——不存在『样式写死在组件里』的元素。",
+    "登录/注册的**业务逻辑是页面逻辑图**（on.submit → 读组件值 → preset.login / preset.register → 判空分支 → 跳转），在 FlowEditor 里可画可改，不需要改前端代码。",
+    "顺带补齐图形化搭建缺的物料：输入类基础组件与组件值读取能力（data.componentValue 从此真正可用）。"
   ],
   "requirementSource": {
     "spec": "pit.md 没有 01/02（玩家注册/登录）用例表——16 张表从 2-2（标识符 03）起步，见 project/requirements-spec.md",
     "consequence": "字段校验规则、用户名重复、封禁账号等验收条件无权威依据；本设计按 member 表结构与管理端登录链路同构来定，建议补表后再逐条核对",
-    "siblingReference": "表 2-8（标识符 13）管理端登录的可选流程是同族参考（校验码、停用账号），但播放侧本次不做图形验证码"
+    "siblingReference": "表 2-8（标识符 13）管理端登录的可选流程是同族参考（校验码、停用账号），但玩家侧本次不做图形验证码"
   },
   "designPrinciples": [
-    "登录态只允许有一个事实源：两端同源的 utils/session.ts（模块级 reactive + localStorage），不许出现『引擎里一份、localStorage 一份、Pinia 里又一份』",
-    "业务组件自包含（仿 builtin:board_nav）：登录表单自己渲染、自己调 /app/login、自己跳转，不依赖页面逻辑图——登录/注册是『任何社区都有』的标准功能，按 logic-graph-orchestration 口径直接给组件模板",
-    "preset.login/act.login 不删除：它们服务于自包含表单做不到的组合流（点收藏→未登录→弹登录→登录成功后继续收藏），两条路并存不冲突",
-    "业务组件必须两端同源副本（管理端画布要做所见即所得预览），且 interactive=true 时不触发提交、只被画布选中",
-    "玩家业务接口一律挂 /app/** 前缀（鉴权边界同 QWEN.md），玩家令牌 userType=MEMBER，不可跨端使用",
-    "用户端所有页面都必须能通过后端下发渲染出来——凡『加了页面要改前端代码』的写法都属于退化"
+    "登录态只允许有一个事实源：两端同源的 utils/session.ts（模块级 reactive + localStorage）",
+    "**页面上的东西一律是组件**：凡是用户在页面上看得见的，都必须由 ui_node 描述、由属性面板配样式；不允许存在『外观写死的业务组件』（这正是 v1.0 被推翻的原因）",
+    "**值从组件流向图**：输入组件把自己的当前值登记进组件值注册表，逻辑图的 data.componentValue 原子按『节点 id + 字段名』读——图不认识组件类型，只认识 id",
+    "**提交语义挂在表单容器上**：on.submit 的 nodeId 指向 form 容器节点；按钮只负责『把提交交给表单』（buttonType=submit），这样输入框里回车也能提交",
+    "逻辑图只编排已有后端能力（act.login / act.register 是对已有接口的封装），不发明新能力",
+    "用户端所有页面都必须能通过后端下发渲染出来——凡『加了页面要改前端代码』的写法都属于退化",
+    "玩家业务接口一律挂 /app/** 前缀，玩家令牌 userType=MEMBER，不可跨端使用"
   ],
   "currentState": {
     "verifiedAt": "2026-10-04",
-    "backend": [
-      "WebMvcConfig 已放行 /app/login、/app/register 两个路径（excludePathPatterns），但没有任何 Controller 映射它们——放行了空路径",
-      "member 表已在 sql/schema.sql（id/username/password/nickname/avatar/intro/status，username 唯一、status 1正常0封禁），但没有 Member 实体 / MemberMapper / AppAuthService",
-      "JwtUtils.createToken(userId, UserType) 与 AuthInterceptor（按 UserType.MEMBER 校验 /app/**）已具备，可直接复用",
-      "AdminAuthServiceImpl 是现成的同构参照：BCrypt.checkpw、账号不存在与密码错返回同一句 401、status!=1 抛 403"
+    "v10Landing": [
+      "后端 Member 域与 /app/login、/app/register、/app/member/me 已实现并 curl 验证（含令牌不跨端）",
+      "两端同源 utils/session.ts（登录态事实源）+ 用户端 store/memberStore.ts 已实现；graphHost 的 isLoggedIn/currentMemberId/logout 已接；act.login 的令牌可经 onLoginSuccess 落盘",
+      "/app/site/config 已升 v2 {theme, storage, presets, pages[]}；用户端 catch-all 路由 + views/PageView.vue + 404 占位已可用；首页页头已有登录入口与当前用户/退出",
+      "act.navigate 候选地址已含 /login、/register；preset.profile / preset.interact 的『去登录』已改指 /login"
     ],
-    "frontendUser": [
-      "router/index.ts 只有 / 与 /board/:id 两条路由；无 /login、无守卫",
-      "App.vue 的 graphHost：isLoggedIn 读 localStorage.getItem('token')、currentMemberId 恒 null、logout 只 removeItem('token')、componentValue 恒 undefined",
-      "utils/request.ts 从 localStorage.getItem('token') 取令牌拼 Authorization 头；401 时只清 token，无跳转",
-      "不存在任何用户态 store；siteStore 只管主题/首页树/图"
-    ],
-    "frontendAdmin": [
-      "blocks/builtinWidgets.ts 与 blocks/builtin/BoardNav.vue 已是两端同源副本，新增业务组件要同时改两端",
-      "logic/atomExecutors.ts 同样是两端同源副本（刻意不依赖 Vue，供 headless 回归测试）"
-    ],
-    "logicLayer": [
-      "ui_logic_node_type 已有 act.login（runner=api POST /app/login）、act.register（POST /app/register）、act.logout（前端）、on.submit（触发器）、data.componentValue（读组件当前值）、cond.isLogin、act.navigate 等原子",
-      "ui_preset 已有 preset.login（用户名/密码非空→branch→登录/提示）；preset.profile、preset.interact 的未登录分支写的是 act.navigate to:'/'（备注明确『登录页路由未落地』）",
-      "apiAtom({savesToken:true}) 只把返回 token 写进引擎内存 state.session.token，没有任何人把它落到 localStorage —— 登录成功后 request.ts 仍不带令牌、cond.isLogin 仍判假",
-      "act.navigate 的 options 只有 /、/board/:id、/post/:id、/profile、back，没有 /login"
-    ],
-    "deliveryChain": [
-      "SiteServiceImpl.userBundle() 硬编码 HOME_PAGE_KEY：只下发首页的组件树与 flows，其他 ui_page 的树和图客户端拿不到",
-      "SiteBundleVO 形状为 {theme, storage, homePage, flows(flowKey->graph 平铺), presets}；flows 平铺会在多页时键冲撞（每页都可能有 submit）",
-      "ui_page 已有 page_key/route_path/is_home，管理端 POST /admin/site/pages 已能建非首页页；UiPageServiceImpl 只对 is_home 做唯一性处理，普通页不受限"
-    ],
-    "componentLibrary": [
-      "ui_component_type 种子 15 条（text/heading/image/button/divider/spacer/container/card/banner/notice/hot_post/board_nav/icon/modal/row），无任何输入类组件",
-      "NodeRenderer.vue 的渲染分支里没有 input，App.vue 注释也写明『还没有输入类组件（阶段 4）』—— 但本次不补通用输入组件（方案选业务组件自包含）"
+    "gapsToFill": [
+      "组件库没有任何输入类组件（15+2 = 17 条里只有 text/heading/image/button/divider/spacer/container/card/banner/notice/hot_post/board_nav/icon/modal/row/login_form/register_form）",
+      "NodeRenderer 没有 input / form 渲染分支；管理端 RENDER_KINDS 白名单里也没有这两个内核",
+      "App.vue 的 graphHost.componentValue 恒返回 undefined —— data.componentValue 原子形同虚设（没有任何组件把值登记进来）",
+      "button 组件的 behavior.emit（触发信号名）声明了但从未接线；button 也不能作为提交按钮（渲染成 type=button）",
+      "preset 库里没有注册预设（只有 login/profile/boardBrowse/postDetail/publishPost/interact/report）"
     ]
   },
   "decisions": {
@@ -61,9 +56,9 @@
       {
         "id": 1,
         "topic": "登录页形态",
-        "chosen": "业务组件 builtin:login_form（自包含）",
-        "alternative": "通用 input 组件 + preset.login 图编排",
-        "why": "登录/注册是标准功能，直接给组件模板；换来落地快。代价：登录页表单本身写死、不可搭；页面其余部分（标题/文案/位置）仍可搭"
+        "chosen": "基础组件组合 + 页面逻辑图编排（v1.1 推翻 v1.0 的业务组件方案）",
+        "alternative": "业务组件 builtin:login_form（自包含，样式写死）——已删除",
+        "why": "用户验收时明确指出：必须能自定义样式。业务组件的外观是代码写死的，属性面板只能配几个字段，无法满足『每个元素都能调样式』"
       },
       {
         "id": 2,
@@ -74,22 +69,22 @@
       {
         "id": 3,
         "topic": "路由与下发",
-        "chosen": "顺势做自定义页路由地基：/app/site/config 升 v2（多页），用户端 catch-all + PageView",
-        "why": "登录页只是第一个使用者；板块/发帖/个人主页都要用，后面每加一页不必再动前端代码"
+        "chosen": "/app/site/config v2（多页）+ 用户端 catch-all + PageView",
+        "why": "登录页只是第一个使用者；板块/发帖/个人主页都要用"
       },
       {
         "id": 4,
         "topic": "用户态",
-        "chosen": "新增 memberStore（Pinia），token+成员信息持久化，启动拉 /app/member/me",
-        "why": "个人主页/发帖鉴权都要读当前用户；同时它接住 graphHost 的 isLoggedIn/currentMemberId/logout"
+        "chosen": "utils/session.ts 为事实源 + 用户端 memberStore（Pinia 外观）",
+        "why": "同源组件不分端地读登录态；memberStore 供页面响应式消费"
       }
     ],
     "tail": [
       {
         "id": 5,
-        "topic": "表单是否接逻辑图",
-        "chosen": "自包含，不接 preset.login",
-        "why": "契合决策 1 的『快』；preset.login 保留给组合流"
+        "topic": "表单提交怎么触发",
+        "chosen": "新增「表单」容器组件（渲染成真 <form>）+ 按钮 buttonType=submit；on.submit 挂表单节点 id",
+        "why": "输入框里按回车也能提交，且『提交』语义落在表单上而不是某个按钮上；按钮可以随便换、加两个都行"
       },
       {
         "id": 6,
@@ -100,239 +95,239 @@
       {
         "id": 7,
         "topic": "/app/site/config 结构",
-        "chosen": "升级为 v2 破坏性结构，取消顶层 homePage/flows",
-        "why": "flows 平铺在多页下会键冲撞；且 homePage 只是 pages 里的一个"
+        "chosen": "v2 破坏性结构，取消顶层 homePage/flows（已实现）",
+        "why": "flows 平铺在多页下会键冲撞"
       },
       {
         "id": 8,
         "topic": "预设里的『去登录』目标",
-        "chosen": "preset.profile / preset.interact 的 act.navigate to 由 / 改为 /login",
-        "why": "登录页路由这次真落地了"
+        "chosen": "preset.profile / preset.interact 的 act.navigate to 由 / 改为 /login（已实现）",
+        "why": "登录页路由本次落地"
+      },
+      {
+        "id": 9,
+        "topic": "两个业务组件的去留",
+        "chosen": "删除（代码 + 组件库种子 + 页面里已放的那个节点）",
+        "why": "只留一条路，避免两种做法并存造成混淆，也避免它们成为没人维护的死代码"
+      },
+      {
+        "id": 10,
+        "topic": "输入框的『必填』怎么实现",
+        "chosen": "required 只作视觉标记（标签红星）；真正的校验在逻辑图（cond.isValid）与后端",
+        "why": "校验规则是业务规则，应留在可编排的图里；组件只负责呈现，避免同一规则在两处各写一遍"
       }
     ]
   },
   "pipeline": {
-    "note": "五层，任一层缺失则『搭出来的登录页跑不起来』断裂",
+    "note": "五层，任一层缺失则『搭出来的登录页跑不起来』断裂。v1.1 只重做第 3、5 层，第 1、2、4 层沿用 v1.0",
     "layers": [
       {
         "layer": 1,
         "name": "认证后端",
-        "detail": "Member 实体/Mapper + AppAuthController(/app/login,/app/register) + AppMemberController(/app/member/me)；BCrypt + status 封禁 + MEMBER 令牌",
-        "status": "待实现（本次第 1 个提交）"
+        "detail": "Member 实体/Mapper + /app/login、/app/register、/app/member/me；BCrypt + status 封禁 + MEMBER 令牌",
+        "status": "已完成（v1.0 第 1 个提交 cd3c468）"
       },
       {
         "layer": 2,
         "name": "登录态事实源",
-        "detail": "两端同源 utils/session.ts（reactive + localStorage + 直接调接口）；用户端 memberStore 是其 Pinia 外观；graphHost 与 request.ts 都接到它",
-        "status": "待实现（第 2 个提交）"
+        "detail": "两端同源 utils/session.ts（reactive + localStorage + saveSession/clearSession/loadMe）；用户端 memberStore 是其 Pinia 外观；graphHost 与 request.ts 都接它",
+        "status": "已完成（v1.0 第 2 个提交 e120cc7）；v1.1 移除只为业务组件服务的 login()/register() 两个函数，登录/注册改由 act.login / act.register 原子发起（令牌仍经 host.onLoginSuccess 落到同一事实源）"
       },
       {
         "layer": 3,
-        "name": "可搭页面与组件",
-        "detail": "builtin:login_form / builtin:register_form（两端同源）+ 组件库种子 2 行 + ui_page 两页与初版节点树",
-        "status": "待实现（第 3 个提交）"
+        "name": "可搭页面与基础组件",
+        "detail": "新增 input（单行输入，inputType 支持 text/password）与 form（容器，渲染成 <form>）两个基础组件；NodeRenderer 补渲染分支；按钮支持 buttonType=submit；属性库补 label/placeholder/inputType/required/buttonType",
+        "status": "待实现（v1.1 第 1 个提交）"
       },
       {
         "layer": 4,
         "name": "多页下发与路由",
-        "detail": "SiteBundleVO/pages v2 + SiteServiceImpl 按页下发 flows + 用户端 siteStore 改 pages 索引 + catch-all 路由 + PageView",
-        "status": "待实现（第 4 个提交）"
+        "detail": "SiteBundleVO/pages v2 + 用户端 siteStore 按 routePath 索引 + catch-all + PageView",
+        "status": "已完成（v1.0 第 4 个提交 04c40e2）"
       },
       {
         "layer": 5,
-        "name": "呈现与交互",
-        "detail": "页头显示当前用户昵称/头像与退出入口（由一个 builtin:user_bar 或页头组件承担——见 openDecisions）",
-        "status": "第 3/4 提交之后视情况补"
+        "name": "组件值读取与页面图",
+        "detail": "组件值注册表（输入组件登记当前值 → graphHost.componentValue 读取）+ 登录/注册页的 submit 图（on.submit → data.componentValue×N → preset.login / preset.register → cond.isEmpty 分支 → act.navigate）",
+        "status": "待实现（v1.1 第 1、2 个提交）"
       }
     ]
   },
+  "mechanism": {
+    "formComponents": {
+      "input": {
+        "typeCode": "input",
+        "renderKind": "input",
+        "category": "base",
+        "isContainer": 0,
+        "contentSchema": ["label", "placeholder", "inputType", "required", "visibleWhen"],
+        "styleSchema": ["width", "maxWidth", "align", "padding", "backgroundColor", "borderWidth", "borderStyle", "borderColor", "radius", "fontSize", "fontWeight", "textColor", "textAlign", "texture", "boxShadow", "cursor", "transitionMs"],
+        "defaultStyle": "{\"width\":\"100%\",\"padding\":\"9px 12px\",\"backgroundColor\":\"var(--site-bg-page)\",\"borderWidth\":\"1px\",\"borderStyle\":\"solid\",\"borderColor\":\"var(--site-border)\",\"radius\":\"8px\",\"fontSize\":\"14px\",\"textColor\":\"var(--site-text-primary)\"}",
+        "defaultContent": "{\"label\":\"\",\"placeholder\":\"\",\"inputType\":\"text\",\"required\":false}",
+        "valueRegistration": "把当前值写入组件值注册表，键 'value'；初始值在 setup 时就登记，保证用户一个字都不输时图读到的也是空串而不是 undefined"
+      },
+      "form": {
+        "typeCode": "form",
+        "renderKind": "form",
+        "category": "layout",
+        "isContainer": 1,
+        "contentSchema": ["visibleWhen"],
+        "styleSchema": ["width", "maxWidth", "padding", "marginTop", "marginBottom", "backgroundColor", "texture", "radius", "borderWidth", "borderStyle", "borderColor", "boxShadow", "flexDirection", "justify", "alignItems", "gap", "wrap"],
+        "defaultStyle": "{\"width\":\"100%\",\"maxWidth\":\"360px\",\"padding\":\"24px\",\"backgroundColor\":\"var(--site-bg-card)\",\"radius\":\"12px\",\"boxShadow\":\"sm\",\"flexDirection\":\"column\",\"gap\":\"14px\"}",
+        "defaultContent": "{}",
+        "behavior": "渲染成 <form @submit.prevent>；提交（点提交按钮或输入框回车）时调 graphBridge.triggerEvent('submit', 本节点id)"
+      },
+      "button": {
+        "change": "content 增加 buttonType（enum: button/submit）；渲染 type 属性按它取值；buttonType=submit 时不走『点击组件』的图与 onClickAction（提交由所在 form 统一触发，避免双触发）"
+      }
+    },
+    "componentValueRegistry": {
+      "file": "两端同源 simple-template-f-{user,admin}/src/blocks/componentValues.ts",
+      "shape": "reactive<Record<string, any>>，键为 `<节点id>.<字段名>`（输入框登记为 `<id>.value`）",
+      "api": ["setComponentValue(nodeId, field, value)", "readComponentValue(nodeId, field = 'value')", "clearComponentValues()"],
+      "wiring": [
+        "NodeRenderer 的 input 分支：本地 ref 作为输入框的显示值（保证输入法/光标正常），@input 时写入注册表；setup 与 onUnmounted 分别登记初值/清理",
+        "App.vue 的 graphHost.componentValue = (nodeId, field) => readComponentValue(nodeId, field ?? 'value')",
+        "App.vue 换页（syncRouteGraphs）时 clearComponentValues()，避免跨页串值"
+      ],
+      "why": "值必须能被图读到，但图不认识组件——注册表是两者之间唯一的桥，且键只用 id，图与组件互不依赖"
+    },
+    "pageFlows": {
+      "file": "sql（ui_flow 种子，页面图随页面一起下发）",
+      "login": {
+        "flowKey": "submit",
+        "graph": "on.submit(nodeId=表单节点) → data.componentValue(用户名) → data.componentValue(密码) → preset.login(username=$ref.用户名.any, password=$ref.密码.any) → cond.isEmpty($ref.预设.result) → branch → false(成功) → act.navigate(to=/)",
+        "failurePath": "失败时预设内的 act.login 抛错，引擎会调 host.onError 弹出后端消息（『用户名或密码错误』等）；该分支不接任何节点，天然不跳转",
+        "why_emptyCheck": "预设内部出错不会把『失败』作为出参传出来（引擎对预设节点仍记 ok），所以用『结果为空即失败』来判成功"
+      },
+      "register": {
+        "flowKey": "submit",
+        "graph": "on.submit(表单) → data.componentValue×3（用户名/密码/昵称）→ preset.register → cond.isEmpty 分支 → 成功 act.navigate(to=/)"
+      },
+      "newPreset": {
+        "presetCode": "preset.register",
+        "version": 1,
+        "inputs": ["username", "password", "nickname"],
+        "outputs": ["result"],
+        "graph": "cond.isValid(用户名非空) → branch → true: act.register → act.toast(注册成功) ; false: act.toast(请填写用户名和密码)；exports.result = act.register.result"
+      }
+    },
+    "sessionSourceOfTruth": {
+      "file": "两端同源 simple-template-f-user/src/utils/session.ts",
+      "keep": ["sessionState", "isLoggedIn", "currentMemberId", "saveSession", "clearSession", "logout", "loadMe"],
+      "remove": ["login(username, password)", "register(username, password, nickname)"],
+      "why": "这两个函数原本只服务于 builtin:login_form；改由图编排后由 act.login / act.register 发起请求，令牌经 host.onLoginSuccess 落盘，留着就是死代码"
+    },
+    "noCodeBoundary": {
+      "note": "答辩会被追问『哪些真零代码』，分级说清",
+      "trulyNoCode": [
+        "登录页/注册页的**每一个元素及其全部样式**：管理端页面搭建器配（宽度/内边距/边框/圆角/字号/颜色/间距/阴影…）",
+        "登录/注册的**业务流程**：FlowEditor 画（提交 → 取值 → 校验 → 调接口 → 判成功 → 跳转）",
+        "页面地址：新建页面时填 route_path",
+        "表单字段（几个输入框、怎么排列、按钮文案）：全在搭建器里增删改"
+      ],
+      "stillNeedsCode": [
+        "input / form 两个基础组件的渲染内核（一次性的通用物料，之后所有表单页面复用）",
+        "组件值注册表（一次性机制）",
+        "act.login / act.register 后端接口与鉴权",
+        "catch-all 路由与 PageView（已落地）"
+      ]
+    }
+  },
   "api": {
-    "note": "全部挂 /app/**（MEMBER 鉴权边界）；/app/login 与 /app/register 已在 WebMvcConfig 放行，/app/member/me 不放行（需登录）",
+    "note": "全部挂 /app/**（MEMBER 鉴权边界）；/app/login 与 /app/register 已在 WebMvcConfig 放行，/app/member/me 不放行（需登录）。v1.1 不改接口，仅改前端如何调用",
     "endpoints": [
       {
         "method": "POST",
         "path": "/app/login",
-        "auth": "无需登录（已放行）",
-        "request": "{ username: string, password: string }",
-        "response": "{ code:200, data:{ token: string, member:{ id, username, nickname, avatar, intro } } }",
-        "errors": [
-          "400 参数格式不合法（@Valid/@Pattern）",
-          "401 账号或密码错误（账号不存在与密码错同一句，避免枚举账号）",
-          "403 该账号已被封禁"
-        ]
+        "auth": "无需登录",
+        "request": "{ username, password }",
+        "response": "{ code:200, data:{ token, member:{ id, username, nickname, avatar, intro } } }",
+        "errors": ["400 参数格式不合法", "401 用户名或密码错误", "403 该账号已被封禁"]
       },
       {
         "method": "POST",
         "path": "/app/register",
-        "auth": "无需登录（已放行）",
-        "request": "{ username: string, password: string, nickname?: string }",
-        "response": "{ code:200, data:{ token: string, member:{...} } } —— 注册即登录，省一次往返",
-        "errors": [
-          "400 用户名已存在 / 格式不合法",
-          "409 可选：并发重名（DB unique 冲突统一转 400）"
-        ]
+        "auth": "无需登录",
+        "request": "{ username, password, nickname? }",
+        "response": "{ code:200, data:{ token, member:{...} } }（注册即登录）",
+        "errors": ["400 用户名已存在 / 格式不合法"]
       },
       {
         "method": "GET",
         "path": "/app/member/me",
         "auth": "MEMBER（不放行）",
-        "request": "-",
         "response": "{ code:200, data:{ id, username, nickname, avatar, intro } }",
-        "errors": [
-          "401 未登录/令牌过期",
-          "403 账号已被封禁（登录后又被封的兜底）"
-        ]
+        "errors": ["401 未登录/令牌过期", "403 账号已被封禁"]
       }
     ]
   },
-  "mechanism": {
-    "sessionSourceOfTruth": {
-      "file": "simple-template-f-{user,admin}/src/utils/session.ts（两端同源副本）",
-      "shape": "{ token: string, member: MemberInfo | null }",
-      "persistence": "localStorage：键沿用现有 'token'（request.ts 不改），成员信息另存 'member_info'",
-      "reactive": "模块级 reactive(...)，两端共用；Vue 组件订阅它即可响应式",
-      "methods": [
-        "readSession() / saveSession(token, member) / clearSession()",
-        "login(username, password) —— 调 POST /app/login 并落库",
-        "register(username, password, nickname?) —— 调 POST /app/register 并落库",
-        "loadMe() —— 有 token 时调 GET /app/member/me 校验并刷新成员信息；401/403 则 clearSession",
-        "isLoggedIn() / currentMemberId()"
-      ]
-    },
-    "memberStore": {
-      "file": "simple-template-f-user/src/store/memberStore.ts",
-      "role": "session.ts 的 Pinia 外观：暴露响应式的 token/member/isLoggedIn/currentMemberId，供后续个人主页、发帖等页面消费",
-      "startup": "App.vue onMounted 里若 session 有 token 则 await memberStore.loadMe()"
-    },
-    "graphHostWiring": {
-      "file": "simple-template-f-user/src/App.vue",
-      "changes": [
-        "isLoggedIn: () => session.isLoggedIn()",
-        "currentMemberId: () => session.readSession().member?.id ?? null",
-        "logout: () => session.clearSession()"
-      ]
-    },
-    "tokenPersistenceForGraphLogin": {
-      "problem": "act.login 原子只写引擎内存 state.session.token，走 preset.login 的组合流登录后不落盘",
-      "solution": "GraphHost 增加可选回调 onLoginSuccess(data)；atomExecutors 的 apiAtom 在 savesToken 分支写完 state.session.token 后调用 host.onLoginSuccess?.(data)；App.vue 把它接到 session.saveSession",
-      "blastRadius": "改动落在两端同源 src/logic（types.ts + atomExecutors.ts），必须跑 npm run test:logic + 两端 vue-tsc -b --force + 两端 vite build"
-    },
-    "builtinComponents": {
-      "files": [
-        "simple-template-f-{user,admin}/src/blocks/builtin/LoginForm.vue",
-        "simple-template-f-{user,admin}/src/blocks/builtin/RegisterForm.vue",
-        "simple-template-f-{user,admin}/src/blocks/builtinWidgets.ts（各加 2 条注册）"
-      ],
-      "behavior": [
-        "渲染：标题（可配）＋用户名/密码输入框（注册含昵称）＋提交按钮＋『去注册/去登录』互跳链接",
-        "提交：调 session.login/register；成功按 node.content.redirectTo（缺省 /）跳转；失败 toast 后端 message",
-        "interactive=true（管理端画布/调试预览）：不提交，点击冒泡给画布选中该节点",
-        "输入框的值不进引擎：自包含路线下不需要 data.componentValue"
-      ],
-      "contentSchema": ["title", "submitText", "usernamePlaceholder", "passwordPlaceholder", "nicknamePlaceholder", "redirectTo", "showRegisterLink", "agreeText"],
-      "styleSchema": ["width", "maxWidth", "align", "padding", "backgroundColor", "radius", "boxShadow", "gap", "textColor"]
-    },
-    "multiPageDelivery": {
-      "backendFiles": ["dto/SiteBundleVO.java", "service/impl/SiteServiceImpl.java", "dto/PageTreeVO.java"],
-      "v2Shape": "{ theme, storage, presets, pages: [ { pageKey, pageName, routePath, isHome, nodes, flows } ] }",
-      "presets": "取各页 flows 引用到的预设并集（含传递闭包），去重后仍按 'code@version' 键下发",
-      "onlyEnabled": "只下发 status=1 的页与其 status=1 的 flows",
-      "frontendFiles": ["simple-template-f-user/src/types/site.ts", "src/store/siteStore.ts", "src/App.vue", "src/router/index.ts", "src/views/PageView.vue（新）"],
-      "routeStrategy": "静态 catch-all '/:pathMatch(.*)*' → PageView；PageView 按 route.path 从 siteStore.pages 里找 routePath 完全匹配的页渲染，找不到给 404 占位。/board/:id 仍保留为代码路由（需优于 catch-all 声明或单独匹配）",
-      "enterTrigger": "App.vue 的『进入页面』触发改为按当前路由所属页的 flows（PageView 挂载时触发，而非全局 onMounted）"
-    },
-    "seedChanges": [
-      "ui_component_type 加 2 行：login_form、register_form（is_builtin=1, category=business, render_kind=builtin:login_form / builtin:register_form）",
-      "ui_page 加 2 行：login(/login)、register(/register)，并给两页各插初版节点树（标题＋表单＋互跳链接）",
-      "ui_logic_node_type 的 act.navigate.options 增加 /login、/register",
-      "ui_preset 的 preset.profile / preset.interact：act.navigate.to 由 / 改 /login"
-    ],
-    "noCodeBoundary": {
-      "note": "答辩会被追问『哪些真零代码』，分级说清",
-      "trulyNoCode": [
-        "登录页/注册页的外观、文案、位置、互跳链接：管理端页面搭建器配置（ui_page + ui_node）",
-        "页面的路由地址：管理端新建页面时填 route_path，无需改前端路由表",
-        "站点主题色/Logo/站点名对表单外观的影响：走 --site-* 变量，登录表单沿用"
-      ],
-      "stillNeedsCode": [
-        "表单控件本身（builtin:login_form 是代码实现的业务组件，只开放标题/文案/跳转等属性）",
-        "登录/注册接口与鉴权（新能力，必须写后端）",
-        "catch-all 路由与 PageView（一次性地基，之后加页面不再改代码）"
-      ]
-    }
-  },
   "commitPlan": [
     {
+      "seq": 0,
+      "title": "docs(login): 设计文档升 v1.1",
+      "scope": "用户端登录注册-搭建方案设计.json",
+      "verify": "文档本身"
+    },
+    {
       "seq": 1,
-      "title": "feat(app-auth): 玩家登录注册接口与 Member 域",
-      "scope": "backend：Member/MemberMapper/AppAuthController/AppMemberController/AppAuthService + DTO",
-      "verify": "JDK21 编译 + 起服务 curl POST /app/login（player1/member123 得 token）+ GET /app/member/me 带/不带 token 分别 200/401 + POST /app/register 重名返回 400"
+      "title": "feat(app-form-kit): 输入/表单基础组件 + 组件值注册表 + 属性库补 key",
+      "scope": "两端 src/blocks/componentValues.ts（新）、NodeRenderer（input/form 分支、buttonType）、App.vue（componentValue 接线 + 换页清理）；后端 ComponentPropertyRegistry（删 7 个业务组件专用 key、加 5 个表单 key）+ UiComponentTypeServiceImpl.RENDER_KINDS；管理端 propertyMeta.ts（同上 + RENDER_KINDS）",
+      "verify": "JDK21 编译 + 两端 vue-tsc -b --force + 两端 vite build + 管理端接口回存含 input/form 的节点树（code=200）"
     },
     {
       "seq": 2,
-      "title": "feat(app-session): 两端同源 session.ts + 用户端 memberStore + graphHost 收口",
-      "scope": "两端 utils/session.ts、用户端 store/memberStore.ts、App.vue、src/logic 的 onLoginSuccess",
-      "verify": "npm run test:logic（23 条）+ 两端 vue-tsc -b --force + 两端 vite build"
-    },
-    {
-      "seq": 3,
-      "title": "feat(app-login-ui): 登录/注册业务组件 + 组件库与页面种子",
-      "scope": "两端 blocks/builtin/{LoginForm,RegisterForm}.vue + builtinWidgets.ts + sql 增量（组件库 2 行 + 页面 2 页与节点）",
-      "verify": "两端类型检查 + 构建 + 重跑 sql 后管理端能看到 login/register 页并拖出表单"
-    },
-    {
-      "seq": 4,
-      "title": "feat(app-routing): /app/site/config v2 多页下发 + catch-all 路由 + PageView",
-      "scope": "SiteBundleVO/SiteServiceImpl + 用户端 types/site.ts、siteStore、router、views/PageView.vue + 预设 to 修正",
-      "verify": "curl /app/site/config 看 pages 结构 + 两端构建 + 用户端首页与 /login 都能渲染（浏览器点击由用户手工验）"
+      "title": "feat(app-login-pages): 登录/注册页改基础组件组合 + 页面图与注册预设 + 删除两个业务组件",
+      "scope": "两端删 blocks/builtin/{LoginForm,RegisterForm}.vue 与注册表条目；utils/session.ts 删 login/register；sql/ui_login.sql 重写（组件库加 input/form、删 login_form/register_form、页面节点树重组、新增 preset.register、新增两页的 submit 图）",
+      "verify": "重跑 SQL + curl /app/site/config 看新节点树与 flows（含 preset.register 下发）+ 两端构建；浏览器点击由用户手工验"
     }
   ],
   "verificationPolicy": {
     "automated": [
       "JDK21 mvn -B -DskipTests clean compile",
-      "npm run test:logic（仅改动 src/logic 时）",
-      "两端 npx vue-tsc -b --force 与 vite build",
-      "curl 接口（登录/注册/me/站点配置）"
+      "两段 vue-tsc -b --force 与 vite build",
+      "curl /app/site/config 检查 nodes 与 flows",
+      "管理端接口整树回存（验证新增属性 key 过白名单）"
     ],
-    "manual": "浏览器点击级验证（打开 /login 登录、页头显示用户、退出、注册重名提示）由用户手工点，符合既有分工",
-    "note": "本项目无后端 src/test 用例习惯；新增接口以 curl 实测为准"
+    "manual": "浏览器点击级验证（打开 /login 输入并登录、回车提交、页头显示用户、退出、注册重名提示、管理端改输入框样式后用户端生效）由用户手工点",
+    "note": "本次不改 src/logic（on.submit / data.componentValue / preset 展开都是既有实现），因此不需要跑 test:logic；若实现中发现必须改 src/logic，则补跑 25 条回归"
   },
   "risks": [
-    "破坏性变更：/app/site/config v2 会让旧结构的前端读取失败——所以第 4 个提交必须两端同批改（后端与用户端一起），不能只改一边",
-    "catch-all 路由与 /board/:id 的匹配优先级要确证（先声明具体路由再声明 catch-all；或用 meta 判定），否则 /board/:id 被 PageView 吃掉",
-    "两端同源文件的副本一致性靠人工——新增/修改 builtinWidgets.ts、src/logic、utils/session.ts 时必须两端同步，否则管理端画布预览与用户端实际行为分叉",
-    "封禁用户已登录的场景：令牌仍有效，需在 /app/member/me 与需要会员的接口里兜底校验 status",
-    "注册即登录返回 token 需要写入 session，注意与登录共用同一条落库逻辑"
+    "删除 login_form/register_form 组件库行后，若库里还有页面引用了它们，页面会渲染成占位——本设计同时把 login/register 两页的节点树整棵替换，需核对没有其他页面引用（当前仅这两页）",
+    "组件值注册表是全局单例：不同页面若有同 id 节点不会冲突（节点 id 全局唯一），但换页必须清理，否则会读到上一页的残留值",
+    "input 组件的显示值放本地 ref、值同步进注册表——注册表只是『图读值』的通道，不要反过来用注册表驱动输入框（会让输入法组合输入中断）",
+    "buttonType=submit 时必须跳过『点击组件』的图与 onClickAction，否则一次点击会既提交又走点击图",
+    "预设内部失败不会作为『失败出参』传出（引擎对预设节点仍记 ok），所以成功判定只能用『结果为空即失败』；将来若加『按动作结果分支』的原子应替换掉这个绕法"
   ],
   "openDecisions": [
     {
       "id": "O1",
-      "topic": "页面运行环境与登录页的渲染容器",
-      "question": "用户端 App.vue 目前把页头/页脚写死在 views/home/index.vue 里；登录页若复用首页的壳，会带上『首页』语义。要不要把页头/页脚抽成独立组件/搭建节点，让登录页也能有页头（含未登录/已登录两态）？",
-      "recommended": "本次先让 PageView 只渲染页面树，不套首页壳；页头显示当前用户留到第 5 层（可选提交）",
-      "impact": "影响 layer 5 是否本次做；不影响前 4 个提交"
+      "topic": "站点外壳（页头/页脚）是否也组件化",
+      "question": "页头/页脚目前写死在 views/home/index.vue 里（登录入口在其中），登录页走 PageView 没有页头。是否把页头也做成搭建器里的组件/页面？",
+      "recommended": "本次不动；登录/注册页自带完整表单与互跳链接，能独立使用",
+      "impact": "只影响观感一致性，不影响功能"
     },
     {
       "id": "O2",
       "topic": "是否补 pit.md 的 01/02 玩家注册登录用例表",
       "question": "字段校验、用户名重复、封禁提示等验收条件目前无需求依据。",
-      "recommended": "开工不受阻（本设计已按 member 表结构与 admin 同构定规则）；建议本次一并补表，把 decisions.tail[6] 的规则写成可选流程",
-      "impact": "只影响文档与验收口径，不影响实现"
+      "recommended": "开工不受阻（本设计已按 member 表结构与 admin 同构定规则）；建议一并补表",
+      "impact": "只影响文档与验收口径"
     },
     {
       "id": "O3",
-      "topic": "注册是否需要昵称必填 / 用户名唯一提示文案",
-      "question": "act.register 的 nickname 是可选的，member.nickname 也允许空。是否缺省用 username 填充？",
-      "recommended": "缺省 nickname = username（避免界面上出现无昵称用户）",
-      "impact": "小，实现时按推荐执行，用户如有异议再改"
+      "topic": "输入框是否要做失焦校验（字段级实时提示）",
+      "question": "现在校验在提交时由逻辑图统一做，输入过程中不提示。",
+      "recommended": "本次不做；需要时可在图上挂 on.blur 之类的触发器（需要新原子）",
+      "impact": "影响的是体验，不影响功能"
     }
   ],
   "outOfScope": [
     "图形验证码（管理端登录的 13 号表要求，但项目无 Redis；登录/注册本次都不做）",
-    "第三方登录（QQ/微信/GameCenter 之类）",
-    "忘记密码 / 邮箱、手机验证",
-    "玩家侧其他接口（/app/member/my-posts、my-favorites、progress、帖子/评论/点赞等）——归各自模块（03–12）",
-    "通用输入类组件（input/textarea）与 preset.login 的图编排落地——本方案走自包含业务组件，这两块明确不做",
-    "登录页/注册页的美术稿级还原（外观由搭建器配，不复刻米游社）"
+    "第三方登录、忘记密码 / 邮箱手机验证",
+    "通用富文本 / textarea（发帖模块再补）",
+    "字段级实时校验与 on.blur 类触发器",
+    "玩家侧其他接口（my-posts / my-favorites / progress 等）——归各自模块 03–12",
+    "站点外壳（页头/页脚）的组件化"
   ]
 }
