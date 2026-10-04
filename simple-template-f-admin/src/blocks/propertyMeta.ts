@@ -120,6 +120,10 @@ export const BEHAVIOR_GROUP: PropertyGroup = {
     properties: [
         { key: "emit", label: "触发信号名", type: "text", maxLength: 40 },
         { key: "onClickAction", label: "点击动作", type: "jsonObject" },
+        { key: "overlayClosable", label: "点击遮罩关闭", type: "bool" },
+        { key: "showClose", label: "显示关闭按钮", type: "bool" },
+        { key: "animation", label: "弹窗动画", type: "enum", options: ["fade", "zoom", "slide-down"] },
+        { key: "zIndex", label: "层级", type: "number", min: 1000, max: 9999 },
     ],
 };
 

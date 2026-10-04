@@ -125,7 +125,12 @@
                                     :key="key"
                                     :label="propertyLabel(key)"
                                 >
-                                    <PropertyControl v-model="selectedNode.behavior[key]" :meta="metaOf(key)" />
+                                    <ActionControl
+                                        v-if="key === 'onClickAction'"
+                                        v-model="selectedNode.behavior[key]"
+                                        :node-options="actionTargetOptions"
+                                    />
+                                    <PropertyControl v-else v-model="selectedNode.behavior[key]" :meta="metaOf(key)" />
                                 </el-form-item>
                             </el-form>
                         </el-tab-pane>
@@ -156,11 +161,13 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, provide, reactive, ref } from "vue";
 import { ElMessage } from "element-plus";
 import NodeRenderer from "../../../blocks/NodeRenderer.vue";
 import PropertyControl from "../../../components/PropertyControl.vue";
+import ActionControl, { type ActionTargetOption } from "../../../components/ActionControl.vue";
 import { CATEGORY_LABELS, PROPERTY_MAP, metaOf } from "../../../blocks/propertyMeta";
+import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockAction } from "../../../blocks/blockRuntime";
 import {
     createPage,
     listComponentTypes,
@@ -197,6 +204,20 @@ const pageForm = reactive({ pageKey: "", pageName: "", routePath: "" });
 
 let nextTempId = -1;
 
+/** 画布内共享一个运行时：编辑态点击只选中，真正执行动作交给用户端；这里保留提示/滚动便于预览 */
+provide(
+    BLOCK_RUNTIME_KEY,
+    createBlockRuntime({
+        navigate: (url) => ElMessage.info(`预览模式：不实际跳转（${url}）`),
+        toast: (message, type) => ElMessage({ message, type: (type ?? "info") as never }),
+        scrollTo: (id) => {
+            document
+                .querySelector(`[data-node-id="${id}"]`)
+                ?.scrollIntoView({ behavior: "smooth", block: "center" });
+        },
+    }),
+);
+
 const groupedTypes = computed(() => {
     const map: Record<string, ComponentType[]> = {};
     for (const type of types.value) {
@@ -213,6 +234,18 @@ const selectedType = computed(() => {
     const node = selectedNode.value;
     return node ? types.value.find((type) => type.typeCode === node.typeCode) ?? null : null;
 });
+
+/** 动作的目标下拉项：标出哪些是弹窗组件，供"打开弹窗"过滤使用 */
+const actionTargetOptions = computed<ActionTargetOption[]>(() =>
+    nodes.value.map((node) => {
+        const type = types.value.find((item) => item.typeCode === node.typeCode);
+        return {
+            value: node.id,
+            label: `${type?.typeName ?? node.typeCode}「${node.nodeName || node.id}」`,
+            isModal: type?.renderKind === "modal",
+        };
+    }),
+);
 
 /** 组装成 NodeRenderer 需要的树，并把组件类型默认值合并进来做预览 */
 const canvasTree = computed<UiNode[]>(() => buildTree(null));
@@ -364,6 +397,31 @@ function moveSelected(offset: number) {
     swapped.sort = temp;
 }
 
+/** 把动作里指向"临时 id"的目标回填为真实 id；目标已被删除则清空 */
+function remapActionTargets(tree: UiNode[]) {
+    const tempToReal = new Map<number, number>();
+    const collect = (list: UiNode[]) => {
+        for (const item of list) {
+            if (typeof item.clientId === "number") {
+                tempToReal.set(item.clientId, item.id);
+            }
+            collect(item.children ?? []);
+        }
+    };
+    collect(tree);
+    if (!tempToReal.size) {
+        return;
+    }
+    for (const node of nodes.value) {
+        const action = node.behavior?.onClickAction as BlockAction | undefined;
+        const target = action?.target;
+        if (typeof target !== "number" || target >= 0) {
+            continue;
+        }
+        node.behavior.onClickAction = { ...action, target: tempToReal.get(target) ?? null };
+    }
+}
+
 async function handleSave() {
     if (!currentPageId.value) {
         return;
@@ -381,7 +439,9 @@ async function handleSave() {
     }));
     saving.value = true;
     try {
-        nodes.value = flatten(await saveNodes(currentPageId.value, payload));
+        const tree = await saveNodes(currentPageId.value, payload);
+        nodes.value = flatten(tree);
+        remapActionTargets(tree);
         ElMessage.success("保存成功，用户端刷新后按新配置渲染");
     } catch {
         // 失败原因由请求拦截器统一提示

@@ -73,6 +73,8 @@ export interface UiNode {
     content: Record<string, any>
     behavior: Record<string, any>
     remark: string | null
+    /** 整树保存后回传的"临时 id"（负数）：仅本次新增的节点有值，用于回填动作目标 */
+    clientId?: number | null
     children: UiNode[]
 }
 
