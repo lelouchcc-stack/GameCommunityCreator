@@ -25,10 +25,19 @@
     max-width: 100%;
 }
 
+/* 按钮：外层节点是盒子（背景/边框/圆角/内边距/字号颜色都配在它上面），
+   内层 <button> 剥成透明的文字载体——此前只去了边框，
+   浏览器默认灰底仍在（页面上一直还没有按钮节点，所以没暴露出来） */
 .ui-button {
     border: none;
+    padding: 0;
+    margin: 0;
+    background: transparent;
     line-height: 1.2;
-    font-family: inherit;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    cursor: inherit;
 }
 
 .ui-divider {
