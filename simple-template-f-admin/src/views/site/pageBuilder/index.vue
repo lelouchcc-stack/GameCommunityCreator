@@ -422,6 +422,18 @@ function remapActionTargets(tree: UiNode[]) {
     }
 }
 
+/** 未填的项不提交：清空某项只表示"跟随组件默认值"，不该往库里写空键 */
+function compact(source: Record<string, any>): Record<string, any> {
+    const result: Record<string, any> = {};
+    for (const [key, value] of Object.entries(source ?? {})) {
+        if (value === undefined || value === null || value === "") {
+            continue;
+        }
+        result[key] = value;
+    }
+    return result;
+}
+
 async function handleSave() {
     if (!currentPageId.value) {
         return;
@@ -433,9 +445,9 @@ async function handleSave() {
         nodeName: node.nodeName,
         sort: node.sort,
         visible: node.visible,
-        styleJson: node.style,
-        contentJson: node.content,
-        behaviorJson: node.behavior,
+        styleJson: compact(node.style),
+        contentJson: compact(node.content),
+        behaviorJson: compact(node.behavior),
     }));
     saving.value = true;
     try {

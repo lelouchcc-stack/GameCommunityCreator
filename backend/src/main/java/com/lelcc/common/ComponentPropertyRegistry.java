@@ -25,7 +25,11 @@ public final class ComponentPropertyRegistry {
     public static final String TYPE_JSON_OBJECT = "jsonObject";
 
     private static final Pattern LENGTH = Pattern.compile("^(auto|0|\\d+(\\.\\d+)?(px|%|rem|em|vh|vw))$");
-    private static final Pattern COLOR = Pattern.compile("^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|var\\(--site-[a-z0-9-]+\\))$");
+    /** 允许 3/6/8 位 hex 与 rgb()/rgba()：颜色选择器开透明度后产出的就是这些形态 */
+    private static final Pattern COLOR = Pattern.compile(
+            "^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}"
+                    + "|rgba?\\([0-9.,%\\s]+\\)"
+                    + "|var\\(--site-[a-z0-9-]+\\))$");
     private static final Pattern URL = Pattern.compile("^(https?://|/).+");
     private static final Pattern BINDING = Pattern.compile("^(\\$ref\\.[A-Za-z0-9_]+\\.[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)?|\\$runtime\\.[A-Za-z0-9_.]+)$");
     /** 危险字符：出现即拒绝，避免 CSS/HTML 注入 */
@@ -131,6 +135,10 @@ public final class ComponentPropertyRegistry {
             return null;
         }
         String text = value instanceof String s ? s : null;
+        if (text != null && text.isBlank()) {
+            // 空串＝"未设置"：属性面板清空某项时会送出空值，不应因此拦住整次保存
+            return null;
+        }
         if (text != null && DANGER.matcher(text).find()) {
             return spec.label() + "包含不允许的字符";
         }

@@ -11,7 +11,7 @@
             clearable
             placeholder="跟随默认"
             style="width: 100%"
-            @update:model-value="(v: any) => emit('update:modelValue', v ?? '')"
+            @update:model-value="(v: any) => emit('update:modelValue', v ?? undefined)"
         >
             <el-option v-for="option in meta.options" :key="option" :label="option" :value="option" />
         </el-select>
@@ -28,7 +28,7 @@
             v-else-if="meta.type === 'color'"
             :model-value="modelValue || null"
             show-alpha
-            @update:model-value="(v: any) => emit('update:modelValue', v ?? '')"
+            @update:model-value="(v: any) => emit('update:modelValue', v ?? undefined)"
         />
         <el-input
             v-else-if="meta.type === 'jsonArray' || meta.type === 'jsonObject'"
