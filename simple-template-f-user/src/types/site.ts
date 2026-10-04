@@ -1,3 +1,5 @@
+import type { UiNode } from "./uiBuilder";
+
 /** 与后端 SiteConfigVO 对应 */
 export interface SiteConfig {
     siteName: string
@@ -8,19 +10,16 @@ export interface SiteConfig {
     darkMode: boolean
 }
 
-/** 与后端 HomeModuleVO 对应 */
-export interface HomeModule {
-    id: number
-    moduleType: string
-    moduleName: string
-    sort: number
-    /** 1启用 0停用 */
-    enabled: number
-    configJson: string | null
+/** 与后端 PageTreeVO 对应：页面信息 + 组件节点树 */
+export interface PageTree {
+    pageKey: string
+    pageName: string
+    routePath: string | null
+    nodes: UiNode[]
 }
 
-/** 与后端 SiteBundleVO 对应：用户端首屏一次拿全主题与首页模块 */
+/** 与后端 SiteBundleVO 对应：用户端首屏一次拿全主题与首页组件树 */
 export interface SiteBundle {
     theme: SiteConfig
-    homeModules: HomeModule[]
+    homePage: PageTree
 }

@@ -108,11 +108,7 @@ public class SiteServiceImpl implements SiteService {
 
     @Override
     public SiteBundleVO userBundle() {
-        // homeModules 为过渡字段，用户端首页改用 homePage 后删除
-        List<HomeModuleVO> enabled = listModules().stream()
-                .filter(module -> module.enabled() != null && module.enabled() == ENABLED)
-                .toList();
-        return new SiteBundleVO(getConfig(), pageService.userTree(HOME_PAGE_KEY), enabled);
+        return new SiteBundleVO(getConfig(), pageService.userTree(HOME_PAGE_KEY));
     }
 
     private void upsert(String key, String value) {

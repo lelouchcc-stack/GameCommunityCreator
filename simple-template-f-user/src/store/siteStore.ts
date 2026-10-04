@@ -2,7 +2,7 @@ import { defineStore } from "pinia";
 import { ref } from "vue";
 import { getSiteBundle } from "../api/site";
 import { applySiteTheme } from "../utils/theme";
-import type { HomeModule, SiteConfig } from "../types/site";
+import type { PageTree, SiteConfig } from "../types/site";
 
 const THEME_CACHE_KEY = "site_theme";
 
@@ -18,20 +18,20 @@ export function readCachedTheme(): SiteConfig | null {
 
 const useSiteStore = defineStore("site", () => {
     const theme = ref<SiteConfig | null>(null);
-    /** 后端只返回启用的模块且已按 sort 升序，前端不再排序 */
-    const homeModules = ref<HomeModule[]>([]);
+    /** 后端只返回启用页面的可见节点，且样式已与组件默认值合并，前端直接渲染 */
+    const homePage = ref<PageTree | null>(null);
     const loaded = ref(false);
 
     async function loadConfig() {
         const bundle = await getSiteBundle();
         theme.value = bundle.theme;
-        homeModules.value = bundle.homeModules;
+        homePage.value = bundle.homePage;
         applySiteTheme(bundle.theme, { title: true, favicon: true });
         localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(bundle.theme));
         loaded.value = true;
     }
 
-    return { theme, homeModules, loaded, loadConfig };
+    return { theme, homePage, loaded, loadConfig };
 });
 
 export default useSiteStore;

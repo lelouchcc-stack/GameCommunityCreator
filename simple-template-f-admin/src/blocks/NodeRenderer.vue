@@ -7,8 +7,8 @@
         :data-node-id="node.id"
         @click.stop="onClick"
     >
-        <!-- 业务组件：随对应业务模块接入后替换为真实组件 -->
-        <div v-if="node.isBuiltin === 1" class="ui-placeholder">
+        <!-- 业务组件：随对应业务模块接入后替换为真实组件；占位仅在管理端编辑态显示 -->
+        <div v-if="node.isBuiltin === 1 && interactive" class="ui-placeholder">
             {{ node.typeName || node.typeCode }}（业务组件，待接入）
         </div>
 
