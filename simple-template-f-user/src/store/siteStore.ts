@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { ref } from "vue";
 import { getSiteBundle } from "../api/site";
+import { resolveAssetUrl, setAssetBaseUrl } from "../utils/asset";
 import { applySiteTheme } from "../utils/theme";
 import type { LogicGraph, PageTree, SiteConfig } from "../types/site";
 
@@ -27,12 +28,16 @@ const useSiteStore = defineStore("site", () => {
 
     async function loadConfig() {
         const bundle = await getSiteBundle();
-        theme.value = bundle.theme;
+        // 存储基址：页面节点与站点 Logo 里存的可能是 objectKey，渲染前要能现拼成地址
+        setAssetBaseUrl(bundle.storage?.publicBaseUrl);
+        // Logo 在这里就解析成可访问地址：页头图片、favicon 与本地缓存都直接可用
+        const resolvedTheme: SiteConfig = { ...bundle.theme, logo: resolveAssetUrl(bundle.theme.logo) };
+        theme.value = resolvedTheme;
         homePage.value = bundle.homePage;
         flows.value = bundle.flows ?? {};
         presets.value = bundle.presets ?? {};
-        applySiteTheme(bundle.theme, { title: true, favicon: true });
-        localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(bundle.theme));
+        applySiteTheme(resolvedTheme, { title: true, favicon: true });
+        localStorage.setItem(THEME_CACHE_KEY, JSON.stringify(resolvedTheme));
         loaded.value = true;
     }
 

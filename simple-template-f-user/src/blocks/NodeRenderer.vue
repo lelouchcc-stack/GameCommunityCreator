@@ -93,6 +93,7 @@
 import { computed, inject } from "vue";
 import type { UiNode } from "../types/uiBuilder";
 import { toClasses, toCss } from "./styleRegistry";
+import { resolveAssetUrl } from "../utils/asset";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockAction, type BlockRuntime } from "./blockRuntime";
 import { GRAPH_RUNTIME_KEY, type GraphBridge } from "./graphBridge";
 
@@ -127,7 +128,8 @@ function textOf(value: unknown): string {
 
 function urlOf(value: unknown): string {
     const resolved = bound(value);
-    return typeof resolved === "string" ? resolved : "";
+    // 内容里存的是对象存储的 key 时，按存储基址现拼成可访问地址
+    return typeof resolved === "string" ? resolveAssetUrl(resolved) : "";
 }
 
 /** 可见条件（visibleWhen）也是个绑定：解析不出来时先当可见，免得数据没回来整块闪掉 */

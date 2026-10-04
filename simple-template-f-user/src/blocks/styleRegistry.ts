@@ -6,6 +6,8 @@
  * - var(--site-xxx) 会补上兜底色，管理端没注入中性色 token 时也不会失效
  * - 质感/阴影/悬停/点击效果走预置类名（ui-blocks.css），其余走内联样式
  */
+import { resolveAssetUrl } from "../utils/asset";
+
 type StyleMap = Record<string, any>
 
 const TOKEN_FALLBACK: Record<string, string> = {
@@ -38,7 +40,9 @@ function urlValue(value: unknown): string | undefined {
     if (typeof value !== "string" || !value) {
         return undefined;
     }
-    return `url("${value}")`;
+    // 值可能是对象存储的 key：先按存储基址现拼成可访问地址再交给 CSS
+    const url = resolveAssetUrl(value);
+    return url ? `url("${url}")` : undefined;
 }
 
 /** 内联样式映射：属性 key -> CSS 属性名 */

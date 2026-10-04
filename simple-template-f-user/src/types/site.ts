@@ -22,12 +22,20 @@ export interface PageTree {
 import type { LogicGraph } from "../logic/types";
 export type { LogicGraph };
 
+/** 与后端 StorageConfigVO 对应：图片存在哪个存储、对外基址是什么 */
+export interface StorageConfig {
+    provider: string
+    publicBaseUrl: string
+}
+
 /**
  * 与后端 SiteBundleVO 对应：用户端首屏一次拿全主题、首页组件树、首页逻辑图、
  * 以及图里引用到的预设定义（键为 "presetCode@version"，供执行器展开预设节点）。
+ * storage 用于把页面里存的 objectKey 现拼成图片地址。
  */
 export interface SiteBundle {
     theme: SiteConfig
+    storage: StorageConfig
     homePage: PageTree
     flows: Record<string, LogicGraph>
     presets: Record<string, LogicGraph>
