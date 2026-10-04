@@ -147,10 +147,10 @@ INSERT INTO ui_component_type
  'Star', 22, 1),
 ('board_nav', '板块导航(业务)', 'business', 'builtin:board_nav', 0, 1,
  '["padding","backgroundColor","radius"]',
- '[]',
+ '["limit","columns","showCover","showIntro"]',
  '[]',
  '{"padding":"16px","backgroundColor":"var(--site-bg-card)","radius":"8px"}',
- '{}',
+ '{"limit":8,"columns":3,"showCover":true,"showIntro":true}',
  'Menu', 23, 1)
 ON DUPLICATE KEY UPDATE
   type_name = VALUES(type_name),

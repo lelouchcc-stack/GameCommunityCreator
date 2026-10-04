@@ -13,6 +13,8 @@ import com.lelcc.service.BoardService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class BoardServiceImpl implements BoardService {
 
@@ -30,6 +32,11 @@ public class BoardServiceImpl implements BoardService {
     public PageResult<BoardVO> page(String name, Integer status, long pageNum, long pageSize) {
         Page<BoardVO> page = new Page<>(pageNum, pageSize);
         return PageResult.of(boardMapper.selectBoardPage(page, name, status));
+    }
+
+    @Override
+    public List<BoardVO> listOpen() {
+        return boardMapper.selectOpenList();
     }
 
     @Override

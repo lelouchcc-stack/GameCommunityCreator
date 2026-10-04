@@ -8,6 +8,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 @Mapper
 public interface BoardMapper extends BaseMapper<Board> {
 
@@ -35,4 +37,18 @@ public interface BoardMapper extends BaseMapper<Board> {
     IPage<BoardVO> selectBoardPage(IPage<BoardVO> page,
                                    @Param("name") String name,
                                    @Param("status") Integer status);
+
+    /**
+     * 用户端板块导航用：只取开放板块，按展示顺序返回。
+     * 不分页——板块数量有限，首页一次拿全。
+     */
+    @Select("""
+            SELECT b.id, b.name, b.intro, b.cover, b.sort, b.status,
+                   b.current_version_id, v.version_no AS current_version_no, b.create_time
+            FROM board b
+            LEFT JOIN board_version v ON v.id = b.current_version_id
+            WHERE b.status = 1
+            ORDER BY b.sort, b.id
+            """)
+    List<BoardVO> selectOpenList();
 }

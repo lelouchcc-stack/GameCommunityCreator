@@ -91,6 +91,9 @@ public final class ComponentPropertyRegistry {
         putEnum("imageFit", "图片填充", "cover", "contain", "fill");
         put("icon", TYPE_IMAGE, "图标地址");
         putRange("limit", "数量", 1, 20);
+        putRange("columns", "列数", 1, 4);
+        put("showCover", TYPE_BOOL, "显示封面");
+        put("showIntro", TYPE_BOOL, "显示简介");
         put("autoplay", TYPE_BOOL, "自动播放");
         putRange("interval", "播放间隔", 1000, 10000);
         put("items", TYPE_JSON_ARRAY, "结构数组");
