@@ -5,6 +5,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,21 @@ public final class UiJsonUtils {
         }
         JSONObject obj = JSONUtil.parseObj(json);
         return new LinkedHashMap<>(obj);
+    }
+
+    /** 值字符串（JSON 数组）-> Map 列表，空串得空列表；非对象的元素跳过 */
+    public static List<Map<String, Object>> toMapList(String json) {
+        if (StrUtil.isBlank(json)) {
+            return List.of();
+        }
+        JSONArray array = JSONUtil.parseArray(json);
+        List<Map<String, Object>> result = new ArrayList<>(array.size());
+        for (Object item : array) {
+            if (item instanceof JSONObject obj) {
+                result.add(new LinkedHashMap<>(obj));
+            }
+        }
+        return result;
     }
 
     public static String toJson(Object value) {

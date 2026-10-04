@@ -247,6 +247,9 @@
       { "key": "listBoard", "label": "板块列表" },
       { "key": "listComment", "label": "评论列表" },
       { "key": "listNotice", "label": "公告列表" },
+      { "key": "listBoardVersion", "label": "版本列表", "note": "板块详情的输出；原 portTypes 名单漏了它，补上以覆盖原子实际用到的类型" },
+      { "key": "listProgressStage", "label": "进度阶段列表", "note": "同上，板块详情的输出" },
+      { "key": "listReport", "label": "举报列表", "note": "同上，我的举报的输出" },
       { "key": "pageInfo", "label": "分页信息", "fields": ["page", "size", "total", "pages"] },
       { "key": "result", "label": "动作结果", "fields": ["ok", "message", "data"] },
       { "key": "any", "label": "任意", "note": "仅少数透传原子使用" }
