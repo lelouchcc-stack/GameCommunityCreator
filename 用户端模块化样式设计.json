@@ -81,6 +81,7 @@
       { "typeCode": "divider", "typeName": "分割线", "category": "base", "renderKind": "divider", "isContainer": false, "isBuiltin": false, "stage": 1, "openProps": "width,borderWidth,borderStyle,borderColor,marginTop,marginBottom" },
       { "typeCode": "spacer", "typeName": "间距", "category": "base", "renderKind": "spacer", "isContainer": false, "isBuiltin": false, "stage": 1, "openProps": "height" },
       { "typeCode": "container", "typeName": "容器", "category": "layout", "renderKind": "container", "isContainer": true, "isBuiltin": false, "stage": 1, "openProps": "width,maxWidth,padding,marginTop,marginBottom,backgroundColor,backgroundImage,texture,radius,borderWidth,borderStyle,borderColor,boxShadow,flexDirection,justify,alignItems,gap,wrap" },
+      { "typeCode": "row", "typeName": "行", "category": "layout", "renderKind": "container", "isContainer": true, "isBuiltin": false, "stage": 2, "openProps": "width,maxWidth,padding,marginTop,marginBottom,backgroundColor,texture,radius,borderWidth,borderStyle,borderColor,boxShadow,flexDirection,justify,alignItems,gap,wrap", "note": "默认 flexDirection=row + wrap，同级从左到右排；行内排序按钮显示为「左移 / 右移」。页面根固定竖排，要横向排一行就加「行」" },
       { "typeCode": "card", "typeName": "卡片", "category": "layout", "renderKind": "container", "isContainer": true, "isBuiltin": false, "stage": 1, "openProps": "width,maxWidth,padding,marginTop,marginBottom,backgroundColor,texture,radius,boxShadow,hoverEffect,flexDirection,gap" },
       { "typeCode": "modal", "typeName": "弹窗", "category": "interactive", "renderKind": "modal", "isContainer": true, "isBuiltin": false, "stage": 2, "openProps": "width,height,padding,backgroundColor,texture,radius,boxShadow,overlayClosable,showClose,animation,zIndex,title" },
       { "typeCode": "carousel", "typeName": "轮播图", "category": "display", "renderKind": "carousel", "isContainer": false, "isBuiltin": false, "stage": 4, "openProps": "width,height,radius,marginBottom,autoplay,interval,items" },
@@ -98,7 +99,7 @@
     "valueTypes": [
       { "type": "length", "pattern": "^(auto|0|\\d+(\\.\\d+)?(px|%|rem|em|vh|vw))$", "defaultUnit": "px" },
       { "type": "number" },
-      { "type": "color", "pattern": "^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$", "allowEmptyMeansThemeToken": true },
+      { "type": "color", "pattern": "^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|rgba?\\([0-9.,%\\s]+\\)|var\\(--site-[a-z0-9-]+\\))$", "allowEmptyMeansThemeToken": true, "note": "后三种是颜色选择器开 show-alpha 后的常见产物；空串一律视为『未设置』" },
       { "type": "image", "pattern": "^(https?://|/).*" },
       { "type": "url", "pattern": "^(https?://|/).*" },
       { "type": "enum", "needsOptions": true },
