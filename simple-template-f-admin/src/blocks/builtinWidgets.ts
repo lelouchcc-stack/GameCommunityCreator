@@ -3,9 +3,15 @@
  * 未注册的 builtin:* 由 NodeRenderer 回落到占位，不会白屏。
  */
 import type { Component } from "vue";
+import BannerCarousel from "./builtin/BannerCarousel.vue";
 import BoardNav from "./builtin/BoardNav.vue";
+import HotPostList from "./builtin/HotPostList.vue";
+import NoticeBar from "./builtin/NoticeBar.vue";
 
 export const BUILTIN_WIDGETS: Record<string, Component> = {
+    "builtin:banner": BannerCarousel,
+    "builtin:notice": NoticeBar,
+    "builtin:hot_post": HotPostList,
     "builtin:board_nav": BoardNav,
 };
 

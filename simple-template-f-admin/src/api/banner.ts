@@ -29,6 +29,8 @@ export function deleteBanner(id: number) {
 }
 
 /** 用户端轮播用的展示中轮播图：匿名可读（后端已放行 /app/banner/list） */
+export type BannerItem = BannerSlide;
+
 export function listVisibleBanners() {
-    return http.get<BannerSlide[], BannerSlide[]>("/app/banner/list");
+    return http.get<BannerItem[], BannerItem[]>("/app/banner/list");
 }
