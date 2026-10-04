@@ -17,12 +17,6 @@ export interface MemberInfo {
     intro?: string | null
 }
 
-/** 后端 /app/login 与 /app/register 的统一返回（注册即登录，结构一致） */
-interface LoginResult {
-    token: string
-    member: MemberInfo
-}
-
 /** 令牌键沿用 'token'：utils/request.ts 与后端 AuthInterceptor 都认它 */
 const TOKEN_KEY = "token";
 const MEMBER_KEY = "member_info";
@@ -69,20 +63,6 @@ export function clearSession(): void {
 
 export function logout(): void {
     clearSession();
-}
-
-/** 玩家登录；成功即落盘 */
-export async function login(username: string, password: string): Promise<MemberInfo> {
-    const data = await http.post<LoginResult, LoginResult>("/app/login", { username, password });
-    saveSession(data.token, data.member);
-    return data.member;
-}
-
-/** 玩家注册；注册即登录，同样落盘 */
-export async function register(username: string, password: string, nickname?: string): Promise<MemberInfo> {
-    const data = await http.post<LoginResult, LoginResult>("/app/register", { username, password, nickname });
-    saveSession(data.token, data.member);
-    return data.member;
 }
 
 /** 用已存令牌换回最新成员信息；失败（过期/被封）就清掉登录态 */
