@@ -17,8 +17,10 @@
                     />
                 </el-select>
                 <el-button @click="pageDialogVisible = true">新建页面</el-button>
+                <el-button :disabled="!currentPageId" @click="openFlowEditor">逻辑编排</el-button>
                 <span class="page-builder__hint">
-                    左：组件库（点击加入选中容器，未选中则加到顶层）；中：画布（点击选中）；右：属性
+                    左：组件库（点击加入选中容器，未选中则加到顶层）；中：画布（点击选中）；右：属性；
+                    「逻辑编排」画这个页面的逻辑图
                 </span>
                 <el-button type="primary" :loading="saving" :disabled="!currentPageId" @click="handleSave">
                     保存
@@ -114,7 +116,12 @@
                                     :key="key"
                                     :label="propertyLabel(key)"
                                 >
-                                    <PropertyControl v-model="selectedNode.content[key]" :meta="metaOf(key)" />
+                                    <!-- 可绑定的字段多给一个"绑到图节点输出"的下拉，生成 $ref -->
+                                    <PropertyControl
+                                        v-model="selectedNode.content[key]"
+                                        :meta="metaOf(key)"
+                                        :bindings="BINDABLE_KEYS.has(key) ? flowOptions : undefined"
+                                    />
                                 </el-form-item>
                             </el-form>
                         </el-tab-pane>
@@ -139,6 +146,22 @@
                 <el-empty v-else description="在画布中选中一个组件" :image-size="60" />
             </el-card>
         </div>
+
+        <el-dialog
+            v-model="flowDialogVisible"
+            title="逻辑编排"
+            width="96%"
+            top="2vh"
+            destroy-on-close
+            class="page-builder__flow-dialog"
+        >
+            <FlowEditor
+                v-if="flowDialogVisible && currentPageId"
+                :page-id="currentPageId"
+                :page-nodes="flowEditorNodes"
+                @close="closeFlowEditor"
+            />
+        </el-dialog>
 
         <el-dialog v-model="pageDialogVisible" title="新建页面" width="440px">
             <el-form :model="pageForm" label-width="90px">
@@ -166,8 +189,10 @@ import { ElMessage } from "element-plus";
 import NodeRenderer from "../../../blocks/NodeRenderer.vue";
 import PropertyControl from "../../../components/PropertyControl.vue";
 import ActionControl, { type ActionTargetOption } from "../../../components/ActionControl.vue";
-import { CATEGORY_LABELS, PROPERTY_MAP, metaOf } from "../../../blocks/propertyMeta";
+import { CATEGORY_LABELS, BINDABLE_KEYS, PROPERTY_MAP, metaOf } from "../../../blocks/propertyMeta";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockAction } from "../../../blocks/blockRuntime";
+import { portsOfNode } from "../../../blocks/portSchema";
+import FlowEditor from "./FlowEditor.vue";
 import {
     createPage,
     listComponentTypes,
@@ -175,6 +200,7 @@ import {
     listPages,
     saveNodes,
 } from "../../../api/uiBuilder";
+import { listFlows, listLogicNodes, listPresets } from "../../../api/uiLogic";
 import type { ComponentType, NodePayload, PageVO, UiNode } from "../../../types/uiBuilder";
 
 /** 编辑态用扁平列表（与后端整树保存结构一致），渲染时再组装成树 */
@@ -201,6 +227,10 @@ const activeTab = ref("style");
 
 const pageDialogVisible = ref(false);
 const pageForm = reactive({ pageKey: "", pageName: "", routePath: "" });
+
+const flowDialogVisible = ref(false);
+/** 本页图里所有可绑定的输出端口，做成 "$ref.<节点>.<端口>" 供内容字段挑选 */
+const flowOptions = ref<Array<{ label: string; value: string }>>([]);
 
 let nextTempId = -1;
 
@@ -263,6 +293,66 @@ const siblingAxis = computed<"row" | "column">(() => {
 });
 
 const moveLabels = computed(() => (siblingAxis.value === "row" ? ["左移", "右移"] : ["上移", "下移"]));
+
+/** 逻辑编排里 nodeRef 型设置项只认本页**已保存**的组件（临时负数 id 还不存在） */
+const flowEditorNodes = computed(() =>
+    nodes.value
+        .filter((node) => node.id > 0)
+        .map((node) => ({
+            id: node.id,
+            typeName: types.value.find((type) => type.typeCode === node.typeCode)?.typeName ?? node.typeCode,
+            nodeName: node.nodeName,
+        })),
+);
+
+function openFlowEditor() {
+    if (!currentPageId.value) {
+        ElMessage.warning("请先选择页面");
+        return;
+    }
+    if (nodes.value.some((node) => node.id < 0)) {
+        ElMessage.warning("画布上还有没保存的组件，先保存再画逻辑图（逻辑图里的\"选本页组件\"要指向已保存的组件）");
+        return;
+    }
+    flowDialogVisible.value = true;
+}
+
+async function closeFlowEditor() {
+    flowDialogVisible.value = false;
+    await loadFlowOptions();
+}
+
+/** 汇总本页各图的所有输出端口，作为内容字段「绑定到图节点输出」的候选 */
+async function loadFlowOptions() {
+    if (!currentPageId.value) {
+        flowOptions.value = [];
+        return;
+    }
+    try {
+        const [flows, atoms, presets] = await Promise.all([
+            listFlows(currentPageId.value),
+            listLogicNodes(1),
+            listPresets(1),
+        ]);
+        const options: Array<{ label: string; value: string }> = [];
+        for (const flow of flows) {
+            for (const node of flow.graph?.nodes ?? []) {
+                for (const port of portsOfNode(node, atoms, presets).outputs) {
+                    if (port.type === "signal") {
+                        continue;
+                    }
+                    options.push({
+                        label: `${flow.flowKey} · ${node.label || node.typeCode}.${port.key}`,
+                        value: `$ref.${node.id}.${port.key}`,
+                    });
+                }
+            }
+        }
+        flowOptions.value = options;
+    } catch {
+        flowOptions.value = [];
+    }
+}
 
 /** 组装成 NodeRenderer 需要的树，并把组件类型默认值合并进来做预览 */
 const canvasTree = computed<UiNode[]>(() => buildTree(null));
@@ -332,6 +422,7 @@ async function onPageChange() {
     selectedId.value = null;
     if (!currentPageId.value) {
         nodes.value = [];
+        flowOptions.value = [];
         return;
     }
     loading.value = true;
@@ -340,6 +431,7 @@ async function onPageChange() {
     } finally {
         loading.value = false;
     }
+    await loadFlowOptions();
 }
 
 function addComponent(type: ComponentType) {

@@ -46,6 +46,19 @@
             clearable
             @update:model-value="(v: any) => emit('update:modelValue', v)"
         />
+        <!-- 可绑定的字段多一个下拉：选中即写入 $ref.<节点id>.<端口>（清空则回到字面量） -->
+        <el-select
+            v-if="bindings"
+            class="prop-control__binding"
+            :model-value="bindingValue"
+            clearable
+            filterable
+            size="small"
+            :placeholder="bindings.length ? '绑定到图节点输出' : '本页还没有逻辑图'"
+            @update:model-value="(v: any) => emit('update:modelValue', v ?? '')"
+        >
+            <el-option v-for="option in bindings" :key="option.value" :label="option.label" :value="option.value" />
+        </el-select>
     </div>
 </template>
 
@@ -54,8 +67,18 @@ import { computed, ref, watch } from "vue";
 import { ElMessage } from "element-plus";
 import type { PropertyMeta } from "../blocks/propertyMeta";
 
-const props = defineProps<{ meta: PropertyMeta; modelValue: any }>();
+const props = defineProps<{
+    meta: PropertyMeta
+    modelValue: any
+    /** 传了就显示「绑定到图节点输出」下拉；不传表示这个字段不可绑定 */
+    bindings?: Array<{ label: string; value: string }>
+}>();
 const emit = defineEmits<{ (e: "update:modelValue", value: any): void }>();
+
+/** 当前值是不是一条绑定（是则下拉回显它，否则下拉留空、输入框显示字面量） */
+const bindingValue = computed(() =>
+    typeof props.modelValue === "string" && props.modelValue.startsWith("$ref.") ? props.modelValue : "",
+);
 
 const numberValue = computed(() => {
     if (props.modelValue === "" || props.modelValue === null || props.modelValue === undefined) {

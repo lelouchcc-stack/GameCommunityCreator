@@ -141,6 +141,12 @@ export function metaOf(key: string): PropertyMeta {
     return PROPERTY_MAP[key] ?? { key, label: key, type: "text" };
 }
 
+/**
+ * 内容里可以绑到「图节点输出」的字段：填 $ref.<节点id>.<端口>，渲染器解析后取值。
+ * 与 logic/valueRef 的求值范围一致（visibleWhen 是布尔绑定，itemsSource 供列表组件用）。
+ */
+export const BINDABLE_KEYS = new Set(["text", "title", "imageUrl", "icon", "itemsSource", "visibleWhen"]);
+
 export const CATEGORY_LABELS: Record<string, string> = {
     base: "基础",
     layout: "布局",

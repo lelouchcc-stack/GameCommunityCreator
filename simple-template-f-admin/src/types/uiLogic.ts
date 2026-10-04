@@ -1,21 +1,16 @@
-/** 端口：入参 / 出参 / 节点设置项都用它描述（与后端 inputs_schema 等 JSON 结构对应） */
-export interface LogicPort {
-    key: string
-    type: string
-    required?: boolean
-    options?: string[]
-    note?: string
-}
+/**
+ * 逻辑层的前端类型。
+ *
+ * 注意命名：**图里的节点**叫 `LogicNode`（id/typeCode/config），**原子库里的一行**叫
+ * `LogicAtom`（typeName/kind/runner/端口 schema）。两者都直接复用 `logic/types` 的定义，
+ * 避免同一个形状在两处各写一份后走样（这个坑已经踩过一次）。
+ */
+import type { LogicEdge, LogicGraph, LogicNode, LogicPort } from "../logic/types";
 
-/** 一段逻辑图：nodes + edges，预设另有 exports */
-export interface LogicGraph {
-    nodes: Array<Record<string, any>>
-    edges: Array<Record<string, any>>
-    exports?: Record<string, string>
-}
+export type { LogicEdge, LogicGraph, LogicNode, LogicPort };
 
-/** 与后端 LogicNodeVO 对应：原子库里的一个原子（管理端只读） */
-export interface LogicNode {
+/** 与后端 LogicNodeVO 对应：原子库里的一行（管理端只读） */
+export interface LogicAtom {
     id: number
     typeCode: string
     typeName: string
@@ -58,6 +53,27 @@ export interface PresetPayload {
     category: string | null
     inputsSchema: LogicPort[]
     outputsSchema: LogicPort[]
+    graphJson: LogicGraph
+    status: number
+    remark: string | null
+}
+
+/** 与后端 FlowVO 对应：页面上的一张图 */
+export interface FlowVO {
+    id: number
+    pageId: number
+    flowKey: string
+    flowName: string | null
+    graph: LogicGraph
+    status: number
+    remark: string | null
+    createTime?: string
+    updateTime?: string
+}
+
+/** 整图保存的请求体（flowKey 走路径参数） */
+export interface FlowPayload {
+    flowName: string | null
     graphJson: LogicGraph
     status: number
     remark: string | null

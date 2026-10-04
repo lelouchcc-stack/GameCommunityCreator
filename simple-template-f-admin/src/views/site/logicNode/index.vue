@@ -104,7 +104,7 @@
 <script lang="ts" setup>
 import { computed, onMounted, ref } from "vue";
 import { listLogicNodes } from "../../../api/uiLogic";
-import type { LogicNode, LogicPort } from "../../../types/uiLogic";
+import type { LogicAtom, LogicPort } from "../../../types/uiLogic";
 
 const KIND_LABELS: Record<string, string> = {
     trigger: "触发",
@@ -116,12 +116,12 @@ const KIND_LABELS: Record<string, string> = {
 };
 
 const loading = ref(false);
-const rows = ref<LogicNode[]>([]);
+const rows = ref<LogicAtom[]>([]);
 const kindFilter = ref("");
 const keyword = ref("");
 
 const detailVisible = ref(false);
-const current = ref<LogicNode | null>(null);
+const current = ref<LogicAtom | null>(null);
 
 const filtered = computed(() => {
     const text = keyword.value.trim().toLowerCase();
@@ -153,7 +153,7 @@ const portRows = computed<PortRow[]>(() => {
     ];
 });
 
-function openDetail(row: LogicNode) {
+function openDetail(row: LogicAtom) {
     current.value = row;
     detailVisible.value = true;
 }
