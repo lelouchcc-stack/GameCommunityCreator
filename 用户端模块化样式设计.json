@@ -280,12 +280,16 @@
       { "typeCode": "data.myReports", "typeName": "我的举报", "kind": "source", "runner": "api", "sourceApi": "GET /app/member/my-reports", "inputs": [{ "key": "page", "type": "number" }], "outputs": ["listReport", "pageInfo"] },
       { "typeCode": "data.myProgress", "typeName": "我的游戏进度", "kind": "source", "runner": "api", "sourceApi": "GET /app/member/progress", "inputs": [{ "key": "boardId", "type": "number" }], "outputs": ["any"] },
       { "typeCode": "data.runtime", "typeName": "运行环境", "kind": "source", "runner": "ui", "inputs": [], "outputs": ["any"], "config": [{ "key": "key", "type": "text", "options": ["routeParam.id", "query.k", "page"] }] },
-      { "typeCode": "op.filterByVersion", "typeName": "按版本过滤", "kind": "operator", "runner": "api", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "versionId", "type": "number" }], "outputs": ["listPost"] },
-      { "typeCode": "op.filterByStage", "typeName": "按阶段过滤", "kind": "operator", "runner": "api", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "stageId", "type": "number" }], "outputs": ["listPost"] },
+      { "typeCode": "data.componentValue", "typeName": "读组件当前值", "kind": "source", "runner": "ui", "inputs": [], "outputs": ["any"], "config": [{ "key": "nodeId", "type": "nodeRef", "required": true }, { "key": "field", "type": "text", "note": "该组件 content/behavior 里的字段名,如 text/imageUrl" }], "note": "表单类图的字段来源:登录/发帖/举报等把某个输入组件的当前值拉进图里" },
+      { "typeCode": "op.filterByVersion", "typeName": "按版本过滤", "kind": "operator", "runner": "ui", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "versionId", "type": "number" }], "outputs": ["listPost"], "note": "前端数组过滤;原设计标 runner=api 但无对应接口,2026-10-04 改为 ui" },
+      { "typeCode": "op.filterByStage", "typeName": "按阶段过滤", "kind": "operator", "runner": "ui", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "stageId", "type": "number" }], "outputs": ["listPost"], "note": "同 op.filterByVersion" },
       { "typeCode": "op.filterByKeyword", "typeName": "关键字过滤", "kind": "operator", "runner": "ui", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "keyword", "type": "text" }], "outputs": ["listPost"] },
       { "typeCode": "op.sort", "typeName": "排序", "kind": "operator", "runner": "ui", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "by", "type": "text", "options": ["latest", "hot"] }], "outputs": ["listPost"] },
       { "typeCode": "op.take", "typeName": "取前N", "kind": "operator", "runner": "ui", "inputs": [{ "key": "list", "type": "any", "required": true }, { "key": "n", "type": "number" }], "outputs": ["any"] },
-      { "typeCode": "op.markExpired", "typeName": "标记版本过期", "kind": "operator", "runner": "api", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "currentVersionId", "type": "number" }], "outputs": ["listPost"], "note": "前端亦可按 post.versionId!==currentVersionId 判定角标" },
+      { "typeCode": "op.and", "typeName": "与", "kind": "operator", "runner": "ui", "inputs": [{ "key": "a", "type": "boolean", "required": true }, { "key": "b", "type": "boolean", "required": true }], "outputs": ["boolean"], "note": "多字段校验用;布尔组合属于 L4 流程控制,不是 L5 通用计算" },
+      { "typeCode": "op.or", "typeName": "或", "kind": "operator", "runner": "ui", "inputs": [{ "key": "a", "type": "boolean", "required": true }, { "key": "b", "type": "boolean", "required": true }], "outputs": ["boolean"] },
+      { "typeCode": "op.not", "typeName": "非", "kind": "operator", "runner": "ui", "inputs": [{ "key": "value", "type": "boolean", "required": true }], "outputs": ["boolean"] },
+      { "typeCode": "op.markExpired", "typeName": "标记版本过期", "kind": "operator", "runner": "ui", "inputs": [{ "key": "list", "type": "listPost", "required": true }, { "key": "currentVersionId", "type": "number" }], "outputs": ["listPost"], "note": "按 post.versionId!==currentVersionId 打角标;前端判定,无后端接口" },
       { "typeCode": "cond.isLogin", "typeName": "是否登录", "kind": "condition", "runner": "ui", "inputs": [], "outputs": ["boolean"] },
       { "typeCode": "cond.isEmpty", "typeName": "是否为空", "kind": "condition", "runner": "ui", "inputs": [{ "key": "value", "type": "any", "required": true }], "outputs": ["boolean"] },
       { "typeCode": "cond.isOwner", "typeName": "是否本人", "kind": "condition", "runner": "ui", "inputs": [{ "key": "memberId", "type": "number", "required": true }], "outputs": ["boolean"] },
@@ -310,8 +314,8 @@
       { "typeCode": "act.setVisible", "typeName": "显示/隐藏组件", "kind": "ui", "runner": "ui", "inputs": [{ "key": "nodeId", "type": "nodeRef", "required": true }, { "key": "visible", "type": "boolean", "required": true }], "outputs": ["signal"] },
       { "typeCode": "act.scrollTo", "typeName": "滚动到组件", "kind": "ui", "runner": "ui", "inputs": [{ "key": "nodeId", "type": "nodeRef", "required": true }], "outputs": ["signal"] }
     ],
-    "count": 44,
-    "authoringNote": "以上为种子原子。原子由开发者实现（后端接口 + 前端执行器映射），管理端只读"
+    "count": 48,
+    "authoringNote": "以上为种子原子。原子由开发者实现（后端接口 + 前端执行器映射），管理端只读。布尔组合 op.and/op.or/op.not 与 data.componentValue 是 2026-10-04 补的：前者让多字段校验可表达（归 L4 流程控制，不是 L5 通用计算），后者是表单类图（登录/发帖/举报）的字段来源"
   },
   "presetLibrary": {
     "note": "原子团/预设：常见业务逻辑的预置子图，放预设库供调用（≈ ComfyUI Node Template）。is_builtin=1 的官方预设只读，可『复制为自定义』再改",
