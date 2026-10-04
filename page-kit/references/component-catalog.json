@@ -522,14 +522,24 @@
         "backgroundColor",
         "radius"
       ],
-      "contentSchema": [],
+      "contentSchema": [
+        "limit",
+        "columns",
+        "showCover",
+        "showIntro"
+      ],
       "behaviorSchema": [],
       "defaultStyle": {
         "padding": "16px",
         "backgroundColor": "var(--site-bg-card)",
         "radius": "8px"
       },
-      "defaultContent": {}
+      "defaultContent": {
+        "limit": 8,
+        "columns": 3,
+        "showCover": true,
+        "showIntro": true
+      }
     }
   ]
 }
