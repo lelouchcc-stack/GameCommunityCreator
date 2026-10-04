@@ -31,6 +31,13 @@ public final class ComponentPropertyRegistry {
                     + "|rgba?\\([0-9.,%\\s]+\\)"
                     + "|var\\(--site-[a-z0-9-]+\\))$");
     private static final Pattern URL = Pattern.compile("^(https?://|/).+");
+    /**
+     * 图片值有两类：完整地址（http(s):// 或 / 开头，兼容历史数据与外链），
+     * 或对象存储的 objectKey（upload/yyyy/MM/dd/<uuid>.<ext>，见 图片上传-存储抽象设计.json）。
+     * key 按真实命名规则校验，顺带排除 .. 之类的路径穿越写法。
+     */
+    private static final Pattern IMAGE = Pattern.compile(
+            "^(https?://|/).+$|^upload/\\d{4}/\\d{2}/\\d{2}/[A-Za-z0-9_-]{1,64}\\.[A-Za-z0-9]{1,8}$");
     private static final Pattern BINDING = Pattern.compile("^(\\$ref\\.[A-Za-z0-9_]+\\.[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)?|\\$runtime\\.[A-Za-z0-9_.]+)$");
     /** 危险字符：出现即拒绝，避免 CSS/HTML 注入 */
     private static final Pattern DANGER = Pattern.compile("[{};<>\u0000]");
@@ -145,7 +152,8 @@ public final class ComponentPropertyRegistry {
         return switch (spec.type()) {
             case TYPE_LENGTH -> text != null && LENGTH.matcher(text).matches() ? null : spec.label() + "格式不合法";
             case TYPE_COLOR -> text != null && COLOR.matcher(text).matches() ? null : "颜色值格式非法，请重新选择";
-            case TYPE_IMAGE, TYPE_URL -> isEmpty(text) || URL.matcher(text).matches() ? null : spec.label() + "格式不合法";
+            case TYPE_IMAGE -> isEmpty(text) || IMAGE.matcher(text).matches() ? null : spec.label() + "格式不合法";
+            case TYPE_URL -> isEmpty(text) || URL.matcher(text).matches() ? null : spec.label() + "格式不合法";
             case TYPE_BINDING -> isEmpty(text) || BINDING.matcher(text).matches() ? null : spec.label() + "绑定格式不合法";
             case TYPE_ENUM -> text != null && spec.options().contains(text) ? null : spec.label() + "取值不在允许范围内";
             case TYPE_BOOL -> value instanceof Boolean ? null : spec.label() + "必须是布尔值";

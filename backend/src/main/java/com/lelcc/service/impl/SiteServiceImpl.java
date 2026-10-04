@@ -12,6 +12,7 @@ import com.lelcc.dto.PageTreeVO;
 import com.lelcc.dto.SiteBundleVO;
 import com.lelcc.dto.SiteConfigDTO;
 import com.lelcc.dto.SiteConfigVO;
+import com.lelcc.dto.StorageConfigVO;
 import com.lelcc.entity.HomeModule;
 import com.lelcc.entity.SiteConfig;
 import com.lelcc.entity.UiFlow;
@@ -22,6 +23,7 @@ import com.lelcc.mapper.SiteConfigMapper;
 import com.lelcc.mapper.UiFlowMapper;
 import com.lelcc.mapper.UiPageMapper;
 import com.lelcc.mapper.UiPresetMapper;
+import com.lelcc.service.FileStorage;
 import com.lelcc.service.SiteService;
 import com.lelcc.service.UiPageService;
 import jakarta.annotation.Resource;
@@ -62,6 +64,10 @@ public class SiteServiceImpl implements SiteService {
 
     @Resource
     private UiPresetMapper presetMapper;
+
+    /** 下发存储基址，用户端据此把库里的 objectKey 现拼成可显示的图片地址 */
+    @Resource
+    private FileStorage fileStorage;
 
     @Override
     public SiteConfigVO getConfig() {
@@ -132,7 +138,11 @@ public class SiteServiceImpl implements SiteService {
     @Override
     public SiteBundleVO userBundle() {
         Map<String, Map<String, Object>> flows = userFlows();
-        return new SiteBundleVO(getConfig(), pageService.userTree(HOME_PAGE_KEY), flows, referencedPresets(flows.values()));
+        return new SiteBundleVO(getConfig(),
+                new StorageConfigVO(fileStorage.provider(), fileStorage.publicBaseUrl()),
+                pageService.userTree(HOME_PAGE_KEY),
+                flows,
+                referencedPresets(flows.values()));
     }
 
     /** 用户端只拿启用中的图；键即 flowKey，前端按触发器（on.click/on.submit）对应的 flowKey 找图 */

@@ -58,6 +58,27 @@
             <artifactId>hutool-all</artifactId>
             <version>5.8.25</version>
         </dependency>
+        <!--
+            S3 兼容协议客户端：图片上传的云侧实现（app.upload.provider=s3）用它访问对象存储。
+            依赖的是 S3 协议本身而非某家云厂商的 SDK——阿里云 OSS/腾讯 COS/MinIO/R2 等都提供
+            S3 兼容端点，换云只改配置；业务代码里不得出现厂商专有的类名与枚举。
+        -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>s3</artifactId>
+            <version>2.28.16</version>
+        </dependency>
+        <!-- S3 客户端的同步 HTTP 传输实现：SDK 里是可选依赖，用哪套 HTTP 客户端需自己声明 -->
+        <dependency>
+            <groupId>software.amazon.awssdk</groupId>
+            <artifactId>apache-client</artifactId>
+            <version>2.28.16</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

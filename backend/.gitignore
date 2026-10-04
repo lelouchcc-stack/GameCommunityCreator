@@ -36,3 +36,6 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### 本地图片存储（app.upload.provider=local 的落盘目录） ###
+uploads/

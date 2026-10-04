@@ -21,7 +21,9 @@ public final class SiteConfigRegistry {
 
     private static final Pattern COLOR = Pattern.compile("^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$");
     private static final Pattern BOOLEAN = Pattern.compile("^(true|false)$");
-    private static final Pattern IMAGE_URL = Pattern.compile("^(https?://|/).+");
+    /** 图片值：完整地址（http(s):// 或 / 开头），或对象存储 objectKey（见 图片上传-存储抽象设计.json） */
+    private static final Pattern IMAGE = Pattern.compile(
+            "^(https?://|/).+$|^upload/\\d{4}/\\d{2}/\\d{2}/[A-Za-z0-9_-]{1,64}\\.[A-Za-z0-9]{1,8}$");
 
     /** 顺序即后台表单的展示顺序 */
     private static final Map<String, Spec> SPECS = new LinkedHashMap<>();
@@ -29,7 +31,7 @@ public final class SiteConfigRegistry {
     static {
         put(SITE_NAME, "站点名称", "游戏社区", 30, null, true);
         put(SITE_INTRO, "站点简介", "", 200, null, false);
-        put(LOGO, "站点 Logo", "/static/logo.png", 255, IMAGE_URL, false);
+        put(LOGO, "站点 Logo", "/static/logo.png", 255, IMAGE, false);
         put(COPYRIGHT, "版权文案", "© 2026 游戏社区", 100, null, false);
         put(PRIMARY_COLOR, "主题主色", "#3B82F6", 20, COLOR, true);
         put(DARK_MODE, "默认深色模式", "false", 5, BOOLEAN, true);

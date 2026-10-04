@@ -162,7 +162,7 @@
     "imageValueType": "允许两类值：绝对地址（https?:// 或 / 开头）与 objectKey（upload/<yyyy>/<MM>/<dd>/<uuid>.<ext>）",
     "urlValueType": "linkUrl 等仍是纯 URL，不接受 objectKey",
     "changes": [
-      "ComponentPropertyRegistry：TYPE_IMAGE 与 TYPE_URL 拆开，新增 IMAGE 正则 ^(https?://|/).+$|^upload/[A-Za-z0-9._/-]+$",
+      "ComponentPropertyRegistry：TYPE_IMAGE 与 TYPE_URL 拆开，新增 IMAGE 正则 ^(https?://|/).+$|^upload/\\d{4}/\\d{2}/\\d{2}/[A-Za-z0-9_-]{1,64}\\.[A-Za-z0-9]{1,8}$（按真实 key 形态校验，顺带排除 .. 穿越）",
       "SiteConfigRegistry：LOGO 改用同一 IMAGE 正则",
       "用户端模块化样式设计.json：valueTypes 里 image 的 pattern 同步更新"
     ],

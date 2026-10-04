@@ -4,6 +4,7 @@ import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
@@ -27,6 +28,12 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(value = NoResourceFoundException.class)
     public Result<Void> notFoundException() {
         return Result.fail(404, "请求的接口不存在");
+    }
+
+    /** 上传文件超过 multipart 上限（spring.servlet.multipart.max-file-size）时的友好提示 */
+    @ExceptionHandler(value = MaxUploadSizeExceededException.class)
+    public Result<Void> uploadTooLargeException() {
+        return Result.fail(400, "图片大小不能超过 5MB");
     }
 
     @ExceptionHandler(value = Exception.class)
