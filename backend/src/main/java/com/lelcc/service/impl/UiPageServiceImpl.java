@@ -181,6 +181,7 @@ public class UiPageServiceImpl implements UiPageService {
         Map<Long, Long> resolved = new HashMap<>();
         existingById.keySet().forEach(existId -> resolved.put(existId, existId));
         List<NodeDTO> pending = new ArrayList<>(nodes);
+        Map<Long, NodeDTO> persistedByRealId = new LinkedHashMap<>();
         while (!pending.isEmpty()) {
             int before = pending.size();
             pending.removeIf(dto -> {
@@ -201,6 +202,7 @@ public class UiPageServiceImpl implements UiPageService {
                     }
                     persistedId = persistNode(dto, pageId, realParent);
                 }
+                persistedByRealId.put(persistedId, dto);
                 if (dto.id() != null) {
                     resolved.put(dto.id(), persistedId);
                 }
@@ -211,25 +213,56 @@ public class UiPageServiceImpl implements UiPageService {
             }
         }
 
-        // 把"临时 id -> 真实 id"回传，前端据此把动作里的目标改成真实 id
-        Map<Long, Long> tempToReal = new HashMap<>();
-        resolved.forEach((tempId, realId) -> {
-            if (tempId < 0) {
-                tempToReal.put(realId, tempId);
+        // 提交时的临时 id（前端新增节点用负数占位）-> 真实 id
+        Map<Long, Long> tempToReal = new LinkedHashMap<>();
+        Map<Long, Long> realToTemp = new LinkedHashMap<>();
+        resolved.forEach((submittedId, realId) -> {
+            if (submittedId < 0) {
+                tempToReal.put(submittedId, realId);
+                realToTemp.put(realId, submittedId);
             }
         });
+
+        // 动作目标里指向临时 id 的，本次保存就落成真实 id：
+        // 前端只拿 clientId 改内存的话，库里仍是负数，用户端要再存一次才生效
+        persistedByRealId.forEach((realId, dto) -> remapActionTarget(realId, dto.behaviorJson(), tempToReal));
+
         List<NodeVO> tree = listNodes(pageId);
-        if (!tempToReal.isEmpty()) {
-            fillClientId(tree, tempToReal);
+        if (!realToTemp.isEmpty()) {
+            fillClientId(tree, realToTemp);
         }
         return tree;
     }
 
+    /** 把行为里 onClickAction.target 的临时 id 换成真实 id；换不到则置空，避免悬空引用 */
+    private void remapActionTarget(Long nodeId, Map<String, Object> behavior, Map<Long, Long> tempToReal) {
+        if (behavior == null || behavior.isEmpty()) {
+            return;
+        }
+        Object action = behavior.get("onClickAction");
+        if (!(action instanceof Map<?, ?> raw)) {
+            return;
+        }
+        Object target = raw.get("target");
+        if (!(target instanceof Number number) || number.longValue() >= 0) {
+            return;
+        }
+        Map<String, Object> actionMap = new LinkedHashMap<>();
+        raw.forEach((key, value) -> actionMap.put(String.valueOf(key), value));
+        actionMap.put("target", tempToReal.get(number.longValue()));
+        behavior.put("onClickAction", actionMap);
+
+        UiNode update = new UiNode();
+        update.setId(nodeId);
+        update.setBehaviorJson(UiJsonUtils.toJson(behavior));
+        nodeMapper.updateById(update);
+    }
+
     /** 给本次新增的节点回填临时 id，供前端做动作目标回填 */
-    private void fillClientId(List<NodeVO> nodes, Map<Long, Long> tempToReal) {
+    private void fillClientId(List<NodeVO> nodes, Map<Long, Long> realToTemp) {
         for (NodeVO node : nodes) {
-            node.setClientId(tempToReal.get(node.getId()));
-            fillClientId(node.getChildren(), tempToReal);
+            node.setClientId(realToTemp.get(node.getId()));
+            fillClientId(node.getChildren(), realToTemp);
         }
     }
 
