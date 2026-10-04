@@ -1,0 +1,162 @@
+/**
+ * 组件属性元数据（前端镜像 ComponentPropertyRegistry），仅管理端使用：
+ * 属性面板与"默认值"编辑器据此动态生成控件。
+ */
+export type PropType =
+    | "length"
+    | "number"
+    | "color"
+    | "image"
+    | "url"
+    | "enum"
+    | "bool"
+    | "text"
+    | "binding"
+    | "jsonArray"
+    | "jsonObject";
+
+export interface PropertyMeta {
+    key: string
+    label: string
+    type: PropType
+    options?: string[]
+    min?: number
+    max?: number
+    step?: number
+    maxLength?: number
+}
+
+export interface PropertyGroup {
+    group: string
+    label: string
+    properties: PropertyMeta[]
+}
+
+export const STYLE_GROUPS: PropertyGroup[] = [
+    {
+        group: "layout",
+        label: "布局",
+        properties: [
+            { key: "width", label: "宽度", type: "length" },
+            { key: "height", label: "高度", type: "length" },
+            { key: "maxWidth", label: "最大宽度", type: "length" },
+            { key: "padding", label: "内边距", type: "length" },
+            { key: "marginTop", label: "上外边距", type: "length" },
+            { key: "marginBottom", label: "下外边距", type: "length" },
+            { key: "align", label: "水平对齐", type: "enum", options: ["left", "center", "right", "full"] },
+            { key: "flexDirection", label: "主轴方向", type: "enum", options: ["row", "column"] },
+            { key: "justify", label: "主轴对齐", type: "enum", options: ["start", "center", "end", "space-between", "space-around"] },
+            { key: "alignItems", label: "交叉轴对齐", type: "enum", options: ["start", "center", "end", "stretch"] },
+            { key: "gap", label: "间距", type: "length" },
+            { key: "wrap", label: "自动换行", type: "bool" },
+        ],
+    },
+    {
+        group: "appearance",
+        label: "外观",
+        properties: [
+            { key: "backgroundColor", label: "背景色", type: "color" },
+            { key: "backgroundImage", label: "背景图", type: "image" },
+            { key: "backgroundSize", label: "背景图填充", type: "enum", options: ["cover", "contain", "auto"] },
+            { key: "opacity", label: "不透明度", type: "number", min: 0, max: 1, step: 0.05 },
+            { key: "texture", label: "质感", type: "enum", options: ["none", "frosted", "transparent", "glass"] },
+            { key: "borderWidth", label: "边框粗细", type: "length" },
+            { key: "borderStyle", label: "边框样式", type: "enum", options: ["solid", "dashed", "none"] },
+            { key: "borderColor", label: "边框颜色", type: "color" },
+            { key: "radius", label: "圆角", type: "length" },
+        ],
+    },
+    {
+        group: "typography",
+        label: "文字",
+        properties: [
+            { key: "fontSize", label: "字号", type: "length" },
+            { key: "fontWeight", label: "字重", type: "enum", options: ["400", "500", "600", "700"] },
+            { key: "textColor", label: "文字颜色", type: "color" },
+            { key: "textAlign", label: "文字对齐", type: "enum", options: ["left", "center", "right"] },
+            { key: "lineHeight", label: "行高", type: "number", min: 1, max: 3, step: 0.1 },
+            { key: "letterSpacing", label: "字间距", type: "length" },
+        ],
+    },
+    {
+        group: "effect",
+        label: "效果",
+        properties: [
+            { key: "boxShadow", label: "阴影", type: "enum", options: ["none", "sm", "md", "lg", "glow"] },
+            { key: "hoverEffect", label: "悬停效果", type: "enum", options: ["none", "lift", "glow", "scale", "underline"] },
+            { key: "clickEffect", label: "点击效果", type: "enum", options: ["none", "scale", "press", "ripple", "opacity"] },
+            { key: "transitionMs", label: "过渡时长(ms)", type: "number", min: 0, max: 1000, step: 50 },
+            { key: "cursor", label: "鼠标指针", type: "enum", options: ["default", "pointer", "text"] },
+        ],
+    },
+];
+
+export const CONTENT_GROUP: PropertyGroup = {
+    group: "content",
+    label: "内容",
+    properties: [
+        { key: "text", label: "文本内容", type: "text", maxLength: 200 },
+        { key: "title", label: "标题", type: "text", maxLength: 100 },
+        { key: "linkType", label: "跳转类型", type: "enum", options: ["none", "internal", "external"] },
+        { key: "linkUrl", label: "跳转地址", type: "url" },
+        { key: "openInNewTab", label: "新窗口打开", type: "bool" },
+        { key: "imageUrl", label: "图片地址", type: "image" },
+        { key: "imageFit", label: "图片填充", type: "enum", options: ["cover", "contain", "fill"] },
+        { key: "icon", label: "图标地址", type: "image" },
+        { key: "limit", label: "数量", type: "number", min: 1, max: 20 },
+        { key: "autoplay", label: "自动播放", type: "bool" },
+        { key: "interval", label: "播放间隔(ms)", type: "number", min: 1000, max: 10000, step: 500 },
+        { key: "items", label: "结构数组", type: "jsonArray" },
+        { key: "itemsSource", label: "列表数据源", type: "binding" },
+        { key: "itemsTemplate", label: "列表项模板", type: "jsonArray" },
+        { key: "emptyText", label: "空状态文案", type: "text", maxLength: 40 },
+        { key: "visibleWhen", label: "可见条件", type: "binding" },
+    ],
+};
+
+export const BEHAVIOR_GROUP: PropertyGroup = {
+    group: "behavior",
+    label: "行为",
+    properties: [
+        { key: "emit", label: "触发信号名", type: "text", maxLength: 40 },
+        { key: "onClickAction", label: "点击动作", type: "jsonObject" },
+    ],
+};
+
+export const ALL_GROUPS: PropertyGroup[] = [...STYLE_GROUPS, CONTENT_GROUP, BEHAVIOR_GROUP];
+
+export const PROPERTY_MAP: Record<string, PropertyMeta> = {};
+ALL_GROUPS.forEach((group) => {
+    group.properties.forEach((property) => {
+        PROPERTY_MAP[property.key] = property;
+    });
+});
+
+/** 取属性元数据；属性库一定包含 schema 里的 key，这里兜底避免类型收窄成 undefined */
+export function metaOf(key: string): PropertyMeta {
+    return PROPERTY_MAP[key] ?? { key, label: key, type: "text" };
+}
+
+export const CATEGORY_LABELS: Record<string, string> = {
+    base: "基础",
+    layout: "布局",
+    display: "展示",
+    interactive: "交互",
+    business: "业务",
+};
+
+/** 已注册的渲染内核（与后端 RENDER_KINDS 一致） */
+export const RENDER_KINDS = [
+    "text",
+    "heading",
+    "image",
+    "button",
+    "divider",
+    "spacer",
+    "container",
+    "carousel",
+    "list",
+    "tabs",
+    "modal",
+    "icon",
+];

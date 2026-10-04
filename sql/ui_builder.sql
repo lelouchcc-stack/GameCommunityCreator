@@ -177,3 +177,22 @@ SELECT p.id, NULL, m.module_type, m.module_name, m.sort, m.enabled, m.config_jso
 FROM home_module m
 JOIN ui_page p ON p.page_key = 'home'
 WHERE NOT EXISTS (SELECT 1 FROM ui_node n WHERE n.page_id = p.id);
+
+-- ==================== 四、管理端菜单 ====================
+-- 把原「首页模块」菜单改为「页面搭建」，并新增「组件库」
+
+UPDATE sys_menu
+SET menu_name = '页面搭建', path = 'page-builder', component = 'site/pageBuilder/index',
+    perms = 'site:page:list', icon = 'Grid', sort = 2
+WHERE id = 8;
+
+INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, component, perms, icon, sort, visible, status) VALUES
+(16, 6, '组件库', 'C', 'component-type', 'site/componentType/index', 'site:component:list', 'Box', 3, 1, 1)
+ON DUPLICATE KEY UPDATE
+  menu_name = VALUES(menu_name), path = VALUES(path), component = VALUES(component),
+  perms = VALUES(perms), icon = VALUES(icon), sort = VALUES(sort), visible = VALUES(visible), status = VALUES(status);
+
+INSERT INTO sys_role_menu (role_id, menu_id)
+SELECT 1, 16 FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM sys_role_menu WHERE role_id = 1 AND menu_id = 16);
+
