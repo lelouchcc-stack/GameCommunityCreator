@@ -9,6 +9,7 @@ import type { GraphHost } from "./logic/types";
 import http from "./utils/request";
 import { toast } from "./utils/toast";
 import { clearSession, currentMemberId, isLoggedIn, saveSession } from "./utils/session";
+import { clearComponentValues, readComponentValue } from "./blocks/componentValues";
 
 const siteStore = useSiteStore();
 const memberStore = useMemberStore();
@@ -77,8 +78,8 @@ const graphHost: GraphHost = {
     setVisible: (nodeId, visible) => blockRuntime.setVisible(nodeId as number, visible),
     openModal: (nodeId) => blockRuntime.openModal(nodeId as number),
     closeModal: (nodeId) => blockRuntime.closeModal(nodeId as number),
-    // 还没有输入类组件（阶段 4），先返回 undefined；有了之后从组件值注册表读
-    componentValue: () => undefined,
+    // 读输入组件的当前值：输入框渲染时把自己的值登记进注册表，data.componentValue 原子按节点 id 读
+    componentValue: (nodeId, field) => readComponentValue(nodeId, field ?? "value"),
     runtimeValues: () => ({
         routeParam: route.params,
         query: route.query,
@@ -111,6 +112,8 @@ async function syncRouteGraphs() {
 watch(
     () => route.path,
     () => {
+        // 换页先清组件值（watch 默认 pre，在重渲染之前跑），免得新页面的图读到上一页的残留
+        clearComponentValues();
         void syncRouteGraphs();
     }
 );

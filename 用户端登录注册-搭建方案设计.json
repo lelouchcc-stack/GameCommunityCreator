@@ -112,9 +112,9 @@
       },
       {
         "id": 10,
-        "topic": "输入框的『必填』怎么实现",
-        "chosen": "required 只作视觉标记（标签红星）；真正的校验在逻辑图（cond.isValid）与后端",
-        "why": "校验规则是业务规则，应留在可编排的图里；组件只负责呈现，避免同一规则在两处各写一遍"
+        "topic": "输入框的标签（用户名 / 密码）怎么来",
+        "chosen": "不做进 input 组件，用独立的「文本」组件放在输入框上方",
+        "why": "外层节点就是输入框的盒子（沿用 text/button 的既有约定：样式落在外层、内层元素剥光），标签塞进盒子里会被边框连同输入区一起框住；独立文本组件的字号/颜色/间距也能各自调，样式控制更彻底。必填校验仍由逻辑图（cond.isValid）与后端承担"
       }
     ]
   },
@@ -136,7 +136,7 @@
       {
         "layer": 3,
         "name": "可搭页面与基础组件",
-        "detail": "新增 input（单行输入，inputType 支持 text/password）与 form（容器，渲染成 <form>）两个基础组件；NodeRenderer 补渲染分支；按钮支持 buttonType=submit；属性库补 label/placeholder/inputType/required/buttonType",
+        "detail": "新增 input（单行输入，inputType 支持 text/password）与 form（容器，渲染成 <form>）两个基础组件；NodeRenderer 补渲染分支；按钮支持 buttonType=submit；属性库补 placeholder/inputType/buttonType",
         "status": "待实现（v1.1 第 1 个提交）"
       },
       {
@@ -160,10 +160,10 @@
         "renderKind": "input",
         "category": "base",
         "isContainer": 0,
-        "contentSchema": ["label", "placeholder", "inputType", "required", "visibleWhen"],
+        "contentSchema": ["placeholder", "inputType", "visibleWhen"],
         "styleSchema": ["width", "maxWidth", "align", "padding", "backgroundColor", "borderWidth", "borderStyle", "borderColor", "radius", "fontSize", "fontWeight", "textColor", "textAlign", "texture", "boxShadow", "cursor", "transitionMs"],
         "defaultStyle": "{\"width\":\"100%\",\"padding\":\"9px 12px\",\"backgroundColor\":\"var(--site-bg-page)\",\"borderWidth\":\"1px\",\"borderStyle\":\"solid\",\"borderColor\":\"var(--site-border)\",\"radius\":\"8px\",\"fontSize\":\"14px\",\"textColor\":\"var(--site-text-primary)\"}",
-        "defaultContent": "{\"label\":\"\",\"placeholder\":\"\",\"inputType\":\"text\",\"required\":false}",
+        "defaultContent": "{\"placeholder\":\"\",\"inputType\":\"text\"}",
         "valueRegistration": "把当前值写入组件值注册表，键 'value'；初始值在 setup 时就登记，保证用户一个字都不输时图读到的也是空串而不是 undefined"
       },
       "form": {
@@ -172,7 +172,7 @@
         "category": "layout",
         "isContainer": 1,
         "contentSchema": ["visibleWhen"],
-        "styleSchema": ["width", "maxWidth", "padding", "marginTop", "marginBottom", "backgroundColor", "texture", "radius", "borderWidth", "borderStyle", "borderColor", "boxShadow", "flexDirection", "justify", "alignItems", "gap", "wrap"],
+        "styleSchema": ["width", "maxWidth", "align", "padding", "marginTop", "marginBottom", "backgroundColor", "texture", "radius", "borderWidth", "borderStyle", "borderColor", "boxShadow", "flexDirection", "justify", "alignItems", "gap", "wrap"],
         "defaultStyle": "{\"width\":\"100%\",\"maxWidth\":\"360px\",\"padding\":\"24px\",\"backgroundColor\":\"var(--site-bg-card)\",\"radius\":\"12px\",\"boxShadow\":\"sm\",\"flexDirection\":\"column\",\"gap\":\"14px\"}",
         "defaultContent": "{}",
         "behavior": "渲染成 <form @submit.prevent>；提交（点提交按钮或输入框回车）时调 graphBridge.triggerEvent('submit', 本节点id)"
@@ -272,7 +272,7 @@
     {
       "seq": 1,
       "title": "feat(app-form-kit): 输入/表单基础组件 + 组件值注册表 + 属性库补 key",
-      "scope": "两端 src/blocks/componentValues.ts（新）、NodeRenderer（input/form 分支、buttonType）、App.vue（componentValue 接线 + 换页清理）；后端 ComponentPropertyRegistry（删 7 个业务组件专用 key、加 5 个表单 key）+ UiComponentTypeServiceImpl.RENDER_KINDS；管理端 propertyMeta.ts（同上 + RENDER_KINDS）",
+      "scope": "两端 src/blocks/componentValues.ts（新）、NodeRenderer（input/form 分支、buttonType）、App.vue（componentValue 接线 + 换页清理）；后端 ComponentPropertyRegistry（删 7 个业务组件专用 key、加 3 个表单 key）+ UiComponentTypeServiceImpl.RENDER_KINDS；管理端 propertyMeta.ts（同上 + RENDER_KINDS）；sql/ui_builder.sql 追加 input/form 两个组件类型",
       "verify": "JDK21 编译 + 两端 vue-tsc -b --force + 两端 vite build + 管理端接口回存含 input/form 的节点树（code=200）"
     },
     {

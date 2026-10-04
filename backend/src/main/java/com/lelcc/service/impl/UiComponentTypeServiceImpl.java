@@ -28,7 +28,8 @@ public class UiComponentTypeServiceImpl implements UiComponentTypeService {
     /** 已注册的渲染内核；新增内核属于开发工作（设计里的 L4/EXT 边界） */
     private static final Set<String> RENDER_KINDS = Set.of(
             "text", "heading", "image", "button", "divider", "spacer",
-            "container", "carousel", "list", "tabs", "modal", "icon");
+            "container", "carousel", "list", "tabs", "modal", "icon",
+            "input", "form");
 
     private static final Set<String> CATEGORIES = Set.of(
             "base", "layout", "display", "interactive", "business");

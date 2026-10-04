@@ -91,7 +91,7 @@ INSERT INTO ui_component_type
  'Picture', 3, 1),
 ('button', '按钮', 'base', 'button', 0, 0,
  '["width","height","padding","align","backgroundColor","texture","radius","fontSize","fontWeight","textColor","hoverEffect","clickEffect","boxShadow","transitionMs","cursor"]',
- '["text","icon","visibleWhen"]',
+ '["text","icon","buttonType","visibleWhen"]',
  '["emit","onClickAction"]',
  '{"width":"auto","height":"auto","padding":"8px 18px","align":"left","backgroundColor":"var(--site-primary)","textColor":"#FFFFFF","fontSize":"14px","fontWeight":"600","radius":"8px","texture":"none","hoverEffect":"lift","clickEffect":"scale","boxShadow":"sm","transitionMs":150,"cursor":"pointer"}',
  '{"text":"按钮"}',
@@ -242,6 +242,47 @@ INSERT INTO ui_component_type
  '{"width":"100%","padding":"0","flexDirection":"row","justify":"start","alignItems":"stretch","gap":"12px","wrap":true}',
  '{}',
  'Operation', 11, 1)
+ON DUPLICATE KEY UPDATE
+  type_name = VALUES(type_name),
+  category = VALUES(category),
+  render_kind = VALUES(render_kind),
+  is_container = VALUES(is_container),
+  is_builtin = VALUES(is_builtin),
+  style_schema = VALUES(style_schema),
+  content_schema = VALUES(content_schema),
+  behavior_schema = VALUES(behavior_schema),
+  default_style = VALUES(default_style),
+  default_content = VALUES(default_content),
+  sort = VALUES(sort);
+
+-- ==================== 七、表单类基础组件（输入框 / 表单） ====================
+-- 输入框与表单都是**基础组件**（不是写死的业务组件）：
+--   * input：外层节点就是输入框的盒子，背景/边框/圆角/内边距/字号/颜色都配在它上面，
+--     内层 <input> 被剥成透明的取值控件（同 text/button 的既有约定）；
+--     它的当前值会登记进组件值注册表，逻辑图的 data.componentValue 原子按节点 id 读。
+--   * form：渲染成真 <form>（所以输入框里回车也能提交），CSS 用 display:contents
+--     不生成盒子、子节点直接参与外层容器排版；提交时触发页面上 on.submit 的图，
+--     图的 nodeId 指向这个表单节点。
+-- 表单里的"标签"用独立的「文本」组件（样式控制更彻底），提交按钮是「按钮」组件
+-- 把 buttonType 设为 submit。
+
+INSERT INTO ui_component_type
+(type_code, type_name, category, render_kind, is_container, is_builtin,
+ style_schema, content_schema, behavior_schema, default_style, default_content, preview_icon, sort, status) VALUES
+('input', '输入框', 'base', 'input', 0, 0,
+ '["width","maxWidth","align","padding","backgroundColor","borderWidth","borderStyle","borderColor","radius","fontSize","fontWeight","textColor","textAlign","texture","boxShadow","cursor","transitionMs"]',
+ '["placeholder","inputType","visibleWhen"]',
+ '[]',
+ '{"width":"100%","padding":"9px 12px","backgroundColor":"var(--site-bg-page)","borderWidth":"1px","borderStyle":"solid","borderColor":"var(--site-border)","radius":"8px","fontSize":"14px","textColor":"var(--site-text-primary)","cursor":"text"}',
+ '{"placeholder":"","inputType":"text"}',
+ 'EditPen', 12, 1),
+('form', '表单', 'layout', 'form', 1, 0,
+ '["width","maxWidth","align","padding","marginTop","marginBottom","backgroundColor","texture","radius","borderWidth","borderStyle","borderColor","boxShadow","flexDirection","justify","alignItems","gap","wrap"]',
+ '["visibleWhen"]',
+ '[]',
+ '{"width":"100%","maxWidth":"360px","padding":"24px","backgroundColor":"var(--site-bg-card)","radius":"12px","boxShadow":"sm","flexDirection":"column","alignItems":"stretch","gap":"14px"}',
+ '{}',
+ 'Files', 13, 1)
 ON DUPLICATE KEY UPDATE
   type_name = VALUES(type_name),
   category = VALUES(category),

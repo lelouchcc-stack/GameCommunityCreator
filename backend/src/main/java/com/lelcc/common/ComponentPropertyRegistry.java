@@ -24,7 +24,14 @@ public final class ComponentPropertyRegistry {
     public static final String TYPE_JSON_ARRAY = "jsonArray";
     public static final String TYPE_JSON_OBJECT = "jsonObject";
 
-    private static final Pattern LENGTH = Pattern.compile("^(auto|0|\\d+(\\.\\d+)?(px|%|rem|em|vh|vw))$");
+    /** 单个长度值 */
+    private static final String LENGTH_TOKEN = "(auto|0|\\d+(\\.\\d+)?(px|%|rem|em|vh|vw))";
+    /**
+     * 长度属性：允许 1–4 个值，与 CSS 的 padding/margin 简写一致
+     * （种子里的默认值本身就写成 "8px 18px"，只认单值的话那些默认值存不回去）。
+     */
+    private static final Pattern LENGTH = Pattern.compile(
+            "^" + LENGTH_TOKEN + "( " + LENGTH_TOKEN + "){0,3}$");
     /** 允许 3/6/8 位 hex 与 rgb()/rgba()：颜色选择器开透明度后产出的就是这些形态 */
     private static final Pattern COLOR = Pattern.compile(
             "^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}"
@@ -101,14 +108,10 @@ public final class ComponentPropertyRegistry {
         put("itemsTemplate", TYPE_JSON_ARRAY, "列表项模板");
         putText("emptyText", "空状态文案", 40);
         put("visibleWhen", TYPE_BINDING, "可见条件");
-        // 表单类业务组件（登录 / 注册）的文案与跳转
-        putText("submitText", "按钮文案", 20);
-        putText("usernamePlaceholder", "用户名占位提示", 50);
-        putText("passwordPlaceholder", "密码占位提示", 50);
-        putText("nicknamePlaceholder", "昵称占位提示", 50);
-        putText("redirectTo", "成功后跳转", 100);
-        put("showRegisterLink", TYPE_BOOL, "显示注册入口");
-        put("showLoginLink", TYPE_BOOL, "显示登录入口");
+        // 表单类基础组件（input / form）与按钮
+        putText("placeholder", "占位提示", 50);
+        putEnum("inputType", "输入类型", "text", "password", "number", "email");
+        putEnum("buttonType", "按钮类型", "button", "submit");
         // 行为
         putText("emit", "触发信号名", 40);
         put("onClickAction", TYPE_JSON_OBJECT, "点击动作");

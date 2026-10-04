@@ -42,6 +42,31 @@
     width: 100%;
 }
 
+/* 输入框：外层节点是盒子（背景/边框/圆角/内边距都配在它上面），
+   内层 <input> 剥成透明的取值控件，只继承字体与颜色 */
+.ui-input {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: transparent;
+    outline: none;
+    font: inherit;
+    color: inherit;
+    text-align: inherit;
+    box-sizing: border-box;
+}
+
+.ui-input::placeholder {
+    color: var(--site-text-secondary, #9ca3af);
+}
+
+/* 表单容器：display:contents 让 <form> 不生成盒子，子节点直接参与外层容器的排版，
+   于是它既是真 <form>（输入框里回车即提交），又能完全沿用容器的样式与间距 */
+.ui-form {
+    display: contents;
+}
+
 /* 管理端编辑态的选中/悬停提示 */
 .ui-node--interactive:hover {
     outline: 1px dashed rgba(59, 130, 246, 0.6);
