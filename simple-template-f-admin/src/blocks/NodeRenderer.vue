@@ -275,14 +275,19 @@ const effectiveAction = computed<BlockAction | null>(() => {
     return null;
 });
 
-function onClick() {
+function onClick(event: MouseEvent) {
     if (props.interactive) {
         emit("select", props.node.id);
         return;
     }
-    // 提交按钮的提交由所在 form 统一触发（on.submit 挂在表单节点上）：
-    // 这里直接返回，免得一次点击既提交、又走一遍点击图 / 点击动作
+    // 提交按钮：整个外层盒子（含内边距）在视觉上就是一个按钮，而原生 <button> 只覆盖文字那一小块。
+    // 点到内边距上时浏览器不会提交（原生提交只认 <button> 作为事件目标），这里补一次 requestSubmit，
+    // 保证"看到哪儿就点哪儿"都能提交；点在 <button> 上时不补——原生提交已在路上，否则会提交两次。
     if (isSubmitButton.value) {
+        const target = event.target as HTMLElement | null;
+        if (!target?.closest("button")) {
+            (event.currentTarget as HTMLElement | null)?.closest("form")?.requestSubmit?.();
+        }
         return;
     }
     // 该组件挂了"点击组件"的图就走图（L4 编排）；没有才回落到简单动作（L2）
