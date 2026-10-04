@@ -15,6 +15,7 @@ import com.lelcc.entity.SiteConfig;
 import com.lelcc.mapper.HomeModuleMapper;
 import com.lelcc.mapper.SiteConfigMapper;
 import com.lelcc.service.SiteService;
+import com.lelcc.service.UiPageService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,12 +29,16 @@ import java.util.Map;
 public class SiteServiceImpl implements SiteService {
 
     private static final int ENABLED = 1;
+    private static final String HOME_PAGE_KEY = "home";
 
     @Resource
     private SiteConfigMapper siteConfigMapper;
 
     @Resource
     private HomeModuleMapper homeModuleMapper;
+
+    @Resource
+    private UiPageService pageService;
 
     @Override
     public SiteConfigVO getConfig() {
@@ -103,10 +108,11 @@ public class SiteServiceImpl implements SiteService {
 
     @Override
     public SiteBundleVO userBundle() {
+        // homeModules 为过渡字段，用户端首页改用 homePage 后删除
         List<HomeModuleVO> enabled = listModules().stream()
                 .filter(module -> module.enabled() != null && module.enabled() == ENABLED)
                 .toList();
-        return new SiteBundleVO(getConfig(), enabled);
+        return new SiteBundleVO(getConfig(), pageService.userTree(HOME_PAGE_KEY), enabled);
     }
 
     private void upsert(String key, String value) {

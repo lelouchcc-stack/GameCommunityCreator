@@ -21,6 +21,6 @@ public interface SiteService {
     /** 整表批量保存（拖拽排序一次提交），返回保存后的列表 */
     List<HomeModuleVO> saveModules(List<HomeModuleDTO> modules);
 
-    /** 用户端首屏配置：主题 + 仅启用的模块（按 sort 升序） */
+    /** 用户端首屏配置：主题 + 首页组件树（仅启用页面与可见节点，值已合并默认样式） */
     SiteBundleVO userBundle();
 }
