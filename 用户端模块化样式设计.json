@@ -100,7 +100,7 @@
       { "type": "length", "pattern": "^(auto|0|\\d+(\\.\\d+)?(px|%|rem|em|vh|vw))$", "defaultUnit": "px" },
       { "type": "number" },
       { "type": "color", "pattern": "^(#[0-9a-fA-F]{3}|#[0-9a-fA-F]{6}|#[0-9a-fA-F]{8}|rgba?\\([0-9.,%\\s]+\\)|var\\(--site-[a-z0-9-]+\\))$", "allowEmptyMeansThemeToken": true, "note": "后三种是颜色选择器开 show-alpha 后的常见产物；空串一律视为『未设置』" },
-      { "type": "image", "pattern": "^(https?://|/).*" },
+      { "type": "image", "pattern": "^(https?://|/).+$|^upload/[A-Za-z0-9._/-]+$", "note": "两类值：绝对地址，或对象存储 objectKey（见 图片上传-存储抽象设计.json）；渲染时经 resolveAssetUrl 现拼成完整 URL" },
       { "type": "url", "pattern": "^(https?://|/).*" },
       { "type": "enum", "needsOptions": true },
       { "type": "bool" },
