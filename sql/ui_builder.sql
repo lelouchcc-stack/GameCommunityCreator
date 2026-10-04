@@ -196,3 +196,35 @@ INSERT INTO sys_role_menu (role_id, menu_id)
 SELECT 1, 16 FROM DUAL
 WHERE NOT EXISTS (SELECT 1 FROM sys_role_menu WHERE role_id = 1 AND menu_id = 16);
 
+-- ==================== 五、阶段2 组件库种子（图标 / 弹窗） ====================
+
+INSERT INTO ui_component_type
+(type_code, type_name, category, render_kind, is_container, is_builtin,
+ style_schema, content_schema, behavior_schema, default_style, default_content, preview_icon, sort, status) VALUES
+('icon', '图标', 'base', 'icon', 0, 0,
+ '["width","height","align","textColor"]',
+ '["icon","linkType","linkUrl","visibleWhen"]',
+ '["emit","onClickAction"]',
+ '{"width":"20px","height":"20px","align":"left","textColor":"var(--site-text-primary)"}',
+ '{"icon":"","linkType":"none"}',
+ 'StarFilled', 9, 1),
+('modal', '弹窗', 'interactive', 'modal', 1, 0,
+ '["width","height","padding","backgroundColor","texture","radius","boxShadow"]',
+ '["title"]',
+ '["overlayClosable","showClose","animation","zIndex"]',
+ '{"width":"480px","padding":"20px","backgroundColor":"var(--site-bg-card)","radius":"12px","boxShadow":"lg"}',
+ '{"title":"提示"}',
+ 'Crop', 10, 1)
+ON DUPLICATE KEY UPDATE
+  type_name = VALUES(type_name),
+  category = VALUES(category),
+  render_kind = VALUES(render_kind),
+  is_container = VALUES(is_container),
+  is_builtin = VALUES(is_builtin),
+  style_schema = VALUES(style_schema),
+  content_schema = VALUES(content_schema),
+  behavior_schema = VALUES(behavior_schema),
+  default_style = VALUES(default_style),
+  default_content = VALUES(default_content),
+  sort = VALUES(sort);
+

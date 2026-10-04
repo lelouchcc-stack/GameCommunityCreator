@@ -90,6 +90,10 @@ public final class ComponentPropertyRegistry {
         // 行为
         putText("emit", "触发信号名", 40);
         put("onClickAction", TYPE_JSON_OBJECT, "点击动作");
+        put("overlayClosable", TYPE_BOOL, "点击遮罩关闭");
+        put("showClose", TYPE_BOOL, "显示关闭按钮");
+        putEnum("animation", "弹窗动画", "fade", "zoom", "slide-down");
+        putRange("zIndex", "层级", 1000, 9999);
     }
 
     private ComponentPropertyRegistry() {

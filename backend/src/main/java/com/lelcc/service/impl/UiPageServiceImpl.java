@@ -211,7 +211,26 @@ public class UiPageServiceImpl implements UiPageService {
             }
         }
 
-        return listNodes(pageId);
+        // 把"临时 id -> 真实 id"回传，前端据此把动作里的目标改成真实 id
+        Map<Long, Long> tempToReal = new HashMap<>();
+        resolved.forEach((tempId, realId) -> {
+            if (tempId < 0) {
+                tempToReal.put(realId, tempId);
+            }
+        });
+        List<NodeVO> tree = listNodes(pageId);
+        if (!tempToReal.isEmpty()) {
+            fillClientId(tree, tempToReal);
+        }
+        return tree;
+    }
+
+    /** 给本次新增的节点回填临时 id，供前端做动作目标回填 */
+    private void fillClientId(List<NodeVO> nodes, Map<Long, Long> tempToReal) {
+        for (NodeVO node : nodes) {
+            node.setClientId(tempToReal.get(node.getId()));
+            fillClientId(node.getChildren(), tempToReal);
+        }
     }
 
     private Long persistNode(NodeDTO dto, Long pageId, Long parentId) {

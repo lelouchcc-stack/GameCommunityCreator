@@ -41,5 +41,11 @@ public class NodeVO {
 
     private String remark;
 
+    /**
+     * 本次整树保存时该节点对应的临时 id（负数）；已保存的节点为 null。
+     * 前端据此把动作里指向临时 id 的目标回填成真实 id。
+     */
+    private Long clientId;
+
     private List<NodeVO> children = new ArrayList<>();
 }
