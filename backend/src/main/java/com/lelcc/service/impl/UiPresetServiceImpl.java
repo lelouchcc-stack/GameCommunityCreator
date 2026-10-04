@@ -126,6 +126,7 @@ public class UiPresetServiceImpl implements UiPresetService {
         if (graphError != null) {
             throw new BusinessException(400, graphError);
         }
+        checkNoNodeRef(dto.graphJson());
 
         // 声明的出参与图的 exports 必须一一对应，否则预设节点上会有接不出值的端口
         Set<String> declared = new LinkedHashSet<>(declaredOutputs.keySet());
@@ -136,6 +137,34 @@ public class UiPresetServiceImpl implements UiPresetService {
         }
         if (!declared.equals(exported)) {
             throw new BusinessException(400, "出参声明与图的 exports 不一致：声明 " + declared + " / 导出 " + exported);
+        }
+    }
+
+    /**
+     * 预设跨页面复用，所以它内部的图不能绑具体页面组件
+     * （on.click/on.submit 的 nodeId、act.openModal 的 nodeId 等都属页面图）。
+     */
+    private void checkNoNodeRef(Map<String, Object> graph) {
+        Object nodesRaw = graph == null ? null : graph.get("nodes");
+        if (!(nodesRaw instanceof List<?> nodes)) {
+            return;
+        }
+        Map<String, Set<String>> nodeRefKeys = portsProvider.nodeRefKeys();
+        for (Object item : nodes) {
+            if (!(item instanceof Map<?, ?> node)) {
+                continue;
+            }
+            Set<String> keys = nodeRefKeys.get(String.valueOf(node.get("typeCode")));
+            if (keys == null || !(node.get("config") instanceof Map<?, ?> config)) {
+                continue;
+            }
+            for (String key : keys) {
+                Object value = config.get(key);
+                if (value != null && !String.valueOf(value).isBlank()) {
+                    throw new BusinessException(400, "预设不能引用页面组件（节点 " + node.get("id") + " 的 " + key
+                            + "）——预设跨页面复用，指组件的设置只能留在页面图里");
+                }
+            }
         }
     }
 

@@ -11,7 +11,9 @@ import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 把原子库与预设库的 schema 汇成"节点类型 -> 端口集合"的表，供 {@link GraphValidator} 使用。
@@ -44,5 +46,27 @@ public class GraphPortsProvider {
                                 UiJsonUtils.toMapList(preset.getInputsSchema()),
                                 UiJsonUtils.toMapList(preset.getOutputsSchema()))));
         return ports;
+    }
+
+    /**
+     * 原子 typeCode -> nodeRef 型设置项的 key。
+     * 这些键的值必须指向**本页的 ui_node**：页面图能绑组件，跨页面的预设不能绑。
+     */
+    public Map<String, Set<String>> nodeRefKeys() {
+        Map<String, Set<String>> keys = new LinkedHashMap<>();
+        logicNodeMapper.selectList(Wrappers.<UiLogicNodeType>lambdaQuery()
+                        .eq(UiLogicNodeType::getStatus, STATUS_ENABLED))
+                .forEach(atom -> {
+                    Set<String> refs = new LinkedHashSet<>();
+                    for (Map<String, Object> item : UiJsonUtils.toMapList(atom.getConfigSchema())) {
+                        if ("nodeRef".equals(String.valueOf(item.get("type")))) {
+                            refs.add(String.valueOf(item.get("key")));
+                        }
+                    }
+                    if (!refs.isEmpty()) {
+                        keys.put(atom.getTypeCode(), refs);
+                    }
+                });
+        return keys;
     }
 }
