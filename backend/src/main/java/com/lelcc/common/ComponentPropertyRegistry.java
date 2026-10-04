@@ -101,6 +101,14 @@ public final class ComponentPropertyRegistry {
         put("itemsTemplate", TYPE_JSON_ARRAY, "列表项模板");
         putText("emptyText", "空状态文案", 40);
         put("visibleWhen", TYPE_BINDING, "可见条件");
+        // 表单类业务组件（登录 / 注册）的文案与跳转
+        putText("submitText", "按钮文案", 20);
+        putText("usernamePlaceholder", "用户名占位提示", 50);
+        putText("passwordPlaceholder", "密码占位提示", 50);
+        putText("nicknamePlaceholder", "昵称占位提示", 50);
+        putText("redirectTo", "成功后跳转", 100);
+        put("showRegisterLink", TYPE_BOOL, "显示注册入口");
+        put("showLoginLink", TYPE_BOOL, "显示登录入口");
         // 行为
         putText("emit", "触发信号名", 40);
         put("onClickAction", TYPE_JSON_OBJECT, "点击动作");

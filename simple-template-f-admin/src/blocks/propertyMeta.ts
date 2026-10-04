@@ -114,6 +114,13 @@ export const CONTENT_GROUP: PropertyGroup = {
         { key: "itemsTemplate", label: "列表项模板", type: "jsonArray" },
         { key: "emptyText", label: "空状态文案", type: "text", maxLength: 40 },
         { key: "visibleWhen", label: "可见条件", type: "binding" },
+        { key: "submitText", label: "按钮文案", type: "text", maxLength: 20 },
+        { key: "usernamePlaceholder", label: "用户名占位提示", type: "text", maxLength: 50 },
+        { key: "passwordPlaceholder", label: "密码占位提示", type: "text", maxLength: 50 },
+        { key: "nicknamePlaceholder", label: "昵称占位提示", type: "text", maxLength: 50 },
+        { key: "redirectTo", label: "成功后跳转", type: "text", maxLength: 100 },
+        { key: "showRegisterLink", label: "显示注册入口", type: "bool" },
+        { key: "showLoginLink", label: "显示登录入口", type: "bool" },
     ],
 };
 
