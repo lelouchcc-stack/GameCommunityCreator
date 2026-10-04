@@ -75,9 +75,9 @@ INSERT INTO ui_logic_node_type
 ('on.click', '点击组件', 'trigger', '触发', 'ui', NULL, '[]', '[{"key":"out","type":"signal"}]', '[{"key":"nodeId","type":"nodeRef","required":true}]', 'VideoPlay', 101, 1, NULL),
 ('on.submit', '提交表单', 'trigger', '触发', 'ui', NULL, '[]', '[{"key":"out","type":"signal"}]', '[{"key":"nodeId","type":"nodeRef","required":true}]', 'VideoPlay', 102, 1, NULL),
 ('data.boardList', '板块列表', 'source', '数据源', 'api', 'GET /app/board/list', '[{"key":"signal","type":"signal"},{"key":"onlyOpen","type":"boolean"}]', '[{"key":"listBoard","type":"listBoard"},{"key":"out","type":"signal"}]', '[]', 'Download', 203, 1, NULL),
-('data.boardDetail', '板块详情', 'source', '数据源', 'api', 'GET /app/board/{id}', '[{"key":"signal","type":"signal"},{"key":"boardId","type":"number","required":true}]', '[{"key":"board","type":"board"},{"key":"listBoardVersion","type":"listBoardVersion"},{"key":"listProgressStage","type":"listProgressStage"},{"key":"out","type":"signal"}]', '[]', 'Download', 204, 1, NULL),
+('data.boardDetail', '板块详情', 'source', '数据源', 'api', 'GET /app/board/{boardId}', '[{"key":"signal","type":"signal"},{"key":"boardId","type":"number","required":true}]', '[{"key":"board","type":"board"},{"key":"listBoardVersion","type":"listBoardVersion"},{"key":"listProgressStage","type":"listProgressStage"},{"key":"out","type":"signal"}]', '[]', 'Download', 204, 1, NULL),
 ('data.postList', '帖子列表', 'source', '数据源', 'api', 'GET /app/post/page', '[{"key":"signal","type":"signal"},{"key":"boardId","type":"number"},{"key":"versionId","type":"number"},{"key":"stageId","type":"number"},{"key":"tagId","type":"number"},{"key":"keyword","type":"text"},{"key":"sort","type":"text","options":["latest","hot"]},{"key":"page","type":"number"},{"key":"size","type":"number"}]', '[{"key":"listPost","type":"listPost"},{"key":"pageInfo","type":"pageInfo"},{"key":"out","type":"signal"}]', '[]', 'Download', 205, 1, NULL),
-('data.postDetail', '帖子详情', 'source', '数据源', 'api', 'GET /app/post/{id}', '[{"key":"signal","type":"signal"},{"key":"postId","type":"number","required":true}]', '[{"key":"post","type":"post"},{"key":"out","type":"signal"}]', '[]', 'Download', 206, 1, NULL),
+('data.postDetail', '帖子详情', 'source', '数据源', 'api', 'GET /app/post/{postId}', '[{"key":"signal","type":"signal"},{"key":"postId","type":"number","required":true}]', '[{"key":"post","type":"post"},{"key":"out","type":"signal"}]', '[]', 'Download', 206, 1, NULL),
 ('data.commentList', '评论列表', 'source', '数据源', 'api', 'GET /app/comment/page', '[{"key":"signal","type":"signal"},{"key":"postId","type":"number","required":true},{"key":"page","type":"number"},{"key":"size","type":"number"}]', '[{"key":"listComment","type":"listComment"},{"key":"pageInfo","type":"pageInfo"},{"key":"out","type":"signal"}]', '[]', 'Download', 207, 1, NULL),
 ('data.noticeList', '公告列表', 'source', '数据源', 'api', 'GET /app/notice/list', '[{"key":"signal","type":"signal"},{"key":"limit","type":"number"}]', '[{"key":"listNotice","type":"listNotice"},{"key":"out","type":"signal"}]', '[]', 'Download', 208, 1, NULL),
 ('data.currentMember', '当前用户', 'source', '数据源', 'api', 'GET /app/member/me', '[{"key":"signal","type":"signal"}]', '[{"key":"member","type":"member"},{"key":"out","type":"signal"}]', '[]', 'Download', 209, 1, NULL),
@@ -109,8 +109,8 @@ INSERT INTO ui_logic_node_type
 ('act.updateProfile', '修改个人资料', 'action', '动作', 'api', 'PUT /app/member/profile', '[{"key":"signal","type":"signal"},{"key":"nickname","type":"text"},{"key":"intro","type":"text"},{"key":"avatar","type":"image"}]', '[{"key":"result","type":"result"},{"key":"out","type":"signal"}]', '[]', 'Promotion', 535, 1, NULL),
 ('act.setGameProgress', '设置游戏进度', 'action', '动作', 'api', 'PUT /app/member/progress', '[{"key":"signal","type":"signal"},{"key":"boardId","type":"number","required":true},{"key":"versionId","type":"number"},{"key":"stageId","type":"number"},{"key":"isPublic","type":"boolean"}]', '[{"key":"result","type":"result"},{"key":"out","type":"signal"}]', '[]', 'Promotion', 536, 1, NULL),
 ('act.submitPost', '发布帖子', 'action', '动作', 'api', 'POST /app/post', '[{"key":"signal","type":"signal"},{"key":"boardId","type":"number","required":true},{"key":"title","type":"text","required":true},{"key":"content","type":"text","required":true},{"key":"cover","type":"image"},{"key":"versionId","type":"number","required":true},{"key":"stageId","type":"number"},{"key":"tagIds","type":"any"}]', '[{"key":"result","type":"result"},{"key":"out","type":"signal"}]', '[]', 'Promotion', 537, 1, NULL),
-('act.like', '点赞(可取消)', 'action', '动作', 'api', 'POST /app/post/{id}/like', '[{"key":"signal","type":"signal"},{"key":"postId","type":"number","required":true}]', '[{"key":"result","type":"result"},{"key":"out","type":"signal"}]', '[]', 'Promotion', 538, 1, NULL),
-('act.favorite', '收藏(可取消)', 'action', '动作', 'api', 'POST /app/post/{id}/favorite', '[{"key":"signal","type":"signal"},{"key":"postId","type":"number","required":true}]', '[{"key":"result","type":"result"},{"key":"out","type":"signal"}]', '[]', 'Promotion', 539, 1, NULL),
+('act.like', '点赞(可取消)', 'action', '动作', 'api', 'POST /app/post/{postId}/like', '[{"key":"signal","type":"signal"},{"key":"postId","type":"number","required":true}]', '[{"key":"result","type":"result"},{"key":"out","type":"signal"}]', '[]', 'Promotion', 538, 1, NULL),
+('act.favorite', '收藏(可取消)', 'action', '动作', 'api', 'POST /app/post/{postId}/favorite', '[{"key":"signal","type":"signal"},{"key":"postId","type":"number","required":true}]', '[{"key":"result","type":"result"},{"key":"out","type":"signal"}]', '[]', 'Promotion', 539, 1, NULL),
 ('act.comment', '发表评论/回复', 'action', '动作', 'api', 'POST /app/comment', '[{"key":"signal","type":"signal"},{"key":"postId","type":"number","required":true},{"key":"content","type":"text","required":true},{"key":"parentId","type":"number"}]', '[{"key":"result","type":"result"},{"key":"out","type":"signal"}]', '[]', 'Promotion', 540, 1, NULL),
 ('act.report', '提交举报', 'action', '动作', 'api', 'POST /app/report', '[{"key":"signal","type":"signal"},{"key":"postId","type":"number","required":true},{"key":"reason","type":"text","required":true},{"key":"remark","type":"text"}]', '[{"key":"result","type":"result"},{"key":"out","type":"signal"}]', '[]', 'Promotion', 541, 1, NULL),
 ('act.navigate', '跳转', 'ui', '界面动作', 'ui', NULL, '[{"key":"signal","type":"signal"},{"key":"to","type":"text","required":true,"options":["/","/board/:id","/post/:id","/profile","back"]}]', '[{"key":"out","type":"signal"}]', '[]', 'Pointer', 642, 1, NULL),
@@ -157,19 +157,3 @@ ON DUPLICATE KEY UPDATE
   outputs_schema = VALUES(outputs_schema),
   graph_json = VALUES(graph_json),
   remark = VALUES(remark);
-
--- ==================== 四、逻辑层菜单 ====================
--- 与页面一起加（视图不存在时挂菜单会变成点不开的死菜单）
-
-INSERT INTO sys_menu (id, parent_id, menu_name, menu_type, path, component, perms, icon, sort, visible, status) VALUES
-(17, 6, '原子库', 'C', 'logic-node', 'site/logicNode/index', 'site:logic:list', 'Cpu', 4, 1, 1),
-(18, 6, '预设库', 'C', 'preset', 'site/preset/index', 'site:preset:list', 'Files', 5, 1, 1)
-ON DUPLICATE KEY UPDATE
-  menu_name = VALUES(menu_name), parent_id = VALUES(parent_id), path = VALUES(path),
-  component = VALUES(component), perms = VALUES(perms), icon = VALUES(icon),
-  sort = VALUES(sort), visible = VALUES(visible), status = VALUES(status);
-
-INSERT INTO sys_role_menu (role_id, menu_id)
-SELECT 1, m.id FROM sys_menu m
-WHERE m.id IN (17, 18)
-  AND NOT EXISTS (SELECT 1 FROM sys_role_menu rm WHERE rm.role_id = 1 AND rm.menu_id = m.id);
