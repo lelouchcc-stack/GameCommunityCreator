@@ -1,7 +1,7 @@
 {
-  "exportedAt": "2026-10-04T14:39:40.116Z",
+  "exportedAt": "2026-10-04T17:04:50.670Z",
   "base": "http://localhost:9331",
-  "count": 15,
+  "count": 17,
   "types": [
     {
       "typeCode": "text",
@@ -132,6 +132,7 @@
         "fontSize",
         "fontWeight",
         "textColor",
+        "textAlign",
         "hoverEffect",
         "clickEffect",
         "boxShadow",
@@ -141,6 +142,7 @@
       "contentSchema": [
         "text",
         "icon",
+        "buttonType",
         "visibleWhen"
       ],
       "behaviorSchema": [
@@ -418,6 +420,103 @@
         "alignItems": "stretch",
         "gap": "12px",
         "wrap": true
+      },
+      "defaultContent": {}
+    },
+    {
+      "typeCode": "input",
+      "typeName": "输入框",
+      "category": "base",
+      "renderKind": "input",
+      "isContainer": 0,
+      "isBuiltin": 0,
+      "status": 1,
+      "sort": 12,
+      "styleSchema": [
+        "width",
+        "maxWidth",
+        "align",
+        "padding",
+        "backgroundColor",
+        "borderWidth",
+        "borderStyle",
+        "borderColor",
+        "radius",
+        "fontSize",
+        "fontWeight",
+        "textColor",
+        "textAlign",
+        "texture",
+        "boxShadow",
+        "cursor",
+        "transitionMs"
+      ],
+      "contentSchema": [
+        "placeholder",
+        "inputType",
+        "visibleWhen"
+      ],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "9px 12px",
+        "backgroundColor": "var(--site-bg-page)",
+        "borderWidth": "1px",
+        "borderStyle": "solid",
+        "borderColor": "var(--site-border)",
+        "radius": "8px",
+        "fontSize": "14px",
+        "textColor": "var(--site-text-primary)",
+        "cursor": "text"
+      },
+      "defaultContent": {
+        "placeholder": "",
+        "inputType": "text"
+      }
+    },
+    {
+      "typeCode": "form",
+      "typeName": "表单",
+      "category": "layout",
+      "renderKind": "form",
+      "isContainer": 1,
+      "isBuiltin": 0,
+      "status": 1,
+      "sort": 13,
+      "styleSchema": [
+        "width",
+        "maxWidth",
+        "align",
+        "padding",
+        "marginTop",
+        "marginBottom",
+        "backgroundColor",
+        "texture",
+        "radius",
+        "borderWidth",
+        "borderStyle",
+        "borderColor",
+        "boxShadow",
+        "flexDirection",
+        "justify",
+        "alignItems",
+        "gap",
+        "wrap"
+      ],
+      "contentSchema": [
+        "visibleWhen"
+      ],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "maxWidth": "360px",
+        "padding": "24px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px",
+        "boxShadow": "sm",
+        "flexDirection": "column",
+        "alignItems": "stretch",
+        "gap": "14px"
       },
       "defaultContent": {}
     },
