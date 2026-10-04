@@ -5,21 +5,33 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.lelcc.common.BusinessException;
 import com.lelcc.common.SiteConfigRegistry;
+import com.lelcc.common.UiJsonUtils;
 import com.lelcc.dto.HomeModuleDTO;
 import com.lelcc.dto.HomeModuleVO;
+import com.lelcc.dto.PageTreeVO;
 import com.lelcc.dto.SiteBundleVO;
 import com.lelcc.dto.SiteConfigDTO;
 import com.lelcc.dto.SiteConfigVO;
 import com.lelcc.entity.HomeModule;
 import com.lelcc.entity.SiteConfig;
+import com.lelcc.entity.UiFlow;
+import com.lelcc.entity.UiPage;
+import com.lelcc.entity.UiPreset;
 import com.lelcc.mapper.HomeModuleMapper;
 import com.lelcc.mapper.SiteConfigMapper;
+import com.lelcc.mapper.UiFlowMapper;
+import com.lelcc.mapper.UiPageMapper;
+import com.lelcc.mapper.UiPresetMapper;
 import com.lelcc.service.SiteService;
 import com.lelcc.service.UiPageService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,6 +42,8 @@ public class SiteServiceImpl implements SiteService {
 
     private static final int ENABLED = 1;
     private static final String HOME_PAGE_KEY = "home";
+    /** 图里引用预设用的伪 typeCode（不是原子库里的原子） */
+    private static final String PRESET_TYPE = "preset";
 
     @Resource
     private SiteConfigMapper siteConfigMapper;
@@ -39,6 +53,15 @@ public class SiteServiceImpl implements SiteService {
 
     @Resource
     private UiPageService pageService;
+
+    @Resource
+    private UiPageMapper pageMapper;
+
+    @Resource
+    private UiFlowMapper flowMapper;
+
+    @Resource
+    private UiPresetMapper presetMapper;
 
     @Override
     public SiteConfigVO getConfig() {
@@ -108,7 +131,72 @@ public class SiteServiceImpl implements SiteService {
 
     @Override
     public SiteBundleVO userBundle() {
-        return new SiteBundleVO(getConfig(), pageService.userTree(HOME_PAGE_KEY));
+        Map<String, Map<String, Object>> flows = userFlows();
+        return new SiteBundleVO(getConfig(), pageService.userTree(HOME_PAGE_KEY), flows, referencedPresets(flows.values()));
+    }
+
+    /** 用户端只拿启用中的图；键即 flowKey，前端按触发器（on.click/on.submit）对应的 flowKey 找图 */
+    private Map<String, Map<String, Object>> userFlows() {
+        UiPage page = pageMapper.selectOne(Wrappers.<UiPage>lambdaQuery()
+                .eq(UiPage::getPageKey, HOME_PAGE_KEY)
+                .eq(UiPage::getStatus, ENABLED));
+        if (page == null) {
+            return Map.of();
+        }
+        Map<String, Map<String, Object>> flows = new LinkedHashMap<>();
+        for (UiFlow flow : flowMapper.selectList(Wrappers.<UiFlow>lambdaQuery()
+                .eq(UiFlow::getPageId, page.getId())
+                .eq(UiFlow::getStatus, ENABLED)
+                .orderByAsc(UiFlow::getFlowKey))) {
+            flows.put(flow.getFlowKey(), UiJsonUtils.toMap(flow.getGraphJson()));
+        }
+        return flows;
+    }
+
+    /**
+     * 只下发图里引用到的预设（含"预设引用预设"的传递闭包），不把整个预设库塞给每个页面。
+     * 预设被停用或删除时跳过而不报错：前端遇到未知预设自己告警，不因此让整站配置拉不出来。
+     */
+    private Map<String, Map<String, Object>> referencedPresets(Collection<Map<String, Object>> graphs) {
+        Map<String, Map<String, Object>> presets = new LinkedHashMap<>();
+        Deque<Map<String, Object>> queue = new ArrayDeque<>(graphs);
+        while (!queue.isEmpty()) {
+            for (String key : collectPresetRefs(queue.poll())) {
+                if (presets.containsKey(key)) {
+                    continue;
+                }
+                int at = key.lastIndexOf('@');
+                UiPreset preset = presetMapper.selectOne(Wrappers.<UiPreset>lambdaQuery()
+                        .eq(UiPreset::getPresetCode, key.substring(0, at))
+                        .eq(UiPreset::getVersion, key.substring(at + 1))
+                        .eq(UiPreset::getStatus, ENABLED));
+                if (preset == null) {
+                    continue;
+                }
+                Map<String, Object> graph = UiJsonUtils.toMap(preset.getGraphJson());
+                presets.put(key, graph);
+                queue.add(graph);
+            }
+        }
+        return presets;
+    }
+
+    private List<String> collectPresetRefs(Map<String, Object> graph) {
+        List<String> keys = new ArrayList<>();
+        Object nodesRaw = graph == null ? null : graph.get("nodes");
+        if (!(nodesRaw instanceof List<?> nodes)) {
+            return keys;
+        }
+        for (Object item : nodes) {
+            if (!(item instanceof Map<?, ?> node) || !PRESET_TYPE.equals(String.valueOf(node.get("typeCode")))) {
+                continue;
+            }
+            Object code = node.get("presetCode");
+            if (code != null) {
+                keys.add(code + "@" + node.get("presetVersion"));
+            }
+        }
+        return keys;
     }
 
     private void upsert(String key, String value) {
