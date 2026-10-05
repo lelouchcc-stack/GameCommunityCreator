@@ -5,14 +5,20 @@
 import type { Component } from "vue";
 import BannerCarousel from "./builtin/BannerCarousel.vue";
 import BoardNav from "./builtin/BoardNav.vue";
+import BoardDetail from "./builtin/BoardDetail.vue";
 import HotPostList from "./builtin/HotPostList.vue";
 import NoticeBar from "./builtin/NoticeBar.vue";
+import PostList from "./builtin/PostList.vue";
+import PostDetail from "./builtin/PostDetail.vue";
 
 export const BUILTIN_WIDGETS: Record<string, Component> = {
     "builtin:banner": BannerCarousel,
     "builtin:notice": NoticeBar,
     "builtin:hot_post": HotPostList,
     "builtin:board_nav": BoardNav,
+    "builtin:board_detail": BoardDetail,
+    "builtin:post_list": PostList,
+    "builtin:post_detail": PostDetail,
 };
 
 /** 取出 renderKind 对应的业务组件；不是业务组件或尚未接入时返回 null */

@@ -112,6 +112,50 @@ public final class ComponentPropertyRegistry {
         putText("placeholder", "占位提示", 50);
         putEnum("inputType", "输入类型", "text", "password", "number", "email");
         putEnum("buttonType", "按钮类型", "button", "submit");
+        // 内容类业务组件的检索/定位参数（帖子列表、帖子详情、板块详情）
+        putRange("boardId", "板块 ID", 1, 999999999);
+        putRange("versionId", "版本 ID", 1, 999999999);
+        putRange("stageId", "进度阶段 ID", 1, 999999999);
+        putRange("tagId", "标签 ID", 1, 999999999);
+        putRange("postId", "帖子 ID", 1, 999999999);
+        putText("keyword", "搜索关键字", 50);
+        putEnum("sort", "排序方式", "latest", "hot");
+        // 业务组件的「多区域样式」：值会转成 --w-* CSS 变量供组件内部各区域消费
+        // 列表项
+        put("itemPadding", TYPE_LENGTH, "列表项内边距");
+        put("itemGap", TYPE_LENGTH, "列表项间距");
+        put("itemBorderColor", TYPE_COLOR, "列表项分隔线");
+        put("itemHoverBackgroundColor", TYPE_COLOR, "悬停背景色");
+        // 标题
+        put("titleColor", TYPE_COLOR, "标题颜色");
+        put("titleFontSize", TYPE_LENGTH, "标题字号");
+        putEnum("titleFontWeight", "标题字重", "400", "500", "600", "700");
+        // 元信息
+        put("metaColor", TYPE_COLOR, "元信息颜色");
+        put("metaFontSize", TYPE_LENGTH, "元信息字号");
+        put("metaGap", TYPE_LENGTH, "元信息间距");
+        // 封面
+        put("coverWidth", TYPE_LENGTH, "封面宽度");
+        put("coverHeight", TYPE_LENGTH, "封面高度");
+        put("coverRadius", TYPE_LENGTH, "封面圆角");
+        putEnum("coverFit", "封面填充", "cover", "contain", "fill");
+        // 序号角标
+        put("rankColor", TYPE_COLOR, "序号颜色");
+        put("rankFontSize", TYPE_LENGTH, "序号字号");
+        put("badgeBackgroundColor", TYPE_COLOR, "角标背景");
+        put("badgeTextColor", TYPE_COLOR, "角标文字");
+        // 空状态
+        put("emptyColor", TYPE_COLOR, "空状态颜色");
+        put("emptyFontSize", TYPE_LENGTH, "空状态字号");
+        // 正文
+        put("bodyColor", TYPE_COLOR, "正文字颜色");
+        put("bodyFontSize", TYPE_LENGTH, "正文字号");
+        putRange("bodyLineHeight", "正文字行高", 1, 3);
+        // 动作
+        put("actionColor", TYPE_COLOR, "动作文字色");
+        put("actionBackgroundColor", TYPE_COLOR, "动作背景");
+        put("actionFontSize", TYPE_LENGTH, "动作字号");
+        put("actionRadius", TYPE_LENGTH, "动作圆角");
         // 行为
         putText("emit", "触发信号名", 40);
         put("onClickAction", TYPE_JSON_OBJECT, "点击动作");

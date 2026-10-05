@@ -100,13 +100,16 @@
                     <el-tabs v-model="activeTab">
                         <el-tab-pane label="样式" name="style">
                             <el-form label-width="76px" size="small">
-                                <el-form-item
-                                    v-for="key in selectedType.styleSchema"
-                                    :key="key"
-                                    :label="propertyLabel(key)"
-                                >
-                                    <PropertyControl v-model="selectedNode.style[key]" :meta="metaOf(key)" />
-                                </el-form-item>
+                                <template v-for="section in styleSections" :key="section.label">
+                                    <el-divider content-position="left">{{ section.label }}</el-divider>
+                                    <el-form-item
+                                        v-for="key in section.keys"
+                                        :key="key"
+                                        :label="propertyLabel(key)"
+                                    >
+                                        <PropertyControl v-model="selectedNode.style[key]" :meta="metaOf(key)" />
+                                    </el-form-item>
+                                </template>
                             </el-form>
                         </el-tab-pane>
                         <el-tab-pane label="内容" name="content">
@@ -189,7 +192,7 @@ import { ElMessage } from "element-plus";
 import NodeRenderer from "../../../blocks/NodeRenderer.vue";
 import PropertyControl from "../../../components/PropertyControl.vue";
 import ActionControl, { type ActionTargetOption } from "../../../components/ActionControl.vue";
-import { CATEGORY_LABELS, BINDABLE_KEYS, PROPERTY_MAP, metaOf } from "../../../blocks/propertyMeta";
+import { CATEGORY_LABELS, BINDABLE_KEYS, PROPERTY_MAP, STYLE_GROUPS, metaOf } from "../../../blocks/propertyMeta";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockAction } from "../../../blocks/blockRuntime";
 import { portsOfNode } from "../../../blocks/portSchema";
 import FlowEditor from "./FlowEditor.vue";
@@ -263,6 +266,22 @@ const selectedNode = computed(() => nodes.value.find((node) => node.id === selec
 const selectedType = computed(() => {
     const node = selectedNode.value;
     return node ? types.value.find((type) => type.typeCode === node.typeCode) ?? null : null;
+});
+
+/**
+ * 样式面板分组：基础样式 + 业务组件的分区域样式（列表项/标题/元信息…）。
+ * 组件类型勾选了哪些 key（styleSchema），这里就只显示哪些，并按分组加标题。
+ */
+const styleSections = computed(() => {
+    const schema = selectedType.value?.styleSchema ?? [];
+    const sections: Array<{ label: string; keys: string[] }> = [];
+    for (const group of STYLE_GROUPS) {
+        const keys = group.properties.filter((property) => schema.includes(property.key)).map((property) => property.key);
+        if (keys.length) {
+            sections.push({ label: group.label, keys });
+        }
+    }
+    return sections;
 });
 
 /** 动作的目标下拉项：标出哪些是弹窗组件，供"打开弹窗"过滤使用 */

@@ -2,6 +2,8 @@
  * 组件属性元数据（前端镜像 ComponentPropertyRegistry），仅管理端使用：
  * 属性面板与"默认值"编辑器据此动态生成控件。
  */
+import { REGION_STYLE_SPECS } from "./styleRegistry";
+
 export type PropType =
     | "length"
     | "number"
@@ -32,7 +34,7 @@ export interface PropertyGroup {
     properties: PropertyMeta[]
 }
 
-export const STYLE_GROUPS: PropertyGroup[] = [
+const BASE_STYLE_GROUPS: PropertyGroup[] = [
     {
         group: "layout",
         label: "布局",
@@ -91,6 +93,33 @@ export const STYLE_GROUPS: PropertyGroup[] = [
     },
 ];
 
+/**
+ * 业务组件的分区域样式（列表项/标题/元信息/封面…）按 group 归拢成属性分组。
+ * 与 styleRegistry 的 REGION_STYLE_SPECS 同源，组件类型勾选哪些键由各自 style_schema 决定。
+ */
+function buildRegionGroups(): PropertyGroup[] {
+    const groups = new Map<string, PropertyGroup>();
+    for (const spec of REGION_STYLE_SPECS) {
+        let group = groups.get(spec.group);
+        if (!group) {
+            group = { group: `region-${groups.size}`, label: spec.group, properties: [] };
+            groups.set(spec.group, group);
+        }
+        group.properties.push({
+            key: spec.key,
+            label: spec.label,
+            type: spec.type as PropType,
+            options: spec.options,
+            min: spec.min,
+            max: spec.max,
+            step: spec.step,
+        });
+    }
+    return [...groups.values()];
+}
+
+export const STYLE_GROUPS: PropertyGroup[] = [...BASE_STYLE_GROUPS, ...buildRegionGroups()];
+
 export const CONTENT_GROUP: PropertyGroup = {
     group: "content",
     label: "内容",
@@ -117,6 +146,13 @@ export const CONTENT_GROUP: PropertyGroup = {
         { key: "placeholder", label: "占位提示", type: "text", maxLength: 50 },
         { key: "inputType", label: "输入类型", type: "enum", options: ["text", "password", "number", "email"] },
         { key: "buttonType", label: "按钮类型", type: "enum", options: ["button", "submit"] },
+        { key: "boardId", label: "板块 ID", type: "number", min: 1 },
+        { key: "versionId", label: "版本 ID", type: "number", min: 1 },
+        { key: "stageId", label: "进度阶段 ID", type: "number", min: 1 },
+        { key: "tagId", label: "标签 ID", type: "number", min: 1 },
+        { key: "postId", label: "帖子 ID", type: "number", min: 1 },
+        { key: "keyword", label: "搜索关键字", type: "text", maxLength: 50 },
+        { key: "sort", label: "排序方式", type: "enum", options: ["latest", "hot"] },
     ],
 };
 

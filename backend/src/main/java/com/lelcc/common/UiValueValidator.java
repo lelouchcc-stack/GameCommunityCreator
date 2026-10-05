@@ -9,7 +9,8 @@ import java.util.Map;
  */
 public final class UiValueValidator {
 
-    private static final int MAX_KEYS = 40;
+    /** 业务组件开放多区域样式后，单个节点的样式键可能较多，上限放宽到 160 */
+    private static final int MAX_KEYS = 160;
 
     private UiValueValidator() {
     }

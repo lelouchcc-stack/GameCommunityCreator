@@ -5,6 +5,8 @@
  * 约定：
  * - var(--site-xxx) 会补上兜底色，管理端没注入中性色 token 时也不会失效
  * - 质感/阴影/悬停/点击效果走预置类名（ui-blocks.css），其余走内联样式
+ * - 业务组件（builtin:*）的「多区域样式」不落在外层盒子上，而是输出成 --w-* CSS 变量，
+ *   由组件内部各区域用 var(--w-xxx, 默认值) 消费，这样标题/元信息/封面等可分别调
  */
 import { resolveAssetUrl } from "../utils/asset";
 
@@ -45,6 +47,69 @@ function urlValue(value: unknown): string | undefined {
     return url ? `url("${url}")` : undefined;
 }
 
+/* ---------------- 多区域样式规格 ---------------- */
+
+export interface RegionStyleSpec {
+    key: string
+    label: string
+    group: string
+    type: "length" | "color" | "enum" | "number"
+    options?: string[]
+    min?: number
+    max?: number
+    step?: number
+}
+
+/**
+ * 业务组件的分区域样式键。组件类型在 style_schema 里勾选要开放哪些，
+ * 属性面板按 group 分组展示；值最终转成 --w-* 变量供组件内部消费。
+ */
+export const REGION_STYLE_SPECS: RegionStyleSpec[] = [
+    { key: "itemPadding", label: "列表项内边距", group: "列表项", type: "length" },
+    { key: "itemGap", label: "列表项间距", group: "列表项", type: "length" },
+    { key: "itemBorderColor", label: "列表项分隔线", group: "列表项", type: "color" },
+    { key: "itemHoverBackgroundColor", label: "悬停背景色", group: "列表项", type: "color" },
+    { key: "titleColor", label: "标题颜色", group: "标题", type: "color" },
+    { key: "titleFontSize", label: "标题字号", group: "标题", type: "length" },
+    { key: "titleFontWeight", label: "标题字重", group: "标题", type: "enum", options: ["400", "500", "600", "700"] },
+    { key: "metaColor", label: "元信息颜色", group: "元信息", type: "color" },
+    { key: "metaFontSize", label: "元信息字号", group: "元信息", type: "length" },
+    { key: "metaGap", label: "元信息间距", group: "元信息", type: "length" },
+    { key: "coverWidth", label: "封面宽度", group: "封面", type: "length" },
+    { key: "coverHeight", label: "封面高度", group: "封面", type: "length" },
+    { key: "coverRadius", label: "封面圆角", group: "封面", type: "length" },
+    { key: "coverFit", label: "封面填充", group: "封面", type: "enum", options: ["cover", "contain", "fill"] },
+    { key: "rankColor", label: "序号颜色", group: "序号角标", type: "color" },
+    { key: "rankFontSize", label: "序号字号", group: "序号角标", type: "length" },
+    { key: "badgeBackgroundColor", label: "角标背景", group: "序号角标", type: "color" },
+    { key: "badgeTextColor", label: "角标文字", group: "序号角标", type: "color" },
+    { key: "emptyColor", label: "空状态颜色", group: "空状态", type: "color" },
+    { key: "emptyFontSize", label: "空状态字号", group: "空状态", type: "length" },
+    { key: "bodyColor", label: "正文字颜色", group: "正文", type: "color" },
+    { key: "bodyFontSize", label: "正文字号", group: "正文", type: "length" },
+    { key: "bodyLineHeight", label: "正文字行高", group: "正文", type: "number", min: 1, max: 3, step: 0.1 },
+    { key: "actionColor", label: "动作文字色", group: "动作", type: "color" },
+    { key: "actionBackgroundColor", label: "动作背景", group: "动作", type: "color" },
+    { key: "actionFontSize", label: "动作字号", group: "动作", type: "length" },
+    { key: "actionRadius", label: "动作圆角", group: "动作", type: "length" },
+];
+
+const REGION_SPEC_MAP = new Map(REGION_STYLE_SPECS.map((spec) => [spec.key, spec]));
+
+export function regionSpecOf(key: string): RegionStyleSpec | undefined {
+    return REGION_SPEC_MAP.get(key);
+}
+
+/** 区域键 -> CSS 变量名，如 titleColor -> --w-title-color */
+export function regionCssVar(key: string): string {
+    return "--w-" + key.replace(/[A-Z]/g, (m) => "-" + m.toLowerCase());
+}
+
+/** 内容/样式里出现过的区域键（供组件按需读取） */
+export function regionKeys(): string[] {
+    return REGION_STYLE_SPECS.map((spec) => spec.key);
+}
+
 /** 内联样式映射：属性 key -> CSS 属性名 */
 const INLINE: Record<string, string> = {
     width: "width",
@@ -77,6 +142,18 @@ export function toCss(style: StyleMap | null | undefined): Record<string, string
     }
     for (const [key, raw] of Object.entries(style)) {
         if (raw === null || raw === undefined || raw === "") {
+            continue;
+        }
+        const regionSpec = REGION_SPEC_MAP.get(key);
+        if (regionSpec) {
+            if (regionSpec.type === "color") {
+                const value = colorValue(raw);
+                if (value) {
+                    css[regionCssVar(key)] = value;
+                }
+            } else {
+                css[regionCssVar(key)] = String(raw);
+            }
             continue;
         }
         if (key === "align") {

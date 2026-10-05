@@ -9,14 +9,8 @@ const routes: RouteRecordRaw[] = [
         meta: { title: "首页" },
     },
     {
-        path: "/board/:id",
-        name: "Board",
-        component: () => import("../views/board/index.vue"),
-        meta: { title: "板块" },
-    },
-    {
-        // 兜底路由：没被上面命中的地址都交给 PageView，按 ui_page.route_path 找页面渲染。
-        // 于是后台新建页面 + 填好路由即可访问，前端不必为每个页面再加一条路由。
+        // 兜底路由：/board/:id、/post/:id、/post/list 等都由 PageView 按 ui_page.route_path 找页面渲染
+        // （支持 :参数 匹配）。于是后台新建页面 + 填好路由即可访问，前端不必为每个页面再加一条路由。
         path: "/:pathMatch(.*)*",
         name: "Page",
         component: () => import("../views/PageView.vue"),

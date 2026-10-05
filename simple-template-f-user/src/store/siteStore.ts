@@ -30,10 +30,36 @@ const useSiteStore = defineStore("site", () => {
         () => pages.value.find((page) => page.isHome === 1) ?? pages.value[0] ?? null,
     );
 
-    /** 按路由地址找页面；找不到返回 null，调用方据此给 404 占位 */
+    /**
+     * 按路由地址找页面；找不到返回 null，调用方据此给 404 占位。
+     * 支持形如 /board/:id 的参数路由：先精确匹配，再退化为「同段数 + 冒号位任意」匹配。
+     */
     function pageByPath(path: string): PageEntry | null {
         const normalized = path.replace(/\/+$/, "") || "/";
-        return pages.value.find((page) => (page.routePath ?? "") === normalized) ?? null;
+        const exact = pages.value.find((page) => (page.routePath ?? "") === normalized);
+        if (exact) {
+            return exact;
+        }
+        return (
+            pages.value.find((page) => matchRoute(page.routePath ?? "", normalized)) ?? null
+        );
+    }
+
+    function matchRoute(pattern: string, target: string): boolean {
+        if (!pattern.includes(":")) {
+            return false;
+        }
+        const patternSegments = pattern.replace(/\/+$/, "").split("/");
+        const targetSegments = target.split("/");
+        if (patternSegments.length !== targetSegments.length) {
+            return false;
+        }
+        return patternSegments.every((segment, index) => {
+            if (segment.startsWith(":")) {
+                return (targetSegments[index] ?? "") !== "";
+            }
+            return segment === targetSegments[index];
+        });
     }
 
     async function loadConfig() {

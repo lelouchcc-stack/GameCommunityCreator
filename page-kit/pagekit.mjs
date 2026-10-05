@@ -31,6 +31,9 @@ const RENDERED_BUILTINS = new Set([
     "builtin:notice",
     "builtin:hot_post",
     "builtin:board_nav",
+    "builtin:board_detail",
+    "builtin:post_list",
+    "builtin:post_detail",
 ]);
 
 /* ------------------------------- 参数解析 ------------------------------- */
