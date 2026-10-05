@@ -16,8 +16,14 @@ export interface GraphBridge {
     setBundle(flows: Record<string, LogicGraph>, presets: Record<string, LogicGraph>): void
     /** 该组件上是否挂了"点击组件"的图（有则点击走图，没有才回落到简单动作） */
     hasClickGraph(nodeId: number | string): boolean
-    triggerEvent(kind: "enter" | "click" | "submit", nodeId?: number | string): Promise<void>
-    evaluate(value: unknown, params?: Record<string, any>): unknown
+    /**
+     * 触发一次图运行；scope 是循环容器注入的当前项（{ item, index, <别名> }），
+     * 让列表项里的按钮能通过 $item 知道自己点的是哪一条。
+     */
+    triggerEvent(kind: "enter" | "click" | "submit", nodeId?: number | string,
+                 scope?: Record<string, any>): Promise<void>
+    /** 解析组件内容里的绑定；scope 同上（渲染循环项时传入） */
+    evaluate(value: unknown, params?: Record<string, any>, scope?: Record<string, any>): unknown
     isVisible(nodeId: number | string): boolean
 }
 
@@ -49,12 +55,12 @@ export function createGraphBridge(host: GraphHost): GraphBridge {
             );
         },
 
-        triggerEvent(kind, nodeId) {
-            return engine.triggerEvent(kind, nodeId);
+        triggerEvent(kind, nodeId, scope) {
+            return engine.triggerEvent(kind, nodeId, scope);
         },
 
-        evaluate(value, params) {
-            return engine.evaluate(value, params);
+        evaluate(value, params, scope) {
+            return engine.evaluate(value, params, scope);
         },
 
         isVisible(nodeId) {

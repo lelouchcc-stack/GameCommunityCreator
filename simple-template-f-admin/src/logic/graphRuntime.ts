@@ -6,6 +6,7 @@
  *   - 数据流拉：某节点执行时若入参来自上游数据节点，就把上游惰性算出来并缓存
  *   - 一次运行内每个节点至多执行一次（computed/pushed 去重），所以图必然终止（无循环）
  *   - 预设节点不拼图，运行期递归跑子图，把 exports 收成它的输出端口
+ *   - 作用域：循环容器触发交互时把当前项作为 scope 注入本次运行，图内与渲染层都能读 $item / $index
  *
  * 状态由调用方传入（用户端传 reactive 的对象），引擎本身不依赖 Vue。
  */
@@ -28,10 +29,14 @@ export interface GraphRuntimeOptions {
 export interface GraphRuntime {
     /** 跑某个 flow 里的所有"进入页面"根 */
     runFlow(flowKey: string, params?: Record<string, any>): Promise<void>
-    /** 组件交互：按 on.click / on.submit 的 nodeId 找到对应根并执行 */
-    triggerEvent(kind: "enter" | "click" | "submit", componentId?: number | string): Promise<void>
-    /** 渲染器解析绑定：$ref / $runtime / $param；解析不出来返回 undefined */
-    evaluate(value: unknown, params?: Record<string, any>): unknown
+    /**
+     * 组件交互：按 on.click / on.submit 的 nodeId 找到对应根并执行。
+     * scope 是循环容器注入的当前项（{ item, index, <别名> }）——列表项里的按钮靠它知道自己点的是哪一条。
+     */
+    triggerEvent(kind: "enter" | "click" | "submit", componentId?: number | string,
+                 scope?: Record<string, any>): Promise<void>
+    /** 渲染器解析绑定：$ref / $runtime / $param / $item / $index；解析不出来返回 undefined */
+    evaluate(value: unknown, params?: Record<string, any>, scope?: Record<string, any>): unknown
     /** 组件显隐（act.setVisible 写过就按它，没写过按节点自身 visible） */
     isVisible(componentId: number | string): boolean
     reset(): void
@@ -42,6 +47,8 @@ interface RunContext {
     presets: Record<string, LogicGraph>
     prefix: string
     params: Record<string, any>
+    /** 本次运行的作用域（循环容器注入的当前项）；页面进入类触发没有 */
+    scope?: Record<string, any>
     runId: string
     computed: Set<string>
     running: Set<string>
@@ -97,6 +104,8 @@ export function createGraphRuntime(options: GraphRuntimeOptions): GraphRuntime {
             runtime: host.runtimeValues(),
             // 预设内部节点：outputs 的键带前缀，$ref 要按同一前缀去找（见 EvalContext.prefix）
             prefix: ctx.prefix,
+            // 循环容器注入的当前项：列表项里的节点配置可以写 $item.id
+            scope: ctx.scope,
         });
         const result: Record<string, any> = values === UNRESOLVED ? {} : { ...values };
         for (const edge of ctx.graph.edges) {
@@ -253,12 +262,14 @@ export function createGraphRuntime(options: GraphRuntimeOptions): GraphRuntime {
         }
     }
 
-    function newContext(graph: LogicGraph, runId: string, params: Record<string, any>): RunContext {
+    function newContext(graph: LogicGraph, runId: string, params: Record<string, any>,
+                        scope?: Record<string, any>): RunContext {
         return {
             graph,
             presets,
             prefix: "",
             params,
+            scope,
             runId,
             computed: new Set(),
             running: new Set(),
@@ -270,8 +281,10 @@ export function createGraphRuntime(options: GraphRuntimeOptions): GraphRuntime {
         };
     }
 
-    async function runGraphRoots(graph: LogicGraph, runId: string, params: Record<string, any>, predicate: (node: LogicNode) => boolean) {
-        const ctx = newContext(graph, runId, params);
+    async function runGraphRoots(graph: LogicGraph, runId: string, params: Record<string, any>,
+                                 predicate: (node: LogicNode) => boolean,
+                                 scope?: Record<string, any>) {
+        const ctx = newContext(graph, runId, params, scope);
         for (const node of graph.nodes) {
             if (!predicate(node)) {
                 continue;
@@ -289,7 +302,7 @@ export function createGraphRuntime(options: GraphRuntimeOptions): GraphRuntime {
             await runGraphRoots(graph, `${flowKey}#${++sequence}`, params, (node) => node.typeCode === "on.pageEnter");
         },
 
-        async triggerEvent(kind, componentId) {
+        async triggerEvent(kind, componentId, scope) {
             const targetType = kind === "enter" ? "on.pageEnter" : kind === "click" ? "on.click" : "on.submit";
             for (const [flowKey, graph] of Object.entries(flows)) {
                 await runGraphRoots(graph, `${flowKey}#${++sequence}`, {}, (node) => {
@@ -300,15 +313,16 @@ export function createGraphRuntime(options: GraphRuntimeOptions): GraphRuntime {
                         return true;
                     }
                     return node.config?.nodeId !== undefined && String(node.config.nodeId) === String(componentId);
-                });
+                }, scope);
             }
         },
 
-        evaluate(value, params = {}) {
+        evaluate(value, params = {}, scope) {
             const resolved = evalValue(value, {
                 outputs: state.outputs,
                 params,
                 runtime: host.runtimeValues(),
+                scope,
             });
             return resolved === UNRESOLVED ? undefined : resolved;
         },

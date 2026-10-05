@@ -333,6 +333,35 @@ try {
         check("内部节点 outputs 带预设前缀", state.outputs["n2/p1"].boolean, true);
     }
 
+    // 10 循环容器注入的 $item 作用域（渲染绑定 + 事件注入）
+    {
+        const { host, calls } = makeHost();
+        const { runtime } = makeRuntime(
+            {
+                row: {
+                    nodes: [
+                        { id: "r1", typeCode: "on.click", config: { nodeId: 40 } },
+                        { id: "r2", typeCode: "act.toast", config: { message: "$item.title" } },
+                    ],
+                    edges: [{ from: { node: "r1", port: "out" }, to: { node: "r2", port: "signal" } }],
+                },
+            },
+            {},
+            host,
+        );
+        const scope = { item: { id: 7, title: "第 7 条", author: { name: "张三" } }, index: 2 };
+        console.log("\n— 10 $item 作用域 —");
+        check("$item.字段 能解析", runtime.evaluate("$item.title", {}, scope), "第 7 条");
+        check("$item 深层字段能解析", runtime.evaluate("$item.author.name", {}, scope), "张三");
+        check("$item 不带字段取整项", runtime.evaluate("$item", {}, scope), scope.item);
+        check("$index 能解析", runtime.evaluate("$index", {}, scope), 2);
+        check("自定义别名能解析", runtime.evaluate("$row.id", {}, { row: { id: 9 } }), 9);
+        check("作用域里没有的别名当字面量（无作用域时不变）", runtime.evaluate("$item.title"), "$item.title");
+        check("普通文案不受影响", runtime.evaluate("$100 优惠"), "$100 优惠");
+        await runtime.triggerEvent("click", 40, scope);
+        check("事件把当前项注入图（列表项按钮知道点的是哪条）", calls.toasts.map((t) => t.message), ["第 7 条"]);
+    }
+
     console.log(failures === 0 ? "\n全部通过" : `\n有 ${failures} 项不符合预期`);
     process.exitCode = failures === 0 ? 0 : 1;
 } finally {

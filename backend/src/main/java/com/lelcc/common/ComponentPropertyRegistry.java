@@ -45,7 +45,15 @@ public final class ComponentPropertyRegistry {
      */
     private static final Pattern IMAGE = Pattern.compile(
             "^(https?://|/).+$|^upload/\\d{4}/\\d{2}/\\d{2}/[A-Za-z0-9_-]{1,64}\\.[A-Za-z0-9]{1,8}$");
-    private static final Pattern BINDING = Pattern.compile("^(\\$ref\\.[A-Za-z0-9_]+\\.[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)?|\\$runtime\\.[A-Za-z0-9_.]+)$");
+    /**
+     * 绑定表达式：$ref.<节点>.<端口>[.字段] / $runtime.<路径> / $param.<名> / $<别名>[.字段]。
+     * 最后一个分支覆盖循环容器注入的 $item / $index / $<自定义别名>（如 $item.title、$row.id）。
+     */
+    private static final Pattern BINDING = Pattern.compile(
+            "^(\\$ref\\.[A-Za-z0-9_]+\\.[A-Za-z0-9_]+(\\.[A-Za-z0-9_]+)?"
+                    + "|\\$runtime\\.[A-Za-z0-9_.]+"
+                    + "|\\$param\\.[A-Za-z0-9_]+"
+                    + "|\\$[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z0-9_]+)*)$");
     /** 危险字符：出现即拒绝，避免 CSS/HTML 注入 */
     private static final Pattern DANGER = Pattern.compile("[{};<>\u0000]");
 
@@ -108,6 +116,12 @@ public final class ComponentPropertyRegistry {
         put("itemsTemplate", TYPE_JSON_ARRAY, "列表项模板");
         putText("emptyText", "空状态文案", 40);
         put("visibleWhen", TYPE_BINDING, "可见条件");
+        // 循环容器（repeat）：把 itemsSource 取到的列表按 layoutMode 重复渲染子节点
+        putEnum("layoutMode", "排列方式", "list", "grid", "row", "scrollX", "carousel");
+        putText("itemAlias", "循环项别名", 20);
+        putEnum("paging", "分页方式", "none", "loadMore");
+        putRange("perView", "一屏条数", 1, 4);
+        put("indicator", TYPE_BOOL, "显示指示点");
         // 表单类基础组件（input / form）与按钮
         putText("placeholder", "占位提示", 50);
         putEnum("inputType", "输入类型", "text", "password", "number", "email");

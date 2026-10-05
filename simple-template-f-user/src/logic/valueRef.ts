@@ -1,5 +1,6 @@
 /**
- * 值引用求值（管理端与用户端同源副本）：字面量 / $param.x / $ref.<节点>.<端口>[.<字段>] / $runtime.x
+ * 值引用求值（管理端与用户端同源副本）：
+ * 字面量 / $param.x / $ref.<节点>.<端口>[.<字段>] / $runtime.x / $item[.字段] / $index / $<别名>[.字段]
  *
  * 求值可能"还没就绪"（上游没跑过），所以用 UNRESOLVED 显式区分"没有值"与"值是 undefined"。
  */
@@ -8,6 +9,11 @@ import type { LogicGraph, LogicNode } from "./types";
 const REF = /^\$ref\.([^.]+)\.([^.]+)((?:\.[^.]*)*)$/;
 const PARAM = /^\$param\.([A-Za-z0-9_]+)$/;
 const RUNTIME = /^\$runtime\.([A-Za-z0-9_.]+)$/;
+/**
+ * 循环容器注入的作用域别名：$item / $index / $<别名>[.字段.子字段]。
+ * 只有在 scope 里存在同名键时才算引用——否则当字面量，避免把「$100 优惠」这类文案吃掉。
+ */
+const ALIAS = /^\$([A-Za-z_][A-Za-z0-9_]*)((?:\.[A-Za-z0-9_]+)*)$/;
 
 export const UNRESOLVED: unique symbol = Symbol("unresolved");
 
@@ -24,6 +30,11 @@ export interface EvalContext {
      * 所以解析 $ref 必须补上这个前缀——否则预设内部节点之间的 $ref 一律解析不出来。
      */
     prefix?: string
+    /**
+     * 循环容器注入的当前项作用域：别名 -> 值（约定至少含 item 与 index）。
+     * $item.字段 / $index / $<别名>.字段 按它求值；键不存在的别名按字面量处理。
+     */
+    scope?: Record<string, any>
 }
 
 export function isBinding(value: unknown): boolean {
@@ -55,6 +66,13 @@ export function evalValue(value: unknown, ctx: EvalContext): unknown {
         }
         const base = ports[port];
         const rest = ref[3] ? ref[3].slice(1) : "";
+        return rest ? readPath(base, rest) : base;
+    }
+    // 循环容器的作用域别名：只有在作用域里存在同名键时才算引用
+    const alias = ALIAS.exec(value);
+    if (alias?.[1] && ctx.scope && hasOwn(ctx.scope, alias[1])) {
+        const base = ctx.scope[alias[1]];
+        const rest = alias[2] ? alias[2].slice(1) : "";
         return rest ? readPath(base, rest) : base;
     }
     // 认不出的 $ 开头：当字面量，避免把正常文案吃掉
