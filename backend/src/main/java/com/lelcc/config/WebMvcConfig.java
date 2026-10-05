@@ -30,13 +30,16 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/admin/**")
                 .excludePathPatterns("/admin/login");
 
-        // 以下 /app 路径匿名可读，供未登录用户看首页：站点外观配置（站点名/Logo/主题）、
-        // 开放板块列表（板块导航）、展示中的轮播图、已发布公告、热门帖子。
-        // 不放行的话未登录用户打开用户端会先撞 401。放行路径下只允许存在读接口。
+        // 以下 /app 路径匿名可读，供未登录用户浏览社区：站点外观配置（站点名/Logo/主题）、
+        // 板块列表与板块详情、轮播图、公告、热门帖子与帖子列表/详情（单段路径 /app/post/*）。
+        // 不放行的话未登录用户打开用户端会先撞 401。
+        // 注意：放行路径下只允许存在读接口——写接口一律用多段路径（如 /app/post/{id}/like），
+        // 才不会被 /app/post/* 这种单段通配误放行。
         registry.addInterceptor(new AuthInterceptor(jwtUtils, UserType.MEMBER))
                 .addPathPatterns("/app/**")
                 .excludePathPatterns("/app/login", "/app/register", "/app/site/config",
-                        "/app/board/list", "/app/banner/list", "/app/notice/list", "/app/post/hot");
+                        "/app/banner/list", "/app/notice/list",
+                        "/app/board/*", "/app/post/*");
     }
 
     /**
