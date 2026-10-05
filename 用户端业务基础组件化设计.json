@@ -1,13 +1,18 @@
 {
   "doc": "用户端业务 —— 全部业务组件改由基础组件搭建（循环容器 + $item 绑定）",
-  "version": "1.0",
+  "version": "1.1",
   "date": "2026-10-05",
-  "status": "首版：把 9 个 builtin:* 业务组件全部拆成『基础组件组合 + 页面图编排』；为此新增循环容器（repeat）与 $item 绑定作用域、四个表单类基础组件，并删除全部业务组件渲染内核",
+  "status": "v1.1：三条取舍已定——分页只做『加载更多』；tagSelect = checkbox 的 variant=tag；补 data.hotPost 原子。其余不变",
   "revisionHistory": [
     {
       "version": "1.0",
       "date": "2026-10-05",
       "change": "首版。用户拍板三件事：范围=全部业务组件一次做完；列表机制=循环容器 + $item 表达式（不走卡片预设、不改回 builtin）；新增组件=textarea / select / imageUpload / radio+checkbox+tagSelect。承接《用户端登录注册-搭建方案设计.json》v1.1 的原则『页面上的东西一律是组件』——登录页已证明**静态结构**可基础组件化，本设计解决剩下的**列表结构**"
+    },
+    {
+      "version": "1.1",
+      "date": "2026-10-05",
+      "change": "openDecisions O1/O2/O3 经用户确认转正：① repeat 的 paging 只做 loadMore，不做页码器；② tagSelect 不单独做，用 checkbox 的 variant=tag；③ 补 data.hotPost 原子，热门帖子不再用 data.postList(sort=hot)+op.take 代替"
     }
   ],
   "goal": [
@@ -98,16 +103,16 @@
       {
         "id": 7,
         "topic": "tagSelect 是否独立组件",
-        "chosen": "recommended：checkbox（多选）加 variant=tag 样式变体，不单独做第三个多选内核",
+        "chosen": "checkbox（多选）加 variant=tag 样式变体，不单独做第三个多选内核（2026-10-05 用户确认）",
         "alternative": "tagSelect 作为独立 typeCode，与 checkbox 各自一份内核",
-        "why": "标签选择 === 多选 + 标签样式，语义与数据都是同一套；独立做会让多选逻辑复制两份。此项见 openDecisions.O2，待用户确认"
+        "why": "标签选择 === 多选 + 标签样式，语义与数据都是同一套；独立做会让多选逻辑复制两份"
       },
       {
         "id": 8,
         "topic": "列表分页",
-        "chosen": "recommended：v1 只做『加载更多』（repeat 的 paging=loadMore，复用 data.*List 的 page 入参），不做页码器",
+        "chosen": "只做『加载更多』（repeat 的 paging=loadMore，复用 data.*List 的 page 入参），不做页码器（2026-10-05 用户确认）",
         "alternative": "页码分页器 / 无限滚动",
-        "why": "pit.md 只要求『分页浏览/超出页码返回最后一页』，加载更多已满足；页码器需要新的分页基础组件，收益低。见 openDecisions.O1"
+        "why": "pit.md 只要求『分页浏览/超出页码返回最后一页』，加载更多已满足；页码器需要新的分页基础组件，收益低"
       },
       {
         "id": 9,
@@ -128,6 +133,13 @@
         "chosen": "op.markExpired 把 versionExpired 写进每个 item，列表项里放一个 text（或 image）节点，visibleWhen 绑 $item.versionExpired",
         "alternative": "新增一个通用『角标』基础组件",
         "why": "角标 = 一个可见性受控的元素，用现有 text + visibleWhen 足够；新增组件会把业务字段（versionExpired）知识泄漏进组件库"
+      },
+      {
+        "id": 12,
+        "topic": "热门帖子用哪个数据源",
+        "chosen": "补一个 data.hotPost 原子（GET /app/post/hot）（2026-10-05 用户确认）",
+        "alternative": "用 data.postList(sort=hot) + op.take(limit) 代替，不新增原子",
+        "why": "接口 /app/post/hot 已存在且语义明确（置顶优先、再按点赞/浏览降序）；补原子后图上一眼看出是榜单，不必用『列表 + 排序 + 截断』三个节点模拟"
       }
     ]
   },
@@ -252,7 +264,7 @@
         "endpoint": "GET /app/post/hot",
         "inputs": ["signal", "limit"],
         "outputs": ["listPost", "out"],
-        "note": "可选。接口已存在；不补则用 data.postList(sort=hot)+op.take 代替。推荐补，语义清晰"
+        "note": "已定：补（2026-10-05 用户确认）。接口已存在；语义为置顶优先、再按点赞/浏览降序"
       },
       "portTypes": "listBanner / listTag 需在 ui_logic_node_type 的端口类型系统里登记（否则图上连线校验不过）"
     },
@@ -297,7 +309,7 @@
           "target": "repeat(listPost) → 帖子卡片（image+heading+text+text）",
           "itemBinding": "$item.title / $item.authorName / $item.versionNo / $item.cover",
           "triggers": "navigate → /post/$item.id",
-          "data": "data.hotPost 或 data.postList(sort=hot) + op.take(limit)"
+          "data": "data.hotPost（新增原子）"
         },
         {
           "builtin": "post_list",
@@ -455,27 +467,6 @@
     "**管理端画布无实时数据**：repeat 的 $item.x 只能显示表达式原文，要显式标注『预览需在用户端』，否则会被当成画错了"
   ],
   "openDecisions": [
-    {
-      "id": "O1",
-      "topic": "列表分页形态",
-      "question": "repeat 的 paging 只做『加载更多』，还是连页码器一起做（需要额外的分页基础组件）？",
-      "recommended": "v1 只做 loadMore；页码器后续按需",
-      "impact": "影响探索体验与节点树复杂度，不影响功能完整性"
-    },
-    {
-      "id": "O2",
-      "topic": "tagSelect 的形态",
-      "question": "标签选择做成 checkbox 的 variant=tag，还是独立 typeCode？",
-      "recommended": "checkbox + variant=tag（避免多选内核复制两份）",
-      "impact": "影响组件库条数与属性面板键名"
-    },
-    {
-      "id": "O3",
-      "topic": "是否补 data.hotPost 原子",
-      "question": "热门帖子用 data.postList(sort=hot)+op.take 代替，还是补一个语义明确的 data.hotPost？",
-      "recommended": "补（复用已有 /app/post/hot 接口，图上更直观）",
-      "impact": "只影响图上节点数量，不影响能力"
-    },
     {
       "id": "O4",
       "topic": "站点外壳（页头/页脚）是否一起组件化",
