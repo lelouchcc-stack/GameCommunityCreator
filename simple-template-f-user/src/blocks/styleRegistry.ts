@@ -133,6 +133,9 @@ const INLINE: Record<string, string> = {
     alignItems: "alignItems",
     gap: "gap",
     cursor: "cursor",
+    // 弹性分栏：grow 决定占宽比例，basis 决定什么时候换行（basis 同时会打上 ui-col 类）
+    grow: "flexGrow",
+    basis: "flexBasis",
 };
 
 export function toCss(style: StyleMap | null | undefined): Record<string, string> {
@@ -211,7 +214,7 @@ export function toCss(style: StyleMap | null | undefined): Record<string, string
     return css;
 }
 
-/** 预置类名：质感 / 阴影 / 悬停 / 点击效果 */
+/** 预置类名：质感 / 阴影 / 悬停 / 点击效果 / 弹性分栏 */
 export function toClasses(style: StyleMap | null | undefined): string[] {
     const classes: string[] = [];
     if (!style) {
@@ -228,6 +231,10 @@ export function toClasses(style: StyleMap | null | undefined): string[] {
         if (typeof value === "string" && value && value !== "none") {
             classes.push(prefix + value);
         }
+    }
+    // 配了 flex-basis 的节点是「分栏」，窄屏由 .ui-col 的 media query 让它整行落下
+    if (typeof style.basis === "string" && style.basis) {
+        classes.push("ui-col");
     }
     return classes;
 }

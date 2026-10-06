@@ -9,7 +9,7 @@
                     :key="slide.id"
                     class="banner-carousel__slide"
                     :class="{ 'banner-carousel__slide--link': clickable(slide) }"
-                    @click="onSlideClick(slide)"
+                    @click="onSlideClick(slide, $event)"
                 >
                     <img
                         class="banner-carousel__img"
@@ -65,6 +65,8 @@ import type { UiNode } from "../../types/uiBuilder";
 import { listVisibleBanners, type BannerItem } from "../../api/banner";
 import { resolveAssetUrl } from "../../utils/asset";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockRuntime } from "../blockRuntime";
+import { GRAPH_RUNTIME_KEY, type GraphBridge } from "../graphBridge";
+import { activateNode } from "../nodeActivation";
 
 const props = defineProps<{
     node: UiNode
@@ -73,6 +75,8 @@ const props = defineProps<{
 }>();
 
 const runtime = inject<BlockRuntime>(BLOCK_RUNTIME_KEY, createBlockRuntime());
+/** 图执行器（用户端才注入；管理端画布没有，退化成"只看点击动作与默认行为"） */
+const graphBridge = inject<GraphBridge | null>(GRAPH_RUNTIME_KEY, null);
 
 const all = ref<BannerItem[]>([]);
 const loading = ref(true);
@@ -102,11 +106,19 @@ function go(step: number) {
     index.value = (index.value + step + count) % count;
 }
 
-function onSlideClick(slide: BannerItem) {
-    if (!clickable(slide) || !slide.linkUrl) {
-        return;
+function onSlideClick(slide: BannerItem, event: MouseEvent) {
+    // 点击归节点处理：节点上有逻辑图/点击动作时优先，否则才用这张图的跳转地址。
+    // 图没配跳转地址时默认动作为空 —— 保持"没配就是不可点"的观感
+    const handled = activateNode({
+        node: props.node,
+        runtime,
+        graphBridge,
+        interactive: props.interactive,
+        defaultAction: slide.linkUrl ? { action: "navigate", url: slide.linkUrl } : null,
+    });
+    if (handled) {
+        event.stopPropagation();
     }
-    runtime.run({ action: "navigate", url: slide.linkUrl });
 }
 
 let timer: number | undefined;
@@ -262,5 +274,28 @@ onUnmounted(() => window.clearInterval(timer));
     width: 16px;
     border-radius: 3px;
     background-color: #fff;
+}
+
+/* 窄屏：标题字号收一档、遮罩浅一点，箭头的悬停显隐在触屏上没意义就常显 */
+@media (max-width: 640px) {
+    .banner-carousel {
+        min-height: 160px;
+    }
+
+    .banner-carousel__caption {
+        padding: 24px 14px 12px;
+    }
+
+    .banner-carousel__title {
+        font-size: 16px;
+    }
+
+    .banner-carousel__subtitle {
+        font-size: 12px;
+    }
+
+    .banner-carousel__arrow {
+        opacity: 1;
+    }
 }
 </style>

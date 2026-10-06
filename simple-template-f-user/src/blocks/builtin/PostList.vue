@@ -2,8 +2,8 @@
     <div class="post-list">
         <div v-if="title" class="post-list__title">{{ title }}</div>
 
-        <p v-if="loading" class="post-list__hint">帖子加载中…</p>
-        <p v-else-if="!rows.length" class="post-list__hint">{{ emptyText }}</p>
+        <p v-if="loading" class="ui-state ui-state--inline">帖子加载中…</p>
+        <p v-else-if="!rows.length" class="ui-state ui-state--inline">{{ emptyText }}</p>
 
         <ul v-else class="post-list__items">
             <li
@@ -11,7 +11,7 @@
                 :key="post.id"
                 class="post-list__item"
                 :class="{ 'post-list__item--link': !interactive }"
-                @click="onItemClick(post)"
+                @click="onItemClick(post, $event)"
             >
                 <img
                     v-if="showCover && coverOf(post)"
@@ -59,6 +59,8 @@ import type { UiNode } from "../../types/uiBuilder";
 import { pagePosts, type PostListItem } from "../../api/content";
 import { resolveAssetUrl } from "../../utils/asset";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockRuntime } from "../blockRuntime";
+import { GRAPH_RUNTIME_KEY, type GraphBridge } from "../graphBridge";
+import { activateNode } from "../nodeActivation";
 
 const props = defineProps<{
     node: UiNode
@@ -66,6 +68,8 @@ const props = defineProps<{
 }>();
 
 const runtime = inject<BlockRuntime>(BLOCK_RUNTIME_KEY, createBlockRuntime());
+/** 图执行器（用户端才注入；管理端画布没有，退化成"只看点击动作与默认行为"） */
+const graphBridge = inject<GraphBridge | null>(GRAPH_RUNTIME_KEY, null);
 const route = useRoute();
 
 const content = computed(() => props.node.content ?? {});
@@ -132,11 +136,18 @@ function dateOf(value: string) {
     return value ? value.slice(0, 10) : "";
 }
 
-function onItemClick(post: PostListItem) {
-    if (props.interactive) {
-        return;
+function onItemClick(post: PostListItem, event: MouseEvent) {
+    // 点击归节点处理：节点上有逻辑图/点击动作时优先，否则才进这条帖子的详情
+    const handled = activateNode({
+        node: props.node,
+        runtime,
+        graphBridge,
+        interactive: props.interactive,
+        defaultAction: { action: "navigate", url: `/post/${post.id}` },
+    });
+    if (handled) {
+        event.stopPropagation();
     }
-    runtime.run({ action: "navigate", url: `/post/${post.id}` });
 }
 
 function numOrUndef(value: unknown): number | undefined {
@@ -164,14 +175,8 @@ onMounted(load);
 .post-list__title {
     margin: 0 0 8px;
     font-size: var(--w-title-font-size, 16px);
-    font-weight: 600;
-    color: var(--site-text-primary, #1f2329);
-}
-
-.post-list__hint {
-    margin: 0;
-    color: var(--w-empty-color, var(--site-text-secondary, #646a73));
-    font-size: var(--w-empty-font-size, 14px);
+    font-weight: var(--w-title-font-weight, 600);
+    color: var(--w-title-color, var(--site-text-primary, #1f2329));
 }
 
 .post-list__items {
@@ -194,7 +199,7 @@ onMounted(load);
 }
 
 .post-list__item--link:hover {
-    background-color: var(--w-item-hover-background-color, transparent);
+    background-color: var(--w-item-hover-background-color, var(--site-bg-hover));
 }
 
 .post-list__cover {
@@ -275,5 +280,21 @@ onMounted(load);
 .post-list__page-info {
     color: var(--site-text-secondary, #646a73);
     font-size: var(--w-action-font-size, 13px);
+}
+
+/* 窄屏：日期收掉、封面缩到 56px，标题仍保持单行省略——列表在手机上依然可读 */
+@media (max-width: 640px) {
+    .post-list__date {
+        display: none;
+    }
+
+    .post-list__cover {
+        width: var(--w-cover-width, 56px);
+        height: var(--w-cover-height, 44px);
+    }
+
+    .post-list__meta {
+        gap: 8px;
+    }
 }
 </style>

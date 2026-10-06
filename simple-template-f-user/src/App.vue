@@ -124,8 +124,11 @@ onMounted(async () => {
         await memberStore.loadMe();
     }
     try {
-        // 站点外观 + 全部启用页面（各自节点树与图）+ 被引用的预设，一次拿全
-        await siteStore.loadConfig();
+        // 站点外观 + 全部启用页面（各自节点树与图）+ 被引用的预设，一次拿全。
+        // 首次导航的路由守卫已经拉过一份，这里只兜底（例如守卫那条路径失败时）
+        if (!siteStore.loaded) {
+            await siteStore.loadConfig();
+        }
         await syncRouteGraphs();
     } catch {
         // 拉取失败时保留缓存或默认主题，页面照常渲染

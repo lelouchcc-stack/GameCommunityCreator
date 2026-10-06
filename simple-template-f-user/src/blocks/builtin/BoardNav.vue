@@ -1,7 +1,7 @@
 <template>
     <div class="board-nav">
-        <p v-if="loading" class="board-nav__hint">板块加载中…</p>
-        <p v-else-if="!shown.length" class="board-nav__hint">暂无开放板块</p>
+        <p v-if="loading" class="ui-state ui-state--inline">板块加载中…</p>
+        <p v-else-if="!shown.length" class="ui-state ui-state--inline">{{ emptyText }}</p>
         <div v-else class="board-nav__grid" :style="gridStyle">
             <div
                 v-for="board in shown"
@@ -36,6 +36,8 @@ import type { UiNode } from "../../types/uiBuilder";
 import { listBoards, type BoardItem } from "../../api/board";
 import { resolveAssetUrl } from "../../utils/asset";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockRuntime } from "../blockRuntime";
+import { GRAPH_RUNTIME_KEY, type GraphBridge } from "../graphBridge";
+import { activateNode } from "../nodeActivation";
 
 const props = defineProps<{
     node: UiNode
@@ -44,6 +46,8 @@ const props = defineProps<{
 }>();
 
 const runtime = inject<BlockRuntime>(BLOCK_RUNTIME_KEY, createBlockRuntime());
+/** 图执行器（用户端才注入；管理端画布没有，退化成"只看点击动作与默认行为"） */
+const graphBridge = inject<GraphBridge | null>(GRAPH_RUNTIME_KEY, null);
 
 const boards = ref<BoardItem[]>([]);
 const loading = ref(true);
@@ -59,6 +63,7 @@ const columns = computed(() => {
 });
 const showCover = computed(() => content.value.showCover !== false);
 const showIntro = computed(() => content.value.showIntro !== false);
+const emptyText = computed(() => String(content.value.emptyText ?? "暂无开放板块"));
 
 const shown = computed(() => boards.value.slice(0, limit.value));
 const gridStyle = computed(() => ({ gridTemplateColumns: `repeat(${columns.value}, minmax(0, 1fr))` }));
@@ -68,12 +73,18 @@ function coverOf(board: BoardItem): string {
 }
 
 function onCardClick(board: BoardItem, event: MouseEvent) {
-    if (props.interactive) {
-        // 编辑态把点击留给画布：冒泡到外层节点，选中 board_nav
-        return;
+    // 点击归节点处理：节点上有逻辑图/点击动作时它们优先，否则才用"进这个板块"的默认行为。
+    // 不再无条件 stopPropagation —— 那会让挂在节点上的逻辑收不到事件。
+    const handled = activateNode({
+        node: props.node,
+        runtime,
+        graphBridge,
+        interactive: props.interactive,
+        defaultAction: { action: "navigate", url: `/board/${board.id}` },
+    });
+    if (handled) {
+        event.stopPropagation();
     }
-    event.stopPropagation();
-    runtime.run({ action: "navigate", url: `/board/${board.id}` });
 }
 
 onMounted(async () => {
@@ -92,12 +103,6 @@ onMounted(async () => {
     width: 100%;
 }
 
-.board-nav__hint {
-    margin: 0;
-    color: var(--site-text-secondary, #646a73);
-    font-size: 14px;
-}
-
 .board-nav__grid {
     display: grid;
     gap: 12px;
@@ -110,8 +115,8 @@ onMounted(async () => {
     min-width: 0;
     padding: 12px;
     border: 1px solid var(--site-border, #e5e6eb);
-    border-radius: 8px;
-    background-color: var(--site-bg-page, #f7f8fa);
+    border-radius: var(--site-radius-md);
+    background-color: var(--site-bg-secondary, #f7f8fa);
     transition: border-color 0.15s, box-shadow 0.15s;
 }
 
@@ -148,5 +153,12 @@ onMounted(async () => {
     color: var(--site-text-secondary, #646a73);
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* 窄屏：无论配了几列，卡片都整行落下——三列在手机上每张只剩几十像素，读不了 */
+@media (max-width: 640px) {
+    .board-nav__grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
 }
 </style>

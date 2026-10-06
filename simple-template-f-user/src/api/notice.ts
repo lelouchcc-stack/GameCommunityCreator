@@ -10,7 +10,23 @@ export interface NoticeItem {
     createTime: string
 }
 
-/** 已发布公告：匿名可读（后端已对会员拦截器放行 /app/notice/list） */
+/** 统一分页返回体 */
+export interface NoticePage {
+    list: NoticeItem[]
+    total: number
+}
+
+/** 已发布公告：匿名可读（后端已放行 /app/notice/*） */
 export function listNotices(limit = 5) {
     return http.get<NoticeItem[], NoticeItem[]>("/app/notice/list", { params: { limit } });
+}
+
+/** 公告列表页：已发布公告分页，匿名可读 */
+export function pageNotices(pageNum = 1, pageSize = 10) {
+    return http.get<NoticePage, NoticePage>("/app/notice/page", { params: { pageNum, pageSize } });
+}
+
+/** 公告详情：草稿对外不可见，匿名可读 */
+export function getNotice(id: number) {
+    return http.get<NoticeItem, NoticeItem>(`/app/notice/${id}`);
 }

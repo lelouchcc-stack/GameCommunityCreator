@@ -4,11 +4,22 @@ export type { LogicGraph };
 
 import type { UiNode } from "./uiBuilder";
 
-/** 与后端 SiteConfigVO 对应 */
+/** 一条站点导航（页头与页脚共用） */
+export interface SiteNavItem {
+    label: string
+    url: string
+}
+
+/**
+ * 与后端 SiteConfigVO 对应。
+ * 这些值就是「改站名即可运行」的全部输入：模板里不写死社区名与游戏名。
+ */
 export interface SiteConfig {
     siteName: string
+    gameName: string
     siteIntro: string
     logo: string
+    navItems: SiteNavItem[]
     copyright: string
     primaryColor: string
     darkMode: boolean

@@ -8,7 +8,7 @@
                 :key="post.id"
                 class="hot-post__item"
                 :class="{ 'hot-post__item--link': !interactive }"
-                @click="onPostClick(post)"
+                @click="onPostClick(post, $event)"
             >
                 <span class="hot-post__rank" :class="rankClass(i)">{{ i + 1 }}</span>
                 <img
@@ -37,13 +37,15 @@
 /**
  * 首页热门帖子（业务组件 builtin:hot_post，管理端与用户端同源副本）。
  * 数据取 /app/post/hot（置顶优先，再按点赞、浏览降序），条数由节点内容属性 limit 决定。
- * 帖子详情页还没做（pit.md 模块 04），点击先给一条提示，避免跳到一个空页面。
+ * 点条目进 /post/:id 帖子详情——与 builtin:post_list 的跳转方式一致。
  */
 import { computed, inject, onMounted, ref } from "vue";
 import type { UiNode } from "../../types/uiBuilder";
 import { listHotPosts, type HotPostItem } from "../../api/post";
 import { resolveAssetUrl } from "../../utils/asset";
 import { BLOCK_RUNTIME_KEY, createBlockRuntime, type BlockRuntime } from "../blockRuntime";
+import { GRAPH_RUNTIME_KEY, type GraphBridge } from "../graphBridge";
+import { activateNode } from "../nodeActivation";
 
 const props = defineProps<{
     node: UiNode
@@ -52,6 +54,8 @@ const props = defineProps<{
 }>();
 
 const runtime = inject<BlockRuntime>(BLOCK_RUNTIME_KEY, createBlockRuntime());
+/** 图执行器（用户端才注入；管理端画布没有，退化成"只看点击动作与默认行为"） */
+const graphBridge = inject<GraphBridge | null>(GRAPH_RUNTIME_KEY, null);
 
 const posts = ref<HotPostItem[]>([]);
 const loading = ref(true);
@@ -79,15 +83,18 @@ function rankClass(index: number) {
     return "";
 }
 
-function onPostClick(post: HotPostItem) {
-    if (props.interactive) {
-        return;
-    }
-    runtime.run({
-        action: "toast",
-        message: `「${post.title}」详情页待接入`,
-        toastType: "info",
+function onPostClick(post: HotPostItem, event: MouseEvent) {
+    // 点击归节点处理：节点上有逻辑图/点击动作时优先，否则才进这条帖子的详情
+    const handled = activateNode({
+        node: props.node,
+        runtime,
+        graphBridge,
+        interactive: props.interactive,
+        defaultAction: { action: "navigate", url: `/post/${post.id}` },
     });
+    if (handled) {
+        event.stopPropagation();
+    }
 }
 
 onMounted(async () => {

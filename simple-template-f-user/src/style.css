@@ -1,50 +1,180 @@
+/*
+ * 站点主题 token —— 用户端所有页面与业务组件唯一的外观来源。
+ *
+ * 分三层：
+ *   1) 主色一族：由站点配置 primary_color 注入（utils/theme.ts），这里只放兜底值
+ *   2) 中性色 / 圆角 / 阴影 / 间距：明暗两套，靠 html[data-theme] 切换
+ *   3) 语义别名：页面写样式时优先用语义名（--site-bg / --site-text-muted），
+ *      不直接写具体色值——换肤与暗色模式才不会漏掉某处
+ *
+ * 命名兼容：--site-bg-page / --site-header-bg 是历史名，业务组件已经引用，
+ * 保留并指向同一组值，不要删除。
+ */
 :root {
-  /* 主色一族由站点配置注入（utils/theme.ts），这里是未配置或注入前的兜底值 */
-  --site-primary: #3b82f6;
-  --site-primary-hover: #3270d4;
-  --site-primary-active: #2a61b8;
-  --site-primary-weak: #eef4ff;
+    /* ---------- 主色一族（兜底值，未配置时用） ---------- */
+    --site-primary: #5b5fe9;
+    --site-primary-hover: #4e51c8;
+    --site-primary-active: #41439f;
+    --site-primary-weak: #eeeefe;
 
-  /* 中性色：明暗两套写死在样式里，靠 html[data-theme] 切换 */
-  --site-bg-page: #f7f8fa;
-  --site-bg-card: #ffffff;
-  --site-text-primary: #1f2329;
-  --site-text-secondary: #646a73;
-  --site-border: #e5e6eb;
-  --site-header-bg: #ffffff;
+    /* ---------- 中性色：浅色模式 ---------- */
+    --site-bg: #f6f7fb;
+    --site-bg-page: var(--site-bg);
+    --site-bg-card: #ffffff;
+    --site-bg-secondary: #f1f2f7;
+    --site-bg-hover: #f5f5fa;
+    --site-bg-mask: rgb(18 20 28 / 48%);
 
-  color-scheme: light;
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    --site-text-primary: #1a1d29;
+    --site-text-secondary: #5a6172;
+    --site-text-muted: #8a90a2;
+    --site-text-inverse: #ffffff;
+
+    --site-border: #e6e8f0;
+    --site-border-strong: #d3d7e3;
+
+    --site-header-bg: rgb(255 255 255 / 88%);
+    --site-footer-bg: #f1f2f7;
+
+    /* ---------- 反馈色 ---------- */
+    --site-success: #16a34a;
+    --site-warning: #e08b1a;
+    --site-danger: #e5484d;
+    --site-info: var(--site-primary);
+
+    /* ---------- 圆角 ---------- */
+    --site-radius-sm: 6px;
+    --site-radius-md: 10px;
+    --site-radius-lg: 16px;
+    --site-radius-pill: 999px;
+
+    /* ---------- 阴影 ---------- */
+    --site-shadow-sm: 0 1px 2px rgb(18 20 28 / 6%);
+    --site-shadow-md: 0 4px 16px rgb(18 20 28 / 8%);
+    --site-shadow-lg: 0 12px 32px rgb(18 20 28 / 12%);
+
+    /* ---------- 间距 ---------- */
+    --site-space-1: 4px;
+    --site-space-2: 8px;
+    --site-space-3: 12px;
+    --site-space-4: 16px;
+    --site-space-5: 24px;
+    --site-space-6: 32px;
+
+    /* ---------- 版心与外壳 ---------- */
+    --site-container: 1180px;
+    --site-container-narrow: 860px;
+    --site-header-height: 60px;
+    --site-gutter: 24px;
+
+    color-scheme: light;
+    font-family:
+        system-ui, -apple-system, "Segoe UI", "PingFang SC", "Hiragino Sans GB",
+        "Microsoft YaHei", Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 html[data-theme="dark"] {
-  color-scheme: dark;
-  --site-bg-page: #17181a;
-  --site-bg-card: #232427;
-  --site-text-primary: #e8e8e8;
-  --site-text-secondary: #a6a6a6;
-  --site-border: #333438;
-  --site-header-bg: #1d1e21;
+    color-scheme: dark;
+
+    --site-bg: #14161c;
+    --site-bg-card: #1c1f27;
+    --site-bg-secondary: #23262f;
+    --site-bg-hover: #262a34;
+    --site-bg-mask: rgb(0 0 0 / 62%);
+
+    --site-text-primary: #edeff5;
+    --site-text-secondary: #a7adbd;
+    --site-text-muted: #7a8093;
+    --site-text-inverse: #14161c;
+
+    --site-border: #2c3038;
+    --site-border-strong: #3a3f4a;
+
+    --site-header-bg: rgb(20 22 28 / 88%);
+    --site-footer-bg: #1a1d24;
+
+    --site-primary-weak: #23244a;
+
+    --site-shadow-sm: 0 1px 2px rgb(0 0 0 / 32%);
+    --site-shadow-md: 0 4px 16px rgb(0 0 0 / 40%);
+    --site-shadow-lg: 0 12px 32px rgb(0 0 0 / 50%);
 }
 
 body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  background-color: var(--site-bg-page);
-  color: var(--site-text-primary);
+    margin: 0;
+    min-width: 320px;
+    min-height: 100vh;
+    background-color: var(--site-bg);
+    color: var(--site-text-primary);
 }
 
 a {
-  color: var(--site-primary);
-  text-decoration: none;
+    color: var(--site-primary);
+    text-decoration: none;
 }
 
 a:hover {
-  color: var(--site-primary-hover);
+    color: var(--site-primary-hover);
+}
+
+img {
+    max-width: 100%;
+}
+
+/* 页面主体：桌面留出 24px 边距，窄屏收到 16px，避免小屏浪费横向空间 */
+@media (max-width: 768px) {
+    :root {
+        --site-gutter: 16px;
+        --site-header-height: 56px;
+    }
+}
+
+/* 逻辑图 / 业务组件加载与空状态的统一观感：三端一致，不让某个组件自己写一套 */
+.ui-state {
+    margin: 0;
+    padding: var(--site-space-5) var(--site-space-4);
+    color: var(--site-text-secondary);
+    font-size: 14px;
+    text-align: center;
+}
+
+.ui-state--error {
+    color: var(--site-danger);
+}
+
+.ui-state--inline {
+    padding: var(--site-space-3) 0;
+    text-align: left;
+}
+
+.ui-skeleton {
+    background: linear-gradient(
+        90deg,
+        var(--site-bg-secondary) 25%,
+        var(--site-bg-hover) 37%,
+        var(--site-bg-secondary) 63%
+    );
+    background-size: 400% 100%;
+    border-radius: var(--site-radius-sm);
+    animation: ui-skeleton-shimmer 1.4s ease infinite;
+}
+
+@keyframes ui-skeleton-shimmer {
+    from {
+        background-position: 100% 50%;
+    }
+    to {
+        background-position: 0 50%;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ui-skeleton {
+        animation: none;
+    }
 }
