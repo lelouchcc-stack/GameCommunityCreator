@@ -4,10 +4,15 @@ import com.lelcc.common.PageResult;
 import com.lelcc.dto.TagDTO;
 import com.lelcc.dto.TagVO;
 
+import java.util.List;
+
 public interface TagService {
 
     PageResult<TagVO> page(Long boardId, Integer tagType, Integer status, String keyword,
                            long pageNum, long pageSize);
+
+    /** 用户端内容分类：启用的全局标签 + 该板块的标签；boardId 可空 */
+    List<TagVO> listOpen(Long boardId);
 
     void create(TagDTO dto);
 

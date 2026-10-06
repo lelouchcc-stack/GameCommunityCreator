@@ -38,4 +38,21 @@ public interface SysMenuMapper extends BaseMapper<SysMenu> {
             ORDER BY parent_id, sort
             """)
     List<SysMenu> selectAll();
+
+    /**
+     * 某个后台账号实际拥有的权限标识（多角色取并集）。
+     * 角色与菜单任一被停用都不计入，这样停用角色/菜单即刻收回权限。
+     */
+    @Select("""
+            SELECT DISTINCT m.perms
+            FROM sys_menu m
+            JOIN sys_role_menu rm ON rm.menu_id = m.id
+            JOIN sys_user_role ur ON ur.role_id = rm.role_id
+            JOIN sys_role r ON r.id = ur.role_id
+            WHERE ur.user_id = #{userId}
+              AND m.perms IS NOT NULL AND m.perms <> ''
+              AND m.status = 1
+              AND r.status = 1
+            """)
+    List<String> selectPermsByUserId(@Param("userId") Long userId);
 }

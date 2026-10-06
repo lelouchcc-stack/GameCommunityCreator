@@ -31,6 +31,8 @@ public class UiPresetServiceImpl implements UiPresetService {
     private static final int STATUS_ENABLED = 1;
     private static final int BUILTIN = 1;
     private static final String CUSTOM_CODE_BASE = "preset.custom";
+    /** 图里引用预设用的伪 typeCode（不是原子库里的原子） */
+    private static final String PRESET_TYPE = "preset";
 
     @Resource
     private UiPresetMapper presetMapper;
@@ -43,13 +45,43 @@ public class UiPresetServiceImpl implements UiPresetService {
 
     @Override
     public List<PresetVO> list(Integer status) {
+        // 一次把所有页面的图取出来算"被引用"集合：逐行调用 referenced() 会变成 N 次查询
+        Set<String> used = referencedKeys();
         return presetMapper.selectList(Wrappers.<UiPreset>lambdaQuery()
                         .eq(status != null, UiPreset::getStatus, status)
                         .orderByAsc(UiPreset::getPresetCode)
                         .orderByDesc(UiPreset::getVersion))
                 .stream()
-                .map(this::toVO)
+                .map(entity -> {
+                    PresetVO vo = toVO(entity);
+                    vo.setReferenced(used.contains(key(entity.getPresetCode(), entity.getVersion())));
+                    return vo;
+                })
                 .toList();
+    }
+
+    /** 被任意页面图引用到的 "presetCode@version" 集合 */
+    private Set<String> referencedKeys() {
+        Set<String> keys = new LinkedHashSet<>();
+        for (UiFlow flow : flowMapper.selectList(null)) {
+            Object nodesRaw = UiJsonUtils.toMap(flow.getGraphJson()).get("nodes");
+            if (!(nodesRaw instanceof List<?> nodes)) {
+                continue;
+            }
+            for (Object item : nodes) {
+                if (item instanceof Map<?, ?> node && PRESET_TYPE.equals(String.valueOf(node.get("typeCode")))) {
+                    Object code = node.get("presetCode");
+                    if (code != null) {
+                        keys.add(key(String.valueOf(code), node.get("presetVersion")));
+                    }
+                }
+            }
+        }
+        return keys;
+    }
+
+    private static String key(String presetCode, Object version) {
+        return presetCode + "@" + version;
     }
 
     @Override

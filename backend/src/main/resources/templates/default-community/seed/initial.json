@@ -1,0 +1,41 @@
+{
+  "_comment": [
+    "模板的初始内容：游戏板块、初始版本、进度阶段、默认标签、欢迎公告。",
+    "全部按「该表为空才写入」处理——已有真实数据时整组跳过，不会覆盖也不会重复插入。",
+    "刻意不生成示例帖子与评论：帖子需要挂在一个假账号下，那才是对真实数据的污染。",
+    "需要带示例帖子的完整演示数据时，用仓库既有的 sql/seed.sql。"
+  ],
+  "board": {
+    "name": "{{gameName}}",
+    "intro": "{{gameName}} 玩家交流区：攻略、资料、同人与问答都在这里。",
+    "sort": 1,
+    "status": 1
+  },
+  "boardVersion": {
+    "versionNo": "1.0.0",
+    "versionName": "正式版",
+    "updateNote": "{{gameName}} 社区开张，欢迎来发第一篇攻略。",
+    "setCurrent": true
+  },
+  "progressStages": [
+    { "stageName": "新手期", "description": "刚入坑，主线未通关", "sort": 1 },
+    { "stageName": "中期", "description": "主线通关，开始刷装备与日常", "sort": 2 },
+    { "stageName": "满级", "description": "已满级，专注高难内容与配队研究", "sort": 3 }
+  ],
+  "tags": [
+    { "tagName": "攻略", "tagType": 1, "sort": 1 },
+    { "tagName": "讨论", "tagType": 1, "sort": 2 },
+    { "tagName": "同人", "tagType": 1, "sort": 3 },
+    { "tagName": "配队", "tagType": 2, "sort": 4, "boardScoped": true },
+    { "tagName": "低配", "tagType": 2, "sort": 5, "boardScoped": true }
+  ],
+  "notices": [
+    {
+      "title": "欢迎来到 {{siteName}}",
+      "content": "这里是 {{gameName}} 的玩家社区。\n\n怎么开始：\n1. 到「社区板块」进入 {{gameName}} 板块；\n2. 在「攻略与资料」里按版本、进度阶段或分类找内容；\n3. 在「公告」里查看版本更新与活动信息。\n\n这条公告是建站时自动生成的，可在后台替换或删除。",
+      "type": 1,
+      "sort": 1,
+      "status": 1
+    }
+  ]
+}

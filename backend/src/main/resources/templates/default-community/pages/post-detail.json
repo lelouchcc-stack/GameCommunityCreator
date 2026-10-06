@@ -1,0 +1,57 @@
+{
+  "pageKey": "post-detail",
+  "pageName": "帖子详情",
+  "routePath": "/post/:id",
+  "isHome": 0,
+  "remark": "帖子详情：正文 + 点赞收藏 + 评论区。三块都是业务组件，自身带取数与交互。",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "post_detail",
+      "nodeName": "帖子正文",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "28px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": {},
+      "behaviorJson": {},
+      "remark": "读路由帖子 id，匿名可浏览，后端累加浏览量"
+    },
+    {
+      "id": -2,
+      "parentId": null,
+      "typeCode": "post_actions",
+      "nodeName": "互动区",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": { "align": "left", "marginTop": "0", "marginBottom": "0" },
+      "contentJson": {},
+      "behaviorJson": {},
+      "remark": "点赞 / 收藏；未登录会引导到登录页"
+    },
+    {
+      "id": -3,
+      "parentId": null,
+      "typeCode": "comment_list",
+      "nodeName": "评论区",
+      "sort": 2,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": { "pageSize": 10, "emptyText": "还没有评论，来抢沙发～" },
+      "behaviorJson": {},
+      "remark": "一级评论 + 回复"
+    }
+  ]
+}

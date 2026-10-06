@@ -9,6 +9,7 @@ import com.lelcc.dto.PostAuditVO;
 import com.lelcc.entity.Post;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
 
@@ -151,7 +152,51 @@ public interface PostMapper extends BaseMapper<Post> {
             """)
     List<String> selectTagNames(@Param("postId") Long postId);
 
+    /**
+     * 「我的帖子」：不过滤 status——作者要能看到自己待审核与已被下架的帖子，
+     * 否则刚发完帖在个人主页里找不到，会以为发布失败。
+     */
+    @Select("""
+            SELECT p.id, p.title, p.cover, p.board_id, b.name AS board_name,
+                   p.version_id, v.version_no, p.stage_id, s.stage_name,
+                   p.like_count, p.view_count, p.comment_count, p.is_top,
+                   p.status, p.audit_remark, p.create_time,
+                   b.current_version_id AS current_version_id
+            FROM post p
+            LEFT JOIN board b ON b.id = p.board_id
+            LEFT JOIN board_version v ON v.id = p.version_id
+            LEFT JOIN progress_stage s ON s.id = p.stage_id
+            WHERE p.member_id = #{memberId}
+            ORDER BY p.id DESC
+            """)
+    IPage<AppPostItemVO> selectMemberPostPage(IPage<AppPostItemVO> page,
+                                             @Param("memberId") Long memberId);
+
     /** 浏览量 +1 */
     @Update("UPDATE post SET view_count = view_count + 1 WHERE id = #{id}")
     int incrementViewCount(@Param("id") Long id);
+
+    /** 点赞数增减（delta 为 +1/-1），GREATEST 兜底避免出现负数 */
+    @Update("UPDATE post SET like_count = GREATEST(like_count + #{delta}, 0) WHERE id = #{id}")
+    int adjustLikeCount(@Param("id") Long id, @Param("delta") int delta);
+
+    /** 收藏数增减（delta 为 +1/-1） */
+    @Update("UPDATE post SET favorite_count = GREATEST(favorite_count + #{delta}, 0) WHERE id = #{id}")
+    int adjustFavoriteCount(@Param("id") Long id, @Param("delta") int delta);
+
+    /** 评论数 +1 */
+    @Update("UPDATE post SET comment_count = comment_count + 1 WHERE id = #{id}")
+    int incrementCommentCount(@Param("id") Long id);
+
+    /**
+     * 批量写帖子标签关联。发帖是"帖子 + 标签"两处写入，必须和插入帖子在同一个事务里，
+     * 否则会出现帖子写进去、标签没写上的半套数据。
+     */
+    @Insert("""
+            <script>
+            INSERT INTO post_tag (post_id, tag_id) VALUES
+            <foreach collection="tagIds" item="tagId" separator=",">(#{postId}, #{tagId})</foreach>
+            </script>
+            """)
+    int insertPostTags(@Param("postId") Long postId, @Param("tagIds") List<Long> tagIds);
 }

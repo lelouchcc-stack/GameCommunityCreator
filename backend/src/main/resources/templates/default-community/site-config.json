@@ -1,0 +1,10 @@
+{
+  "_comment": "模板写入的站点配置默认值。{{key}} 会被创建社区时填写的输入替换；留空的项由 SiteConfigRegistry 的默认值兜底。",
+  "site_name": "{{siteName}}",
+  "game_name": "{{gameName}}",
+  "site_intro": "{{siteIntro}}",
+  "logo": "{{logo}}",
+  "primary_color": "{{primaryColor}}",
+  "copyright": "{{copyright}}",
+  "nav_items": "[{\"label\":\"首页\",\"url\":\"/\"},{\"label\":\"攻略与资料\",\"url\":\"/guide\"},{\"label\":\"社区板块\",\"url\":\"/boards\"},{\"label\":\"公告\",\"url\":\"/notice\"},{\"label\":\"发帖\",\"url\":\"/publish\"},{\"label\":\"我的\",\"url\":\"/profile\"}]"
+}

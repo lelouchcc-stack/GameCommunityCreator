@@ -5,10 +5,17 @@ import com.lelcc.common.Result;
 import com.lelcc.dto.AppPostDetailVO;
 import com.lelcc.dto.AppPostItemVO;
 import com.lelcc.dto.HotPostVO;
+import com.lelcc.dto.InteractionVO;
+import com.lelcc.dto.PostCreateDTO;
+import com.lelcc.dto.PostCreateVO;
+import com.lelcc.service.PostInteractionService;
 import com.lelcc.service.PostService;
 import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -26,6 +33,9 @@ public class AppPostController {
 
     @Resource
     private PostService postService;
+
+    @Resource
+    private PostInteractionService postInteractionService;
 
     /** 热门帖子：置顶优先，再按点赞、浏览降序，最多 limit 条（默认 10） */
     @GetMapping("/hot")
@@ -51,5 +61,34 @@ public class AppPostController {
     @GetMapping("/{postId}")
     public Result<AppPostDetailVO> detail(@PathVariable Long postId) {
         return Result.success(postService.detail(postId));
+    }
+
+    /* -------- 以下为多段路径的写接口，不会被 /app/post/* 放行，需登录 -------- */
+
+    /**
+     * 发帖。注意路径是 /app/post（**没有第二段**），不在 "/app/post/*" 的放行范围内，
+     * 因此匿名调用会先被会员拦截器挡下返回 401——这是有意的：写操作绝不能被匿名放行。
+     */
+    @PostMapping
+    public Result<PostCreateVO> create(@Valid @RequestBody PostCreateDTO dto) {
+        return Result.success(postService.create(dto));
+    }
+
+    /** 当前登录玩家对该帖的互动状态与计数 */
+    @GetMapping("/{postId}/interaction")
+    public Result<InteractionVO> interaction(@PathVariable Long postId) {
+        return Result.success(postInteractionService.get(postId));
+    }
+
+    /** 点赞 / 取消点赞 */
+    @PostMapping("/{postId}/like")
+    public Result<InteractionVO> like(@PathVariable Long postId) {
+        return Result.success(postInteractionService.toggleLike(postId));
+    }
+
+    /** 收藏 / 取消收藏 */
+    @PostMapping("/{postId}/favorite")
+    public Result<InteractionVO> favorite(@PathVariable Long postId) {
+        return Result.success(postInteractionService.toggleFavorite(postId));
     }
 }

@@ -1,0 +1,27 @@
+{
+  "pageKey": "notice-detail",
+  "pageName": "公告详情",
+  "routePath": "/notice/:id",
+  "isHome": 0,
+  "remark": "公告详情：公告标题、发布时间与正文。",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "notice_detail",
+      "nodeName": "公告正文",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "28px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": {},
+      "behaviorJson": {},
+      "remark": "公告 id 取路由参数，未发布的公告对外不可见"
+    }
+  ]
+}

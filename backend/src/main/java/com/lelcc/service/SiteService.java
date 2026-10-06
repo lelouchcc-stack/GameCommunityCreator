@@ -7,6 +7,7 @@ import com.lelcc.dto.SiteConfigDTO;
 import com.lelcc.dto.SiteConfigVO;
 
 import java.util.List;
+import java.util.Map;
 
 public interface SiteService {
 
@@ -15,6 +16,12 @@ public interface SiteService {
 
     /** 保存站点信息/主题，返回保存后的最新配置供管理端即时预览 */
     SiteConfigVO updateConfig(SiteConfigDTO dto);
+
+    /**
+     * 按 config_key 直接写若干配置项（模板初始化用）。
+     * 未在注册表里声明的键会被拒绝，值同样逐项校验。
+     */
+    void putValues(Map<String, String> values);
 
     List<HomeModuleVO> listModules();
 

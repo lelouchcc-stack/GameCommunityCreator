@@ -4,11 +4,13 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.crypto.digest.BCrypt;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.lelcc.common.BusinessException;
+import com.lelcc.common.ComponentPropertyRegistry;
 import com.lelcc.common.UserContext;
 import com.lelcc.common.UserType;
 import com.lelcc.dto.MemberInfoVO;
 import com.lelcc.dto.MemberLoginDTO;
 import com.lelcc.dto.MemberLoginVO;
+import com.lelcc.dto.MemberProfileDTO;
 import com.lelcc.dto.MemberRegisterDTO;
 import com.lelcc.entity.Member;
 import com.lelcc.mapper.MemberMapper;
@@ -26,6 +28,9 @@ import org.springframework.stereotype.Service;
 public class AppAuthServiceImpl implements AppAuthService {
 
     private static final int STATUS_NORMAL = 1;
+    /** 昵称与简介长度上限，与 member 表列宽保持余量 */
+    private static final int NICKNAME_MAX = 20;
+    private static final int INTRO_MAX = 200;
 
     @Resource
     private MemberMapper memberMapper;
@@ -71,6 +76,43 @@ public class AppAuthServiceImpl implements AppAuthService {
         }
         requireNormal(member);
         return toInfo(member);
+    }
+
+    @Override
+    public MemberInfoVO updateProfile(MemberProfileDTO dto) {
+        Member member = memberMapper.selectById(UserContext.getId());
+        if (member == null) {
+            throw new BusinessException(401, "登录状态已失效，请重新登录");
+        }
+        requireNormal(member);
+
+        String nickname = StrUtil.trimToEmpty(dto.nickname());
+        // 昵称留空就沿用原名，避免个人主页出现一片空白
+        if (nickname.isEmpty()) {
+            nickname = StrUtil.blankToDefault(member.getNickname(), member.getUsername());
+        }
+        if (nickname.length() > NICKNAME_MAX) {
+            throw new BusinessException(400, "昵称不能超过 " + NICKNAME_MAX + " 个字");
+        }
+        String intro = StrUtil.trimToEmpty(dto.intro());
+        if (intro.length() > INTRO_MAX) {
+            throw new BusinessException(400, "个人简介不能超过 " + INTRO_MAX + " 个字");
+        }
+        String avatar = StrUtil.trimToEmpty(dto.avatar());
+        // 头像复用组件属性库里 imageUrl 的校验规则（完整地址或对象存储 objectKey），
+        // 不在这里再写一遍正则——两处规则一旦漂移，脏值就会绕过其中一处
+        String avatarError = ComponentPropertyRegistry.validate("imageUrl", avatar);
+        if (avatarError != null) {
+            throw new BusinessException(400, "头像格式不合法，请重新上传");
+        }
+
+        Member update = new Member();
+        update.setId(member.getId());
+        update.setNickname(nickname);
+        update.setIntro(intro);
+        update.setAvatar(avatar);
+        memberMapper.updateById(update);
+        return toInfo(memberMapper.selectById(member.getId()));
     }
 
     private Member findByUsername(String username) {

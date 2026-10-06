@@ -40,7 +40,7 @@ public final class ComponentPropertyRegistry {
     private static final Pattern URL = Pattern.compile("^(https?://|/).+");
     /**
      * 图片值有两类：完整地址（http(s):// 或 / 开头，兼容历史数据与外链），
-     * 或对象存储的 objectKey（upload/yyyy/MM/dd/<uuid>.<ext>，见 图片上传-存储抽象设计.json）。
+     * 或对象存储的 objectKey（upload/yyyy/MM/dd/<uuid>.<ext>）。
      * key 按真实命名规则校验，顺带排除 .. 之类的路径穿越写法。
      */
     private static final Pattern IMAGE = Pattern.compile(
@@ -73,6 +73,9 @@ public final class ComponentPropertyRegistry {
         putEnum("alignItems", "交叉轴对齐", "start", "center", "end", "stretch");
         put("gap", TYPE_LENGTH, "间距");
         put("wrap", TYPE_BOOL, "自动换行");
+        // 弹性分栏：一行里按比例分宽，并在窗口变窄时自动折行（basis 也决定窄屏整行落下的时机）
+        putRange("grow", "占宽比例", 0, 10);
+        put("basis", TYPE_LENGTH, "换行基准宽度");
         // 外观
         put("backgroundColor", TYPE_COLOR, "背景色");
         put("backgroundImage", TYPE_IMAGE, "背景图");
@@ -99,6 +102,7 @@ public final class ComponentPropertyRegistry {
         // 内容
         putText("text", "文本内容", 200);
         putText("title", "标题", 100);
+        putText("intro", "简介文案", 400);
         putEnum("linkType", "跳转类型", "none", "internal", "external");
         put("linkUrl", TYPE_URL, "跳转地址");
         put("openInNewTab", TYPE_BOOL, "新窗口打开");
@@ -116,6 +120,18 @@ public final class ComponentPropertyRegistry {
         put("itemsTemplate", TYPE_JSON_ARRAY, "列表项模板");
         putText("emptyText", "空状态文案", 40);
         put("visibleWhen", TYPE_BINDING, "可见条件");
+        putRange("pageSize", "每页条数", 1, 50);
+        // 业务组件的取数与区块开关（公告、版本、板块详情、游戏简介）
+        put("autoBoard", TYPE_BOOL, "自动取主板块");
+        put("showVersion", TYPE_BOOL, "显示当前版本");
+        put("showVersions", TYPE_BOOL, "显示版本归档");
+        put("showStages", TYPE_BOOL, "显示进度阶段");
+        put("showTags", TYPE_BOOL, "显示分类标签");
+        put("showStage", TYPE_BOOL, "显示进度阶段选择");
+        put("showContent", TYPE_BOOL, "显示内容摘要");
+        put("showNote", TYPE_BOOL, "显示更新说明");
+        put("showMore", TYPE_BOOL, "显示更多入口");
+        putRange("noticeId", "公告 ID", 1, 999999999);
         // 循环容器（repeat）：把 itemsSource 取到的列表按 layoutMode 重复渲染子节点
         putEnum("layoutMode", "排列方式", "list", "grid", "row", "scrollX", "carousel");
         putText("itemAlias", "循环项别名", 20);
@@ -126,6 +142,9 @@ public final class ComponentPropertyRegistry {
         putText("placeholder", "占位提示", 50);
         putEnum("inputType", "输入类型", "text", "password", "number", "email");
         putEnum("buttonType", "按钮类型", "button", "submit");
+        // 发帖表单（post_form）：提交按钮文案与提交成功后的去向
+        putText("submitText", "提交按钮文案", 20);
+        put("redirectUrl", TYPE_URL, "提交后跳转地址");
         // 内容类业务组件的检索/定位参数（帖子列表、帖子详情、板块详情）
         putRange("boardId", "板块 ID", 1, 999999999);
         putRange("versionId", "版本 ID", 1, 999999999);

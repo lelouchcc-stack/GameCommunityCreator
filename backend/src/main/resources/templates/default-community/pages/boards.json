@@ -1,0 +1,83 @@
+{
+  "pageKey": "boards",
+  "pageName": "社区板块",
+  "routePath": "/boards",
+  "isHome": 0,
+  "remark": "板块总览：展示所有开放板块，点击进入板块详情。",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "heading",
+      "nodeName": "页面标题",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": { "fontSize": "26px", "fontWeight": "700", "marginBottom": "2px" },
+      "contentJson": { "text": "社区板块" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -2,
+      "parentId": null,
+      "typeCode": "text",
+      "nodeName": "页面说明",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": { "fontSize": "14px", "textColor": "var(--site-text-secondary)" },
+      "contentJson": { "text": "每个板块是一款游戏的分区；进入板块可以按版本与进度阶段找攻略。" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -4,
+      "parentId": null,
+      "typeCode": "button",
+      "nodeName": "发帖入口",
+      "sort": 2,
+      "visible": 1,
+      "styleJson": {
+        "width": "auto",
+        "padding": "9px 22px",
+        "align": "left",
+        "backgroundColor": "var(--site-primary)",
+        "textColor": "#FFFFFF",
+        "fontSize": "14px",
+        "fontWeight": "600",
+        "radius": "999px",
+        "hoverEffect": "lift",
+        "clickEffect": "scale",
+        "boxShadow": "sm",
+        "transitionMs": 150,
+        "cursor": "pointer"
+      },
+      "contentJson": { "text": "发帖", "linkType": "internal", "linkUrl": "/publish" },
+      "behaviorJson": {},
+      "remark": "跳转类型=站内链接 + 地址 /publish；按钮的跳转能力在渲染内核里本来就有"
+    },
+    {
+      "id": -3,
+      "parentId": null,
+      "typeCode": "board_nav",
+      "nodeName": "板块列表",
+      "sort": 3,
+      "visible": 1,
+      "styleJson": {
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "marginTop": "0",
+        "marginBottom": "0"
+      },
+      "contentJson": {
+        "limit": 12,
+        "columns": 3,
+        "showCover": true,
+        "showIntro": true,
+        "emptyText": "暂无开放板块，可在后台「内容管理 → 板块管理」中新增"
+      },
+      "behaviorJson": {},
+      "remark": ""
+    }
+  ]
+}

@@ -1,0 +1,106 @@
+{
+  "pageKey": "guide",
+  "pageName": "攻略与资料",
+  "routePath": "/guide",
+  "isHome": 0,
+  "remark": "攻略与资料入口：版本归档 + 进度阶段 + 内容分类，下面跟一列被筛选的内容。板块自动取主板块，模板里不写死板块 id。",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "heading",
+      "nodeName": "页面标题",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": { "fontSize": "26px", "fontWeight": "700", "marginBottom": "2px" },
+      "contentJson": { "text": "攻略与资料" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -2,
+      "parentId": null,
+      "typeCode": "text",
+      "nodeName": "页面说明",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": { "fontSize": "14px", "textColor": "var(--site-text-secondary)" },
+      "contentJson": { "text": "先选版本、进度或分类，下面的内容会跟着筛；点已选中的项再点一次即取消筛选。" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -5,
+      "parentId": null,
+      "typeCode": "button",
+      "nodeName": "发帖入口",
+      "sort": 2,
+      "visible": 1,
+      "styleJson": {
+        "width": "auto",
+        "padding": "9px 22px",
+        "align": "left",
+        "backgroundColor": "var(--site-primary)",
+        "textColor": "#FFFFFF",
+        "fontSize": "14px",
+        "fontWeight": "600",
+        "radius": "999px",
+        "hoverEffect": "lift",
+        "clickEffect": "scale",
+        "boxShadow": "sm",
+        "transitionMs": 150,
+        "cursor": "pointer"
+      },
+      "contentJson": { "text": "我要发帖", "linkType": "internal", "linkUrl": "/publish" },
+      "behaviorJson": {},
+      "remark": "把在筛选中看到的版本/分类写成自己的攻略"
+    },
+    {
+      "id": -3,
+      "parentId": null,
+      "typeCode": "board_detail",
+      "nodeName": "版本与分类",
+      "sort": 3,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": {
+        "autoBoard": true,
+        "showVersions": true,
+        "showStages": true,
+        "showTags": true
+      },
+      "behaviorJson": {},
+      "remark": "筛选条件写进地址查询串，下面的 post_list 直接读它"
+    },
+    {
+      "id": -4,
+      "parentId": null,
+      "typeCode": "post_list",
+      "nodeName": "内容列表",
+      "sort": 4,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": {
+        "title": "全部内容",
+        "sort": "latest",
+        "pageSize": 10,
+        "showCover": true,
+        "emptyText": "这个筛选下还没有内容"
+      },
+      "behaviorJson": {},
+      "remark": "读 address 上的 versionId/stageId/tagId 做筛选"
+    }
+  ]
+}

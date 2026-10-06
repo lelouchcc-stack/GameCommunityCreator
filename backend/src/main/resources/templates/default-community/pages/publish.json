@@ -1,0 +1,37 @@
+{
+  "pageKey": "publish",
+  "pageName": "发布新帖",
+  "routePath": "/publish",
+  "isHome": 0,
+  "remark": "发帖页：板块/版本/进度阶段/标签全部从接口取，模板里不写死任何 id；提交后进入待审核，未登录时给出登录入口。",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "post_form",
+      "nodeName": "发帖表单",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "maxWidth": "760px",
+        "padding": "28px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm",
+        "itemGap": "18px"
+      },
+      "contentJson": {
+        "title": "发布新帖",
+        "placeholder": "写下你的攻略、资料或心得…支持换行",
+        "submitText": "发布",
+        "redirectUrl": "/profile",
+        "showCover": true,
+        "showTags": true,
+        "showStage": true
+      },
+      "behaviorJson": {},
+      "remark": "板块默认取地址查询串 boardId（从板块页带过来），没带就取第一个开放板块"
+    }
+  ]
+}

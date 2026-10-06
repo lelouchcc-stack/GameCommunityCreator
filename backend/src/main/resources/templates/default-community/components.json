@@ -1,0 +1,545 @@
+{
+  "_comment": [
+    "模板需要的组件库定义。应用模板时会按 type_code upsert 这些行：",
+    "  * 新增：默认社区模板独有的业务组件（游戏简介/版本更新/公告列表/公告详情/个人主页/发帖表单）",
+    "  * 升级：给既有组件补开放属性（分栏用 grow/basis、列表每页条数、自动取主板块、分类标签…）",
+    "          button 开放 linkType/linkUrl/openInNewTab——渲染内核本来就按这两个字段跳转，",
+    "          只是属性面板没声明，导致模板里没法用按钮做站内入口。",
+    "内置组件（is_builtin=1）的渲染内核在 Vue 代码里，这里只声明它开放哪些属性与默认值。",
+    "style_schema / content_schema / behavior_schema 里的每个 key 都必须在后端 ComponentPropertyRegistry 中登记。"
+  ],
+  "components": [
+    {
+      "typeCode": "game_intro",
+      "typeName": "游戏简介(业务)",
+      "category": "business",
+      "renderKind": "builtin:game_intro",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "radius", "boxShadow",
+        "titleColor", "titleFontSize", "titleFontWeight",
+        "bodyColor", "bodyFontSize", "bodyLineHeight",
+        "metaColor", "metaFontSize",
+        "badgeBackgroundColor", "badgeTextColor", "actionRadius", "itemGap"
+      ],
+      "contentSchema": ["title", "intro", "showVersion"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "24px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px",
+        "boxShadow": "sm"
+      },
+      "defaultContent": { "showVersion": true },
+      "previewIcon": "MagicStick",
+      "sort": 30,
+      "remark": "游戏名/简介/当前版本取站点配置与主板块，组件里不写死任何游戏名"
+    },
+    {
+      "typeCode": "game_versions",
+      "typeName": "版本更新(业务)",
+      "category": "business",
+      "renderKind": "builtin:game_versions",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "radius", "boxShadow",
+        "itemBorderColor", "itemGap", "actionRadius",
+        "titleColor", "titleFontSize", "titleFontWeight",
+        "bodyColor", "bodyFontSize", "bodyLineHeight",
+        "metaColor", "metaFontSize",
+        "badgeBackgroundColor", "badgeTextColor", "emptyColor", "emptyFontSize"
+      ],
+      "contentSchema": ["autoBoard", "boardId", "limit", "showNote", "emptyText"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px",
+        "boxShadow": "sm"
+      },
+      "defaultContent": {
+        "autoBoard": true,
+        "limit": 5,
+        "showNote": true,
+        "emptyText": "暂无版本信息"
+      },
+      "previewIcon": "Clock",
+      "sort": 31,
+      "remark": "取板块的版本列表渲染成时间线；autoBoard 打开时不用写死板块 id"
+    },
+    {
+      "typeCode": "notice_list",
+      "typeName": "公告列表(业务)",
+      "category": "business",
+      "renderKind": "builtin:notice_list",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "radius", "boxShadow",
+        "itemPadding", "itemBorderColor", "itemHoverBackgroundColor",
+        "titleColor", "titleFontSize", "titleFontWeight",
+        "bodyColor", "bodyFontSize",
+        "metaColor", "metaFontSize",
+        "badgeBackgroundColor", "badgeTextColor",
+        "actionColor", "actionFontSize", "actionRadius",
+        "emptyColor", "emptyFontSize"
+      ],
+      "contentSchema": ["title", "pageSize", "showContent", "emptyText"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px",
+        "boxShadow": "sm"
+      },
+      "defaultContent": {
+        "pageSize": 10,
+        "showContent": true,
+        "emptyText": "暂无公告"
+      },
+      "previewIcon": "Bell",
+      "sort": 32,
+      "remark": "已发布公告分页列表，点条目前往公告详情"
+    },
+    {
+      "typeCode": "notice_detail",
+      "typeName": "公告详情(业务)",
+      "category": "business",
+      "renderKind": "builtin:notice_detail",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "radius", "boxShadow",
+        "itemBorderColor",
+        "titleColor", "titleFontSize", "titleFontWeight",
+        "bodyColor", "bodyFontSize", "bodyLineHeight",
+        "metaColor", "metaFontSize", "metaGap",
+        "badgeBackgroundColor", "badgeTextColor",
+        "actionColor", "actionFontSize", "actionRadius",
+        "emptyColor", "emptyFontSize"
+      ],
+      "contentSchema": ["noticeId"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "28px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px"
+      },
+      "defaultContent": {},
+      "previewIcon": "Document",
+      "sort": 33,
+      "remark": "公告正文；公告 id 取内容属性或路由参数"
+    },
+    {
+      "typeCode": "profile",
+      "typeName": "个人主页(业务)",
+      "category": "business",
+      "renderKind": "builtin:profile",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "radius", "boxShadow",
+        "itemPadding", "itemBorderColor", "itemHoverBackgroundColor",
+        "titleColor", "titleFontSize", "titleFontWeight",
+        "bodyColor", "bodyFontSize",
+        "metaColor", "metaFontSize", "metaGap",
+        "badgeBackgroundColor", "badgeTextColor",
+        "actionColor", "actionFontSize", "actionRadius",
+        "emptyColor", "emptyFontSize"
+      ],
+      "contentSchema": ["pageSize", "emptyText"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "24px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px"
+      },
+      "defaultContent": { "pageSize": 10, "emptyText": "还没有发过帖子" },
+      "previewIcon": "User",
+      "sort": 34,
+      "remark": "资料展示与修改 + 我的帖子；未登录时给出登录入口"
+    },
+    {
+      "typeCode": "post_form",
+      "typeName": "发帖表单(业务)",
+      "category": "business",
+      "renderKind": "builtin:post_form",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "radius", "boxShadow",
+        "itemBorderColor", "itemGap",
+        "titleColor", "titleFontSize", "titleFontWeight",
+        "bodyColor", "bodyFontSize",
+        "metaColor", "metaFontSize",
+        "actionColor", "actionBackgroundColor", "actionFontSize", "actionRadius",
+        "emptyColor", "emptyFontSize"
+      ],
+      "contentSchema": [
+        "title", "placeholder", "submitText", "redirectUrl",
+        "boardId", "showCover", "showTags", "showStage"
+      ],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "maxWidth": "720px",
+        "padding": "24px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm",
+        "itemGap": "16px"
+      },
+      "defaultContent": {
+        "title": "发布新帖",
+        "placeholder": "写点什么…支持换行",
+        "submitText": "发布",
+        "redirectUrl": "/profile",
+        "showCover": true,
+        "showTags": true,
+        "showStage": true
+      },
+      "previewIcon": "EditPen",
+      "sort": 35,
+      "remark": "板块/版本/阶段/标签都从接口取，不在模板里写死；提交后进入待审核，成功后跳 redirectUrl"
+    },
+
+    {
+      "typeCode": "container",
+      "typeName": "容器",
+      "category": "layout",
+      "renderKind": "container",
+      "isContainer": 1,
+      "isBuiltin": 0,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "backgroundImage", "backgroundSize", "texture", "radius",
+        "borderWidth", "borderStyle", "borderColor", "boxShadow",
+        "flexDirection", "justify", "alignItems", "gap", "wrap", "grow", "basis"
+      ],
+      "contentSchema": ["visibleWhen"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "auto",
+        "maxWidth": "100%",
+        "padding": "16px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "8px",
+        "flexDirection": "column",
+        "justify": "start",
+        "alignItems": "stretch",
+        "gap": "12px",
+        "wrap": true
+      },
+      "defaultContent": {},
+      "previewIcon": "Grid",
+      "sort": 7
+    },
+    {
+      "typeCode": "row",
+      "typeName": "行",
+      "category": "layout",
+      "renderKind": "container",
+      "isContainer": 1,
+      "isBuiltin": 0,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "texture", "radius",
+        "borderWidth", "borderStyle", "borderColor", "boxShadow",
+        "flexDirection", "justify", "alignItems", "gap", "wrap", "grow", "basis"
+      ],
+      "contentSchema": ["visibleWhen"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "0",
+        "flexDirection": "row",
+        "justify": "start",
+        "alignItems": "stretch",
+        "gap": "12px",
+        "wrap": true
+      },
+      "defaultContent": {},
+      "previewIcon": "Operation",
+      "sort": 11
+    },
+    {
+      "typeCode": "card",
+      "typeName": "卡片",
+      "category": "layout",
+      "renderKind": "container",
+      "isContainer": 1,
+      "isBuiltin": 0,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "texture", "radius", "boxShadow", "hoverEffect",
+        "flexDirection", "gap", "grow", "basis"
+      ],
+      "contentSchema": ["visibleWhen"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "auto",
+        "maxWidth": "100%",
+        "padding": "16px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "8px",
+        "boxShadow": "sm",
+        "hoverEffect": "none",
+        "flexDirection": "column",
+        "gap": "12px"
+      },
+      "defaultContent": {},
+      "previewIcon": "Postcard",
+      "sort": 8
+    },
+    {
+      "typeCode": "heading",
+      "typeName": "标题",
+      "category": "base",
+      "renderKind": "heading",
+      "isContainer": 0,
+      "isBuiltin": 0,
+      "styleSchema": [
+        "align", "padding", "marginTop", "marginBottom",
+        "fontSize", "fontWeight", "textColor", "textAlign"
+      ],
+      "contentSchema": ["text"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "align": "left",
+        "textAlign": "left",
+        "fontSize": "20px",
+        "fontWeight": "600",
+        "textColor": "var(--site-text-primary)"
+      },
+      "defaultContent": { "text": "标题" },
+      "previewIcon": "Tickets",
+      "sort": 2
+    },
+    {
+      "typeCode": "text",
+      "typeName": "文本",
+      "category": "base",
+      "renderKind": "text",
+      "isContainer": 0,
+      "isBuiltin": 0,
+      "styleSchema": [
+        "width", "align", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "fontSize", "fontWeight", "textColor", "textAlign",
+        "lineHeight", "letterSpacing"
+      ],
+      "contentSchema": ["text", "visibleWhen"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "align": "left",
+        "textAlign": "left",
+        "fontSize": "14px",
+        "fontWeight": "400",
+        "textColor": "var(--site-text-primary)",
+        "lineHeight": 1.5
+      },
+      "defaultContent": { "text": "文本内容" },
+      "previewIcon": "Document",
+      "sort": 1
+    },
+
+    {
+      "typeCode": "notice",
+      "typeName": "公告(业务)",
+      "category": "business",
+      "renderKind": "builtin:notice",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": ["padding", "backgroundColor", "radius", "fontSize", "marginTop", "marginBottom"],
+      "contentSchema": ["limit", "showMore"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "padding": "12px 16px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "8px",
+        "fontSize": "14px"
+      },
+      "defaultContent": { "limit": 5, "showMore": true },
+      "previewIcon": "Bell",
+      "sort": 21
+    },
+    {
+      "typeCode": "board_nav",
+      "typeName": "板块导航(业务)",
+      "category": "business",
+      "renderKind": "builtin:board_nav",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": ["padding", "backgroundColor", "radius", "marginTop", "marginBottom"],
+      "contentSchema": ["limit", "columns", "showCover", "showIntro", "emptyText"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "padding": "16px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "8px"
+      },
+      "defaultContent": {
+        "limit": 8,
+        "columns": 3,
+        "showCover": true,
+        "showIntro": true,
+        "emptyText": "暂无开放板块"
+      },
+      "previewIcon": "Menu",
+      "sort": 23
+    },
+    {
+      "typeCode": "board_detail",
+      "typeName": "板块详情(业务)",
+      "category": "business",
+      "renderKind": "builtin:board_detail",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "radius", "boxShadow",
+        "coverWidth", "coverHeight", "coverRadius", "coverFit",
+        "titleColor", "titleFontSize", "titleFontWeight",
+        "metaColor", "metaFontSize", "metaGap",
+        "bodyColor", "bodyFontSize", "bodyLineHeight",
+        "badgeBackgroundColor", "badgeTextColor",
+        "actionColor", "actionFontSize", "actionRadius", "itemGap",
+        "emptyColor", "emptyFontSize"
+      ],
+      "contentSchema": ["boardId", "autoBoard", "showVersions", "showStages", "showTags"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "16px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px",
+        "boxShadow": "sm"
+      },
+      "defaultContent": {
+        "autoBoard": true,
+        "showVersions": true,
+        "showStages": true,
+        "showTags": true
+      },
+      "previewIcon": "Postcard",
+      "sort": 24
+    },
+    {
+      "typeCode": "post_list",
+      "typeName": "帖子列表(业务)",
+      "category": "business",
+      "renderKind": "builtin:post_list",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "radius", "boxShadow",
+        "itemPadding", "itemBorderColor", "itemHoverBackgroundColor",
+        "titleColor", "titleFontSize", "titleFontWeight",
+        "metaColor", "metaFontSize", "metaGap",
+        "coverWidth", "coverHeight", "coverRadius", "coverFit",
+        "badgeBackgroundColor", "badgeTextColor",
+        "emptyColor", "emptyFontSize",
+        "actionColor", "actionFontSize", "actionRadius"
+      ],
+      "contentSchema": [
+        "title", "boardId", "versionId", "stageId", "tagId",
+        "keyword", "sort", "pageSize", "showCover", "emptyText"
+      ],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "16px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px",
+        "boxShadow": "sm"
+      },
+      "defaultContent": {
+        "sort": "latest",
+        "pageSize": 10,
+        "showCover": true,
+        "emptyText": "暂无帖子"
+      },
+      "previewIcon": "List",
+      "sort": 25
+    },
+    {
+      "typeCode": "comment_list",
+      "typeName": "评论区(业务)",
+      "category": "business",
+      "renderKind": "builtin:comment_list",
+      "isContainer": 0,
+      "isBuiltin": 1,
+      "styleSchema": [
+        "width", "maxWidth", "padding", "marginTop", "marginBottom",
+        "backgroundColor", "radius", "boxShadow",
+        "itemPadding", "itemBorderColor",
+        "titleColor", "titleFontSize", "titleFontWeight",
+        "metaColor", "metaFontSize", "metaGap",
+        "bodyColor", "bodyFontSize", "bodyLineHeight",
+        "emptyColor", "emptyFontSize",
+        "actionColor", "actionFontSize", "actionRadius"
+      ],
+      "contentSchema": ["postId", "pageSize", "emptyText"],
+      "behaviorSchema": [],
+      "defaultStyle": {
+        "width": "100%",
+        "padding": "16px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px"
+      },
+      "defaultContent": { "pageSize": 10, "emptyText": "还没有评论，来抢沙发～" },
+      "previewIcon": "ChatDotRound",
+      "sort": 28
+    },
+    {
+      "typeCode": "button",
+      "typeName": "按钮",
+      "category": "base",
+      "renderKind": "button",
+      "isContainer": 0,
+      "isBuiltin": 0,
+      "styleSchema": [
+        "width", "height", "padding", "align",
+        "backgroundColor", "texture", "radius",
+        "fontSize", "fontWeight", "textColor", "textAlign",
+        "hoverEffect", "clickEffect", "boxShadow", "transitionMs", "cursor"
+      ],
+      "contentSchema": ["text", "icon", "buttonType", "visibleWhen", "linkType", "linkUrl", "openInNewTab"],
+      "behaviorSchema": ["emit", "onClickAction"],
+      "defaultStyle": {
+        "width": "auto",
+        "height": "auto",
+        "padding": "8px 18px",
+        "align": "left",
+        "backgroundColor": "var(--site-primary)",
+        "textColor": "#FFFFFF",
+        "fontSize": "14px",
+        "fontWeight": "600",
+        "radius": "8px",
+        "texture": "none",
+        "hoverEffect": "lift",
+        "clickEffect": "scale",
+        "boxShadow": "sm",
+        "transitionMs": 150,
+        "cursor": "pointer"
+      },
+      "defaultContent": { "text": "按钮" },
+      "previewIcon": "Pointer",
+      "sort": 4,
+      "remark": "跳转类型选「站内链接」再填 /publish 这类站内地址即可点击跳转；渲染内核本来就认这两个字段，这里补上开放声明"
+    }
+  ]
+}

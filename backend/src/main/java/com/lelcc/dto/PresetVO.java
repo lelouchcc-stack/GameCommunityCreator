@@ -30,6 +30,12 @@ public class PresetVO {
 
     private Integer status;
 
+    /**
+     * 是否已被某个页面逻辑图引用（按 presetCode@version 精确匹配）。
+     * 引用中的预设改内容会自动另起新版本、且不允许删除，列表里要能一眼看出来。
+     */
+    private Boolean referenced;
+
     private String remark;
 
     private LocalDateTime createTime;

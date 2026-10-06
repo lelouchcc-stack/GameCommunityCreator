@@ -6,8 +6,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * 玩家注册请求体。
- * 校验规则按 member.username VARCHAR(50) 与常见社区惯例取值（pit.md 无 01/02 用例表，
- * 见设计文档 decisions.tail[6]）；前后端使用同一组规则。
+ * 校验规则按 member.username VARCHAR(50) 与常见社区惯例取值；前后端使用同一组规则。
  */
 public record MemberRegisterDTO(
         @NotBlank(message = "请输入用户名")

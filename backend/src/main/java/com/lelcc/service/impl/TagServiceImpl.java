@@ -12,6 +12,8 @@ import com.lelcc.service.TagService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class TagServiceImpl implements TagService {
 
@@ -30,6 +32,11 @@ public class TagServiceImpl implements TagService {
                                   long pageNum, long pageSize) {
         Page<TagVO> page = new Page<>(pageNum, pageSize);
         return PageResult.of(tagMapper.selectTagPage(page, boardId, tagType, status, keyword));
+    }
+
+    @Override
+    public List<TagVO> listOpen(Long boardId) {
+        return tagMapper.selectOpenTags(boardId);
     }
 
     @Override

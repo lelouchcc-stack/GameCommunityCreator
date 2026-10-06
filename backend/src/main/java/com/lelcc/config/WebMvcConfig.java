@@ -1,7 +1,9 @@
 package com.lelcc.config;
 
 import com.lelcc.common.UserType;
+import com.lelcc.interceptor.AdminPermInterceptor;
 import com.lelcc.interceptor.AuthInterceptor;
+import com.lelcc.mapper.SysMenuMapper;
 import com.lelcc.utils.JwtUtils;
 import jakarta.annotation.Resource;
 import org.springframework.context.annotation.Configuration;
@@ -18,6 +20,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
     private JwtUtils jwtUtils;
 
     @Resource
+    private SysMenuMapper sysMenuMapper;
+
+    @Resource
     private UploadProperties uploadProperties;
 
     /**
@@ -30,16 +35,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .addPathPatterns("/admin/**")
                 .excludePathPatterns("/admin/login");
 
-        // 以下 /app 路径匿名可读，供未登录用户浏览社区：站点外观配置（站点名/Logo/主题）、
-        // 板块列表与板块详情、轮播图、公告、热门帖子与帖子列表/详情（单段路径 /app/post/*）。
+        // 后台写操作再查一次权限标识（sys_menu.perms）：只挡非 GET 的请求，
+        // 否则只有部分角色的账号会因为读不到站点配置而进不了后台。细则见 AdminPermInterceptor。
+        registry.addInterceptor(new AdminPermInterceptor(sysMenuMapper))
+                .addPathPatterns("/admin/**")
+                .excludePathPatterns("/admin/login");
+
+        // 以下 /app 路径匿名可读，供未登录用户浏览社区：站点外观配置（站点名/游戏名/Logo/主题/导航）、
+        // 板块列表与板块详情、轮播图、公告列表与详情、内容分类（标签）、热门帖子与帖子列表/详情。
         // 不放行的话未登录用户打开用户端会先撞 401。
         // 注意：放行路径下只允许存在读接口——写接口一律用多段路径（如 /app/post/{id}/like），
         // 才不会被 /app/post/* 这种单段通配误放行。
+        // 例外 /app/member/**：个人主页是自己的数据，不在此列，必须登录。
         registry.addInterceptor(new AuthInterceptor(jwtUtils, UserType.MEMBER))
                 .addPathPatterns("/app/**")
                 .excludePathPatterns("/app/login", "/app/register", "/app/site/config",
-                        "/app/banner/list", "/app/notice/list",
-                        "/app/board/*", "/app/post/*");
+                        "/app/banner/list", "/app/notice/*", "/app/tag/*",
+                        "/app/board/*", "/app/post/*", "/app/comment/page");
     }
 
     /**

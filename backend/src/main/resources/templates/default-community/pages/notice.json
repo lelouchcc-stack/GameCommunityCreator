@@ -1,0 +1,51 @@
+{
+  "pageKey": "notice",
+  "pageName": "公告列表",
+  "routePath": "/notice",
+  "isHome": 0,
+  "remark": "公告列表：游戏更新、社区公告与活动信息。",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "heading",
+      "nodeName": "页面标题",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": { "fontSize": "26px", "fontWeight": "700", "marginBottom": "2px" },
+      "contentJson": { "text": "社区公告" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -2,
+      "parentId": null,
+      "typeCode": "text",
+      "nodeName": "页面说明",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": { "fontSize": "14px", "textColor": "var(--site-text-secondary)" },
+      "contentJson": { "text": "游戏版本更新、社区公告与活动信息都会发在这里。" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -3,
+      "parentId": null,
+      "typeCode": "notice_list",
+      "nodeName": "公告列表",
+      "sort": 2,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": { "pageSize": 10, "showContent": true, "emptyText": "暂无公告" },
+      "behaviorJson": {},
+      "remark": "取 /app/notice/page 已发布公告"
+    }
+  ]
+}

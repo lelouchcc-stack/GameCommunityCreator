@@ -1,0 +1,92 @@
+{
+  "code": "default-community",
+  "name": "Default Game Community",
+  "nameZh": "默认游戏社区模板",
+  "version": 2,
+  "description": "开箱即用的游戏社区：首页、攻略与资料、板块、帖子详情与评论、发帖、公告、个人主页一次建好，视觉与响应式统一。所有文案与配色都从站点配置读取，填完社区名称与游戏名称即可直接部署。",
+  "inputs": [
+    {
+      "key": "siteName",
+      "label": "社区名称",
+      "type": "text",
+      "required": true,
+      "maxLength": 30,
+      "placeholder": "星海游戏社区",
+      "help": "显示在浏览器标题、页头与页脚"
+    },
+    {
+      "key": "gameName",
+      "label": "游戏名称",
+      "type": "text",
+      "required": true,
+      "maxLength": 30,
+      "placeholder": "星海传说",
+      "help": "显示在页头副标题与首页「游戏简介」区块"
+    },
+    {
+      "key": "siteIntro",
+      "label": "社区简介",
+      "type": "textarea",
+      "required": false,
+      "maxLength": 200,
+      "placeholder": "《星海传说》官方玩家社区，攻略、资料与同好都在这里",
+      "help": "显示在首页游戏简介区块与页脚"
+    },
+    {
+      "key": "logo",
+      "label": "社区 Logo",
+      "type": "image",
+      "required": false,
+      "help": "不上传也可以：页头会用社区名称首字生成徽标兜底，不会出现碎图"
+    },
+    {
+      "key": "primaryColor",
+      "label": "主题主色",
+      "type": "color",
+      "required": false,
+      "default": "#5B5FE9",
+      "help": "悬停色、按下色与浅底色都由它派生，改一个值整站跟着变"
+    },
+    {
+      "key": "copyright",
+      "label": "版权文案",
+      "type": "text",
+      "required": false,
+      "maxLength": 100,
+      "help": "留空时按「社区名称 + 年份」自动生成"
+    },
+    {
+      "key": "overwritePages",
+      "label": "按模板重建页面",
+      "type": "boolean",
+      "default": true,
+      "help": "开启：模板自带的页面（首页/攻略/板块/帖子/公告/个人主页）会被模板内容覆盖。关闭：只补建缺失的页面，已有页面原样保留。"
+    },
+    {
+      "key": "seedInitial",
+      "label": "同时创建初始内容",
+      "type": "boolean",
+      "default": true,
+      "help": "创建游戏板块、初始版本、进度阶段、默认标签与一条欢迎公告。仅在对应数据表为空时创建，不会覆盖或重复写入已有内容。"
+    }
+  ],
+  "pageKeys": [
+    "home",
+    "guide",
+    "boards",
+    "board",
+    "post-list",
+    "post-detail",
+    "publish",
+    "notice",
+    "notice-detail",
+    "profile"
+  ],
+  "relatedPages": {
+    "login": "登录页（由 sql/ui_login.sql 建立，模板不覆盖）",
+    "register": "注册页（由 sql/ui_login.sql 建立，模板不覆盖）"
+  },
+  "customPages": {
+    "user_info": "检测到历史遗留的空页面 user_info（0 节点），与模板的 /profile 功能重叠。管理端「页面搭建」目前只提供新建、没有删除/停用入口（后端接口已有），可以先忽略这一条。"
+  }
+}

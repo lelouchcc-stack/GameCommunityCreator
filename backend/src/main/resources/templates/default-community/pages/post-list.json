@@ -1,0 +1,56 @@
+{
+  "pageKey": "post-list",
+  "pageName": "帖子检索",
+  "routePath": "/post/list",
+  "isHome": 0,
+  "remark": "帖子检索：页头搜索框把关键字写到 ?keyword=，这里直接读它出结果。",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "heading",
+      "nodeName": "页面标题",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": { "fontSize": "24px", "fontWeight": "700", "marginBottom": "2px" },
+      "contentJson": { "text": "帖子检索" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -2,
+      "parentId": null,
+      "typeCode": "text",
+      "nodeName": "页面说明",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": { "fontSize": "14px", "textColor": "var(--site-text-secondary)" },
+      "contentJson": { "text": "在页头搜索框输入关键字，或从「攻略与资料」按版本与分类筛选后过来。" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -3,
+      "parentId": null,
+      "typeCode": "post_list",
+      "nodeName": "检索结果",
+      "sort": 2,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": {
+        "sort": "hot",
+        "pageSize": 10,
+        "showCover": true,
+        "emptyText": "没有找到符合条件的帖子"
+      },
+      "behaviorJson": {},
+      "remark": "关键字与筛选条件都从地址查询串读取"
+    }
+  ]
+}

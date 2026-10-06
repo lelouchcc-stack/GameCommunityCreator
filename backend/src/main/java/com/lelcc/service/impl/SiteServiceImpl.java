@@ -83,15 +83,38 @@ public class SiteServiceImpl implements SiteService {
     public SiteConfigVO updateConfig(SiteConfigDTO dto) {
         Map<String, String> incoming = new LinkedHashMap<>();
         incoming.put(SiteConfigRegistry.SITE_NAME, dto.siteName());
+        incoming.put(SiteConfigRegistry.GAME_NAME, dto.gameName());
         incoming.put(SiteConfigRegistry.SITE_INTRO, dto.siteIntro());
         incoming.put(SiteConfigRegistry.LOGO, dto.logo());
+        incoming.put(SiteConfigRegistry.NAV_ITEMS, toNavJson(dto.navItems()));
         incoming.put(SiteConfigRegistry.COPYRIGHT, dto.copyright());
         incoming.put(SiteConfigRegistry.PRIMARY_COLOR, dto.primaryColor());
         incoming.put(SiteConfigRegistry.DARK_MODE, Boolean.TRUE.equals(dto.darkMode()) ? "true" : "false");
 
-        // 先整体校验再落库：任一项不合法就整体拒绝，不写入半套配置
+        putValidated(incoming);
+        return getConfig();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void putValues(Map<String, String> values) {
+        Map<String, String> incoming = new LinkedHashMap<>();
+        values.forEach((key, value) -> {
+            if (SiteConfigRegistry.get(key) == null) {
+                throw new BusinessException(400, "未知的站点配置项：" + key);
+            }
+            incoming.put(key, value);
+        });
+        putValidated(incoming);
+    }
+
+    /** 先整体校验再落库：任一项不合法就整体拒绝，不写入半套配置 */
+    private void putValidated(Map<String, String> incoming) {
         Map<String, String> normalized = new LinkedHashMap<>();
         for (SiteConfigRegistry.Spec spec : SiteConfigRegistry.specs()) {
+            if (!incoming.containsKey(spec.key())) {
+                continue;
+            }
             String value = StrUtil.nullToEmpty(incoming.get(spec.key()));
             String error = spec.validate(value);
             if (error != null) {
@@ -100,8 +123,24 @@ public class SiteServiceImpl implements SiteService {
             normalized.put(spec.key(), value);
         }
         normalized.forEach(this::upsert);
+    }
 
-        return getConfig();
+    /** 导航菜单入库前转成 JSON 文本；null / 空数组存空串，读回时回落到默认导航 */
+    private String toNavJson(List<SiteConfigVO.NavItemVO> navItems) {
+        if (navItems == null || navItems.isEmpty()) {
+            return "";
+        }
+        List<Map<String, String>> items = new ArrayList<>();
+        for (SiteConfigVO.NavItemVO item : navItems) {
+            if (item == null) {
+                continue;
+            }
+            Map<String, String> row = new LinkedHashMap<>();
+            row.put("label", StrUtil.nullToEmpty(item.label()));
+            row.put("url", StrUtil.nullToEmpty(item.url()));
+            items.add(row);
+        }
+        return items.isEmpty() ? "" : JSONUtil.toJsonStr(items);
     }
 
     @Override
@@ -254,11 +293,30 @@ public class SiteServiceImpl implements SiteService {
     private SiteConfigVO toVO(Map<String, String> values) {
         return new SiteConfigVO(
                 valueOrDefault(values, SiteConfigRegistry.SITE_NAME),
+                valueOrDefault(values, SiteConfigRegistry.GAME_NAME),
                 valueOrDefault(values, SiteConfigRegistry.SITE_INTRO),
                 valueOrDefault(values, SiteConfigRegistry.LOGO),
+                toNavItems(values.get(SiteConfigRegistry.NAV_ITEMS)),
                 valueOrDefault(values, SiteConfigRegistry.COPYRIGHT),
                 valueOrDefault(values, SiteConfigRegistry.PRIMARY_COLOR),
                 Boolean.parseBoolean(valueOrDefault(values, SiteConfigRegistry.DARK_MODE)));
+    }
+
+    /** 导航菜单只下发结构正确的项：残缺项被跳过而不是整站配置拉不出来 */
+    private List<SiteConfigVO.NavItemVO> toNavItems(String raw) {
+        List<SiteConfigVO.NavItemVO> items = new ArrayList<>();
+        for (Object item : SiteConfigRegistry.parseNavItems(raw)) {
+            if (!(item instanceof Map<?, ?> node)) {
+                continue;
+            }
+            String label = StrUtil.nullToEmpty(String.valueOf(node.get("label"))).trim();
+            String url = StrUtil.nullToEmpty(String.valueOf(node.get("url"))).trim();
+            if (label.isEmpty() || url.isEmpty() || "null".equals(label) || "null".equals(url)) {
+                continue;
+            }
+            items.add(new SiteConfigVO.NavItemVO(label, url));
+        }
+        return items;
     }
 
     /** 行缺失或为空时回落到注册表默认值，前端不必再判空 */

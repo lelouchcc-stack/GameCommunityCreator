@@ -44,5 +44,14 @@ public class AppPostItemVO {
     /** 帖子关联版本与板块当前版本不一致 */
     private Boolean expired;
 
+    /**
+     * 帖子状态：0待审 1已发布 2已下架。
+     * 公开列表里恒为 1（SQL 已过滤），只有「我的帖子」会用到——作者要看到自己待审/被下架的帖。
+     */
+    private Integer status;
+
+    /** 审核意见/驳回原因，仅「我的帖子」下发 */
+    private String auditRemark;
+
     private LocalDateTime createTime;
 }

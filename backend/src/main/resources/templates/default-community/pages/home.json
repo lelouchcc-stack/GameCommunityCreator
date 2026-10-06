@@ -1,0 +1,313 @@
+{
+  "pageKey": "home",
+  "pageName": "首页",
+  "routePath": "/",
+  "isHome": 1,
+  "remark": "默认社区模板首页：轮播 → 游戏简介 → 热门内容 → 公告 → 最新帖子/攻略精选两栏 → 版本更新 → 社区板块",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "banner",
+      "nodeName": "首页轮播",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": { "height": "300px", "radius": "16px" },
+      "contentJson": { "autoplay": true, "interval": 5000, "limit": 5 },
+      "behaviorJson": {},
+      "remark": "图与标题在「站点配置 → 轮播图管理」维护"
+    },
+    {
+      "id": -2,
+      "parentId": null,
+      "typeCode": "game_intro",
+      "nodeName": "游戏简介",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "28px 24px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": { "showVersion": true },
+      "behaviorJson": {},
+      "remark": "游戏名/简介/当前版本取站点配置与主板块，模板里不写死任何游戏名"
+    },
+    {
+      "id": -3,
+      "parentId": null,
+      "typeCode": "notice",
+      "nodeName": "社区公告",
+      "sort": 2,
+      "visible": 1,
+      "styleJson": {
+        "padding": "14px 18px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "12px",
+        "fontSize": "14px"
+      },
+      "contentJson": { "limit": 4, "showMore": true },
+      "behaviorJson": {},
+      "remark": "取 notice 表已发布公告，点条目进 /notice/:id"
+    },
+    {
+      "id": -4,
+      "parentId": null,
+      "typeCode": "row",
+      "nodeName": "推荐两栏",
+      "sort": 3,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "0",
+        "flexDirection": "row",
+        "wrap": true,
+        "gap": "16px",
+        "justify": "start",
+        "alignItems": "stretch"
+      },
+      "contentJson": {},
+      "behaviorJson": {},
+      "remark": "grow/basis 让两栏按比例分宽，窄屏由 .ui-col 自动整行落下"
+    },
+
+    {
+      "id": -5,
+      "parentId": -4,
+      "typeCode": "container",
+      "nodeName": "左栏-热门内容",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": {
+        "width": "auto",
+        "grow": 2,
+        "basis": "380px",
+        "padding": "18px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm",
+        "flexDirection": "column",
+        "justify": "start",
+        "alignItems": "stretch",
+        "gap": "12px",
+        "wrap": true
+      },
+      "contentJson": {},
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -6,
+      "parentId": -5,
+      "typeCode": "heading",
+      "nodeName": "标题-热门内容",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": { "fontSize": "18px", "fontWeight": "600", "marginBottom": "2px" },
+      "contentJson": { "text": "热门内容" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -7,
+      "parentId": -5,
+      "typeCode": "text",
+      "nodeName": "副标题-热门内容",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": { "fontSize": "13px", "textColor": "var(--site-text-secondary)" },
+      "contentJson": { "text": "按置顶、点赞与浏览排出来的社区热帖" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -8,
+      "parentId": -5,
+      "typeCode": "hot_post",
+      "nodeName": "热门帖列表",
+      "sort": 2,
+      "visible": 1,
+      "styleJson": { "padding": "0", "backgroundColor": "var(--site-bg-card)", "radius": "0" },
+      "contentJson": { "limit": 6 },
+      "behaviorJson": {},
+      "remark": "取 /app/post/hot"
+    },
+
+    {
+      "id": -9,
+      "parentId": -4,
+      "typeCode": "container",
+      "nodeName": "右栏-最新与板块",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": {
+        "width": "auto",
+        "grow": 1,
+        "basis": "280px",
+        "padding": "18px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm",
+        "flexDirection": "column",
+        "justify": "start",
+        "alignItems": "stretch",
+        "gap": "12px",
+        "wrap": true
+      },
+      "contentJson": {},
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -10,
+      "parentId": -9,
+      "typeCode": "heading",
+      "nodeName": "标题-最新帖子",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": { "fontSize": "16px", "fontWeight": "600", "marginBottom": "2px" },
+      "contentJson": { "text": "最新帖子" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -11,
+      "parentId": -9,
+      "typeCode": "post_list",
+      "nodeName": "最新帖子列表",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "0",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "0"
+      },
+      "contentJson": {
+        "sort": "latest",
+        "pageSize": 5,
+        "showCover": false,
+        "emptyText": "还没有帖子，等待第一位发帖的玩家"
+      },
+      "behaviorJson": {},
+      "remark": "取 /app/post/page，按最新排序"
+    },
+    {
+      "id": -12,
+      "parentId": -9,
+      "typeCode": "divider",
+      "nodeName": "分隔线",
+      "sort": 2,
+      "visible": 1,
+      "styleJson": {
+        "borderWidth": "1px",
+        "borderStyle": "solid",
+        "borderColor": "var(--site-border)",
+        "marginTop": "4px",
+        "marginBottom": "4px"
+      },
+      "contentJson": {},
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -13,
+      "parentId": -9,
+      "typeCode": "heading",
+      "nodeName": "标题-社区板块",
+      "sort": 3,
+      "visible": 1,
+      "styleJson": { "fontSize": "16px", "fontWeight": "600", "marginBottom": "2px" },
+      "contentJson": { "text": "社区板块" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -14,
+      "parentId": -9,
+      "typeCode": "board_nav",
+      "nodeName": "板块导航",
+      "sort": 4,
+      "visible": 1,
+      "styleJson": { "padding": "0", "backgroundColor": "var(--site-bg-card)", "radius": "0" },
+      "contentJson": {
+        "limit": 4,
+        "columns": 1,
+        "showCover": true,
+        "showIntro": true,
+        "emptyText": "暂无开放板块"
+      },
+      "behaviorJson": {},
+      "remark": "取 /app/board/list 的开放板块，点击进 /board/:id"
+    },
+
+    {
+      "id": -15,
+      "parentId": null,
+      "typeCode": "heading",
+      "nodeName": "标题-版本更新",
+      "sort": 4,
+      "visible": 1,
+      "styleJson": { "fontSize": "20px", "fontWeight": "700", "marginTop": "8px", "marginBottom": "0" },
+      "contentJson": { "text": "版本与更新" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -16,
+      "parentId": null,
+      "typeCode": "game_versions",
+      "nodeName": "游戏版本",
+      "sort": 5,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "22px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": { "autoBoard": true, "limit": 5, "showNote": true, "emptyText": "暂无版本信息" },
+      "behaviorJson": {},
+      "remark": "取主板块的版本列表，渲染成时间线"
+    },
+    {
+      "id": -17,
+      "parentId": null,
+      "typeCode": "heading",
+      "nodeName": "标题-全部板块",
+      "sort": 6,
+      "visible": 1,
+      "styleJson": { "fontSize": "20px", "fontWeight": "700", "marginTop": "8px", "marginBottom": "0" },
+      "contentJson": { "text": "全部板块" },
+      "behaviorJson": {},
+      "remark": ""
+    },
+    {
+      "id": -18,
+      "parentId": null,
+      "typeCode": "board_nav",
+      "nodeName": "板块导航-全部",
+      "sort": 7,
+      "visible": 1,
+      "styleJson": {
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "marginTop": "0",
+        "marginBottom": "0"
+      },
+      "contentJson": {
+        "limit": 6,
+        "columns": 3,
+        "showCover": true,
+        "showIntro": true,
+        "emptyText": "暂无开放板块"
+      },
+      "behaviorJson": {},
+      "remark": ""
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "pageKey": "board",
+  "pageName": "板块详情",
+  "routePath": "/board/:id",
+  "isHome": 0,
+  "remark": "板块详情：板块信息 + 版本归档/进度阶段/内容分类 + 该板块的帖子列表。",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "board_detail",
+      "nodeName": "板块头部",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": {
+        "autoBoard": true,
+        "showVersions": true,
+        "showStages": true,
+        "showTags": true
+      },
+      "behaviorJson": {},
+      "remark": "板块 id 取路由参数，autoBoard 只是无参数时的兜底"
+    },
+    {
+      "id": -2,
+      "parentId": null,
+      "typeCode": "post_list",
+      "nodeName": "板块内容",
+      "sort": 1,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "20px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": {
+        "title": "板块内容",
+        "sort": "latest",
+        "pageSize": 10,
+        "showCover": true,
+        "emptyText": "这个板块还没有内容"
+      },
+      "behaviorJson": {},
+      "remark": "板块 id 取路由参数，版本/阶段/分类由查询串筛选"
+    }
+  ]
+}

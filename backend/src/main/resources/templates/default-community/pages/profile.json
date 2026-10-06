@@ -1,0 +1,27 @@
+{
+  "pageKey": "profile",
+  "pageName": "个人主页",
+  "routePath": "/profile",
+  "isHome": 0,
+  "remark": "个人主页：资料展示与修改 + 我的帖子（含待审核与已下架）。未登录时给出登录入口。",
+  "nodes": [
+    {
+      "id": -1,
+      "parentId": null,
+      "typeCode": "profile",
+      "nodeName": "个人主页",
+      "sort": 0,
+      "visible": 1,
+      "styleJson": {
+        "width": "100%",
+        "padding": "28px",
+        "backgroundColor": "var(--site-bg-card)",
+        "radius": "16px",
+        "boxShadow": "sm"
+      },
+      "contentJson": { "pageSize": 10, "emptyText": "还没有发过帖子" },
+      "behaviorJson": {},
+      "remark": "取当前登录玩家的资料与帖子；未登录显示登录引导"
+    }
+  ]
+}

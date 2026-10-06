@@ -8,6 +8,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.util.List;
+
 @Mapper
 public interface TagMapper extends BaseMapper<Tag> {
 
@@ -44,4 +46,24 @@ public interface TagMapper extends BaseMapper<Tag> {
     /** 标签被帖子引用时不允许删除 */
     @Select("SELECT COUNT(*) FROM post_tag WHERE tag_id = #{tagId}")
     long countPostRefs(@Param("tagId") Long tagId);
+
+    /**
+     * 用户端内容分类：启用的全局标签 + 指定板块的标签。
+     * boardId 为空时只给全局标签（首页/攻略入口在没有板块上下文时用）。
+     */
+    @Select("""
+            <script>
+            SELECT t.id, t.board_id, t.tag_name, t.tag_type, t.sort
+            FROM tag t
+            LEFT JOIN board b ON b.id = t.board_id
+            WHERE t.status = 1
+              AND (t.board_id IS NULL
+              <if test="boardId != null">
+                   OR (t.board_id = #{boardId} AND b.status = 1)
+              </if>
+              )
+            ORDER BY t.sort, t.id
+            </script>
+            """)
+    List<TagVO> selectOpenTags(@Param("boardId") Long boardId);
 }
