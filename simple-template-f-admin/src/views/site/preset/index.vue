@@ -6,7 +6,8 @@
                     <span>预设库</span>
                     <span class="preset__hint">
                         预设 = 原子团（一段可复用的子图），页面图里以「预设节点」引用它。
-                        内置预设只读，可「复制为自定义」再改；已被页面图引用的预设改动会另起新版本，引用方仍锁旧版本
+                        内置预设只读，可「复制为自定义」再改；已被页面图引用的预设改动会另起新版本，引用方仍锁旧版本。
+                        「停用」的预设不会出现在「逻辑编排」的预设面板里（依赖的后端接口没落地时先停用，避免插进图里跑不通）
                     </span>
                     <el-button type="primary" @click="openCreate">新增预设</el-button>
                 </div>
@@ -52,6 +53,13 @@
                     <template #default="{ row }">
                         <el-tag size="small" :type="row.status === 1 ? 'success' : 'info'">
                             {{ row.status === 1 ? "启用" : "停用" }}
+                        </el-tag>
+                    </template>
+                </el-table-column>
+                <el-table-column label="被引用" width="90" align="center">
+                    <template #default="{ row }">
+                        <el-tag size="small" :type="row.referenced ? 'success' : 'info'">
+                            {{ row.referenced ? "已引用" : "未引用" }}
                         </el-tag>
                     </template>
                 </el-table-column>

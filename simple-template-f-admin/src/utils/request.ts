@@ -30,9 +30,16 @@ http.interceptors.response.use(
         if (result.code !== 200) {
             ElMessage.error(result.message || "请求失败");
             if (result.code === 401) {
-                useUserStore().clear();
-                if (window.location.pathname !== "/login") {
-                    window.location.href = "/login";
+                // 只对**后台接口**的 401 登出。画布会渲染两端同源的业务组件，
+                // 它们可能去调用户端接口（/app/**），那条路径上的 401 的含义是
+                // "后台令牌不该调玩家接口"，不是"后台登录态失效"；
+                // 不加这个判断就会把正在编辑页面的管理员直接踢到登录页。
+                const url = response.config?.url ?? "";
+                if (url.startsWith("/admin")) {
+                    useUserStore().clear();
+                    if (window.location.pathname !== "/login") {
+                        window.location.href = "/login";
+                    }
                 }
             }
             return Promise.reject(new Error(result.message || "请求失败"));

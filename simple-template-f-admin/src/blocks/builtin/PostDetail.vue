@@ -1,7 +1,7 @@
 <template>
     <div class="post-detail">
-        <p v-if="loading" class="post-detail__hint">内容加载中…</p>
-        <p v-else-if="!post" class="post-detail__hint">{{ errorText }}</p>
+        <p v-if="loading" class="ui-state">内容加载中…</p>
+        <p v-else-if="!post" class="ui-state ui-state--error">{{ errorText }}</p>
 
         <article v-else class="post-detail__article">
             <h1 class="post-detail__title">
@@ -108,12 +108,6 @@ onMounted(load);
     width: 100%;
 }
 
-.post-detail__hint {
-    margin: 0;
-    color: var(--w-empty-color, var(--site-text-secondary, #646a73));
-    font-size: var(--w-empty-font-size, 14px);
-}
-
 .post-detail__title {
     margin: 0 0 12px;
     font-size: var(--w-title-font-size, 22px);
@@ -189,5 +183,20 @@ onMounted(load);
 .post-detail__image {
     width: 100%;
     border-radius: 8px;
+}
+
+/* 窄屏：标题与正文各降一档，封面限高，长表格/长代码更容易读 */
+@media (max-width: 640px) {
+    .post-detail__title {
+        font-size: var(--w-title-font-size, 18px);
+    }
+
+    .post-detail__cover {
+        max-height: var(--w-cover-height, 200px);
+    }
+
+    .post-detail__body {
+        font-size: var(--w-body-font-size, 14px);
+    }
 }
 </style>

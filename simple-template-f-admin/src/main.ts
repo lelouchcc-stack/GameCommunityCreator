@@ -1,6 +1,7 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
 import ElementPlus from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import 'element-plus/dist/index.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 import './style.css'
@@ -18,6 +19,8 @@ for (const [name, component] of Object.entries(ElementPlusIconsVue)) {
 
 app.use(createPinia())
 app.use(router)
-app.use(ElementPlus)
+// 显式挂中文语言包：Element Plus 默认是英文，不挂的话弹窗按钮会是 OK / Cancel、
+// 分页会显示 10/page——后台界面全是中文，只有这些内置文案是英文会很突兀
+app.use(ElementPlus, { locale: zhCn })
 setupRouterGuard(router)
 app.mount('#app')

@@ -1,8 +1,16 @@
+/** 一条站点导航（页头与页脚共用），与后端 SiteConfigVO.NavItemVO 对应 */
+export interface SiteNavItem {
+    label: string
+    url: string
+}
+
 /** 与后端 SiteConfigVO 对应 */
 export interface SiteConfig {
     siteName: string
+    gameName: string
     siteIntro: string
     logo: string
+    navItems: SiteNavItem[]
     copyright: string
     primaryColor: string
     darkMode: boolean

@@ -68,6 +68,10 @@ export interface PostListItem {
     commentCount: number
     isTop: number
     expired: boolean
+    /** 0待审 1已发布 2已下架；公开列表恒为 1，只有「我的帖子」会用到 */
+    status?: number
+    /** 审核意见/驳回原因，仅「我的帖子」下发 */
+    auditRemark?: string | null
     createTime: string
 }
 
@@ -122,4 +126,92 @@ export function pagePosts(params: PostQuery) {
 /** 帖子详情：匿名可读，后端会累加浏览量 */
 export function getPost(postId: number) {
     return http.get<PostDetail, PostDetail>(`/app/post/${postId}`);
+}
+
+/** 当前玩家对某帖的互动状态与计数（需登录） */
+export interface Interaction {
+    liked: boolean
+    favorited: boolean
+    likeCount: number
+    favoriteCount: number
+    commentCount: number
+}
+
+/** 评论（一级评论带 replies） */
+export interface CommentItem {
+    id: number
+    postId: number
+    memberId: number
+    authorName: string | null
+    authorAvatar: string | null
+    parentId: number
+    rootId: number
+    content: string
+    likeCount: number
+    createTime: string
+    replies: CommentItem[]
+}
+
+/** 发表评论/回复请求体 */
+export interface CommentForm {
+    postId: number
+    parentId?: number
+    content: string
+}
+
+/** 互动状态（需登录；匿名调用会 401） */
+export function getInteraction(postId: number) {
+    return http.get<Interaction, Interaction>(`/app/post/${postId}/interaction`);
+}
+
+/** 点赞/取消点赞（需登录） */
+export function likePost(postId: number) {
+    return http.post<Interaction, Interaction>(`/app/post/${postId}/like`);
+}
+
+/** 收藏/取消收藏（需登录） */
+export function favoritePost(postId: number) {
+    return http.post<Interaction, Interaction>(`/app/post/${postId}/favorite`);
+}
+
+/** 评论分页：匿名可读（后端已放行 /app/comment/page） */
+export function pageComments(postId: number, pageNum = 1, pageSize = 10) {
+    return http.get<PageData<CommentItem>, PageData<CommentItem>>("/app/comment/page", {
+        params: { postId, pageNum, pageSize },
+    });
+}
+
+/** 发表评论/回复（需登录） */
+export function createComment(data: CommentForm) {
+    return http.post<CommentItem, CommentItem>("/app/comment", data);
+}
+
+/** 发帖请求体（与后端 PostCreateDTO 对应） */
+export interface PostCreateForm {
+    boardId: number
+    versionId: number
+    /** 进度阶段，可空表示通用 */
+    stageId?: number | null
+    title: string
+    content: string
+    /** 封面：对象存储 objectKey 或完整地址 */
+    cover?: string | null
+    /** 标签 id，最多 5 个 */
+    tagIds?: number[]
+}
+
+/** 发帖结果（与后端 PostCreateVO 对应） */
+export interface PostCreateResult {
+    id: number
+    /** 0待审 1已发布 2已下架；新帖恒为 0 */
+    status: number
+}
+
+/**
+ * 发帖（需登录）。
+ * 板块与版本都必填：社区按「游戏版本 × 进度阶段」组织内容，帖子不挂版本就没法在正确的版本下被看到。
+ * 落库状态是待审核，管理员通过后才出现在公开列表与热门里。
+ */
+export function createPost(data: PostCreateForm) {
+    return http.post<PostCreateResult, PostCreateResult>("/app/post", data);
 }

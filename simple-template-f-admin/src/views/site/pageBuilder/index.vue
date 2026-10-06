@@ -129,6 +129,23 @@
                             </el-form>
                         </el-tab-pane>
                         <el-tab-pane label="行为" name="behavior">
+                            <el-alert
+                                v-if="!selectedType.behaviorSchema.length"
+                                type="info"
+                                :closable="false"
+                                show-icon
+                                title="这个组件没有开放「行为」属性"
+                                class="page-builder__behavior-hint"
+                            >
+                                <div>
+                                    要让它在被点击时执行逻辑，用工具栏的「逻辑编排」：
+                                    左栏「触发 → 点击组件」，把它的 <code>nodeId</code> 指向这个组件。
+                                </div>
+                                <div>
+                                    节点上挂的逻辑图优先于组件自带的默认行为（例如板块卡片默认进该板块、
+                                    帖子条目默认进帖子详情）；没挂图时才走默认行为。
+                                </div>
+                            </el-alert>
                             <el-form label-width="76px" size="small">
                                 <el-form-item
                                     v-for="key in selectedType.behaviorSchema"
@@ -652,6 +669,20 @@ onMounted(async () => {
 .page-builder__props {
     width: 360px;
     flex-shrink: 0;
+}
+
+/* 「行为」页签为空时的去处提示：不写这块，选中业务组件会看到一个空白页签，
+   误以为"业务组件没法编排逻辑" */
+.page-builder__behavior-hint {
+    margin-bottom: 12px;
+    line-height: 1.7;
+}
+
+.page-builder__behavior-hint code {
+    padding: 0 4px;
+    border-radius: 3px;
+    background: rgb(0 0 0 / 6%);
+    font-family: monospace;
 }
 
 .page-builder__panel-title {

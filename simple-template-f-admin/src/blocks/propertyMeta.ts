@@ -51,6 +51,8 @@ const BASE_STYLE_GROUPS: PropertyGroup[] = [
             { key: "alignItems", label: "交叉轴对齐", type: "enum", options: ["start", "center", "end", "stretch"] },
             { key: "gap", label: "间距", type: "length" },
             { key: "wrap", label: "自动换行", type: "bool" },
+            { key: "grow", label: "占宽比例", type: "number", min: 0, max: 10, step: 1 },
+            { key: "basis", label: "换行基准宽度", type: "length" },
         ],
     },
     {
@@ -126,6 +128,7 @@ export const CONTENT_GROUP: PropertyGroup = {
     properties: [
         { key: "text", label: "文本内容", type: "text", maxLength: 200 },
         { key: "title", label: "标题", type: "text", maxLength: 100 },
+        { key: "intro", label: "简介文案", type: "text", maxLength: 400 },
         { key: "linkType", label: "跳转类型", type: "enum", options: ["none", "internal", "external"] },
         { key: "linkUrl", label: "跳转地址", type: "url" },
         { key: "openInNewTab", label: "新窗口打开", type: "bool" },
@@ -153,6 +156,17 @@ export const CONTENT_GROUP: PropertyGroup = {
         { key: "postId", label: "帖子 ID", type: "number", min: 1 },
         { key: "keyword", label: "搜索关键字", type: "text", maxLength: 50 },
         { key: "sort", label: "排序方式", type: "enum", options: ["latest", "hot"] },
+        { key: "pageSize", label: "每页条数", type: "number", min: 1, max: 50, step: 1 },
+        // 业务组件的取数与区块开关（游戏简介/版本/公告/板块详情）
+        { key: "autoBoard", label: "自动取主板块", type: "bool" },
+        { key: "showVersion", label: "显示当前版本", type: "bool" },
+        { key: "showVersions", label: "显示版本归档", type: "bool" },
+        { key: "showStages", label: "显示进度阶段", type: "bool" },
+        { key: "showTags", label: "显示分类标签", type: "bool" },
+        { key: "showContent", label: "显示内容摘要", type: "bool" },
+        { key: "showNote", label: "显示更新说明", type: "bool" },
+        { key: "showMore", label: "显示更多入口", type: "bool" },
+        { key: "noticeId", label: "公告 ID", type: "number", min: 1 },
     ],
 };
 

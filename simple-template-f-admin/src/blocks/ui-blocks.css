@@ -15,6 +15,20 @@
     flex-wrap: wrap;
 }
 
+/* 容器里的子节点允许被压缩：否则长文本 / 宽图片会把 flex 行撑破，
+   在窄屏上顶出整页横向滚动条（flex 子项默认 min-width:auto） */
+.ui-container > * {
+    min-width: 0;
+}
+
+/* 窄屏：显式配了 flex-basis 的「分栏」节点整行落下，
+   避免分栏在手机上挤成两条窄缝（styleRegistry 给这类节点加了 ui-col 类） */
+@media (max-width: 640px) {
+    .ui-container > .ui-col {
+        flex-basis: 100% !important;
+    }
+}
+
 .ui-heading {
     margin: 0;
     display: block;

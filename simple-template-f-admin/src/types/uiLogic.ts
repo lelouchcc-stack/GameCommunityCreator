@@ -42,6 +42,8 @@ export interface Preset {
     outputs: LogicPort[]
     graph: LogicGraph
     status: number
+    /** 已被某个页面逻辑图引用：改它会自动另起新版本，且不能删除 */
+    referenced?: boolean
     remark: string | null
     createTime?: string
     updateTime?: string

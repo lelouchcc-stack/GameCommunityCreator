@@ -21,3 +21,18 @@ export function changeTagStatus(id: number, status: number) {
 export function deleteTag(id: number) {
     return http.delete<void, void>(`/admin/tag/${id}`);
 }
+
+/** 用户端内容分类项（与后端 TagVO 对应）：管理端画布预览板块详情的分类区时也走这个接口 */
+export interface TagItem {
+    id: number
+    boardId: number | null
+    tagName: string
+    /** 1内容类型(攻略/讨论/同人) 2主题 */
+    tagType: number
+    sort: number
+}
+
+/** 启用的内容分类：全局标签 + 指定板块的标签（匿名可读） */
+export function listTags(boardId?: number) {
+    return http.get<TagItem[], TagItem[]>("/app/tag/list", { params: { boardId } });
+}
