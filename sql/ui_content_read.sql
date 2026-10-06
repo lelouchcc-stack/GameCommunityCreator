@@ -1,5 +1,9 @@
 -- 用户端内容读取页面（v1）：板块详情 + 帖子检索 + 帖子详情
 --
+-- ⚠ 这三页的当前定义已被「默认社区模板」取代（比本脚本多了分类标签与 autoBoard）：
+--   backend/src/main/resources/templates/default-community/pages/{board,post-list,post-detail}.json
+--   由管理端「站点配置 → 创建社区」应用。本脚本保留作为历史记录与兜底，重跑会退回旧版。
+--
 -- 内容：
 --   1. 三个业务组件的组件库种子（builtin:board_detail / builtin:post_list / builtin:post_detail），
 --      都开放了「多区域样式」键（列表项/标题/元信息/封面/序号角标/空状态/动作）。

@@ -133,6 +133,10 @@ ON DUPLICATE KEY UPDATE
   remark = VALUES(remark);
 
 -- ==================== 三、内置预设种子（7 个原子团） ====================
+-- ⚠ 预设库的**增补与修正见 sql/ui_preset_v2.sql**（2026-10-05 盘点：修 preset.interact 的语义、
+--   停用两个依赖未实现接口的预设、补 like/favorite/comment/updateProfile/logout 五个）。
+--   本节是初版种子，保持原样以便对照；改动请写进 v2 之后的增量脚本，不要在这里原地改。
+--
 -- 预设 = 原子团，放预设库供页面图引用（≈ ComfyUI 的节点模板）。三条图内约定见
 -- 设计文档 presetLibrary.graphConventions，要点：
 --   * 内部图不带触发（预设跨页面，触发器的 nodeId 只能指具体页面节点）；

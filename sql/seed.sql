@@ -64,11 +64,13 @@ INSERT INTO sys_role_menu (role_id, menu_id) SELECT 1, id FROM sys_menu;
 
 INSERT INTO site_config (config_key, config_value, remark) VALUES
 ('site_name',     '游戏社区',           '站点名称，显示在浏览器标题与导航栏'),
+('game_name',     '',                   '游戏名称，显示在页头副标题与游戏简介区块'),
 ('site_intro',    '面向独立游戏开发者与玩家的游戏社区', '站点简介，显示在页脚与关于区块'),
-('logo',          '/static/logo.png',   '站点 Logo 地址'),
-('primary_color', '#3B82F6',            '主题主色，注入用户端 CSS 变量'),
+('logo',          '',                   '站点 Logo 地址；留空时页头用站点名首字徽标兜底'),
+('nav_items',     '[{"label":"首页","url":"/"},{"label":"攻略与资料","url":"/guide"},{"label":"社区板块","url":"/boards"},{"label":"公告","url":"/notice"}]', '页头/页脚导航菜单(JSON 数组)'),
+('primary_color', '#5B5FE9',            '主题主色，注入用户端 CSS 变量'),
 ('dark_mode',     'false',              '是否默认深色模式'),
-('copyright',     '© 2026 游戏社区',    '页脚版权信息');
+('copyright',     '',                   '页脚版权信息；留空时按站点名与年份生成');
 
 INSERT INTO home_module (module_type, module_name, sort, enabled, config_json) VALUES
 ('banner',    '首页轮播', 1, 1, '{"autoplay":true,"interval":5000}'),
