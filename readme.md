@@ -4,6 +4,25 @@
 
 项目背景：近年来AI的发展，小团队的游戏数量暴增，但是这些游戏没有属于自己的社区讨论地方，玩家只能在贴吧、nga、discord、qq等社区聊天。本项目的目的是创建一个可以开箱即用的“类米游社”web项目，游戏团队只需要修改一些属于自己游戏的设计风格即可构建。
 
+## 仓库内容
+
+本仓库只放**部署与运行真正需要**的东西：
+
+| 路径 | 说明 |
+|---|---|
+| `backend/` | Spring Boot 后端（双端共用），端口 9331 |
+| `simple-template-f-user/` | 用户端前端（Vue 3），**必须托管在域名根路径** |
+| `simple-template-f-admin/` | 管理端前端（Vue 3 + Element Plus） |
+| `sql/` | 建库与种子脚本，入口是 `sql/install.sql` |
+| `docker/` + `docker-compose.yml` | Docker Compose 一键部署：MySQL + 后端 + nginx |
+| `DEPLOY.md` | **部署说明**：一键部署 / 手动部署 / 首次建站 / 上线前检查清单 |
+| `QWEN.md` | 开发手册：目录结构、接口与数据模型约定、踩过的坑 |
+
+**部署看 [DEPLOY.md](DEPLOY.md)**，一条 `docker compose up -d --build` 就能起来。
+
+开发期的设计稿与需求规范（`pit.md`、数据库设计文档、各 `*设计.json`）以及 AI 辅助开发工具
+（`page-kit/`、`.qwen/`）只留在开发机、不进版本库——它们的结论都已经落到代码与 `sql/` 里。
+
 
 ## 项目开发背景
 

@@ -4,11 +4,30 @@
 .DS_Store
 Thumbs.db
 
-### Qwen Code 本地临时文件 ###
-.qwen/tmp/
-.qwen/worktrees/
-
 ### 构建产物（各子项目内另有 .gitignore，此处兜底）###
 node_modules/
 dist/
 target/
+.aider*
+
+### Docker 本地配置（里面有数据库口令与 JWT 密钥，绝不能提交）###
+.env
+docker/.env
+
+### 设计稿 / 规范文档：只留在本机，部署仓库不需要 ###
+# 这些是开发期的设计叙事与需求规范，正文结论都已经落到代码与 sql/ 里。
+# 本机文件照常保留（没被删除），只是不再进版本库。
+/16-毕设数据库设计.md
+/用例图-mermaid.md
+/pit.md
+/*设计.json
+
+### AI agent 工具包：部署不需要 ###
+# page-kit/ 是给 AI 生成页面的开发期工具，.qwen/ 是 agent 技能与临时产物
+/page-kit/
+/.qwen/
+
+### 只认 npm：两个前端的 Dockerfile 与 DEPLOY.md 都走 npm ci + package-lock.json ###
+# yarn / pnpm 的锁文件与 package-lock.json 并存只会互相漂移，本机要用 yarn 的话留着即可
+yarn.lock
+pnpm-lock.yaml

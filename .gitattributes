@@ -1,0 +1,6 @@
+# 容器里跑的脚本必须保持 LF。
+#
+# Windows 上 core.autocrlf=true 时，检出会把 .sh 变成 CRLF，拷到 Linux 服务器上
+# 直接跑会报 "bad interpreter: /bin/sh^M"。这里锁定这几类文件的行尾。
+*.sh text eol=lf
+*.Dockerfile text eol=lf
