@@ -1,0 +1,26 @@
+# Docker 构建上下文（仓库根目录）的排除清单。
+#
+# 为什么要写：两个前端的 node_modules 加起来几百 MB，后端 target 又是几十 MB，
+# 不排除的话每次 compose build 都要先把这些打进上下文，又慢又占磁盘。
+# 两个镜像都不需要这些东西：web 在镜像里 npm ci + build，backend 在镜像里 mvn package。
+
+# 依赖与构建产物
+**/node_modules
+**/dist
+backend/target
+
+# 上传目录（运行时数据，不该进镜像；容器里挂的是 uploads 卷）
+backend/uploads
+uploads
+
+# 版本控制与本地工具
+.git
+.gitignore
+.qwen
+.idea
+*.iml
+.aider*
+
+# 文档与编辑器产物：镜像里用不到
+*.md
+.vscode

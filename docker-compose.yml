@@ -1,0 +1,93 @@
+# GameCommunityCreator 一键部署：MySQL + 后端 + nginx（托管两个前端）。
+#
+# 用法（仓库根目录）：
+#   cp docker/.env.example .env      # Windows: copy docker\.env.example .env
+#   改 .env 里的 DB_ROOT_PASSWORD 与 JWT_SECRET
+#   docker compose up -d --build
+#   用户端   http://<host>/          管理端 http://<host>:8081/
+#
+# 第一次 `up` 会做三件事：建库（db 容器执行 sql/install.sql）→ 编译后端 → 构建两个前端。
+# 都要下依赖，慢是正常的；之后的重启是秒级。
+#
+# 建站还差最后一步：打开管理端用种子账号 admin / admin123 登录 → 「站点配置 → 创建社区」
+# 填社区名称与游戏名称，详见 DEPLOY.md「首次建站」。
+
+name: gcc
+
+services:
+
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    # 库名没法用环境变量换：sql/*.sql 里写死了 USE ssy_db，改名前要先把那一堆脚本改掉
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_general_ci
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?请在 .env 里设置 DB_ROOT_PASSWORD}
+      TZ: Asia/Shanghai
+    volumes:
+      - db-data:/var/lib/mysql
+      # 建库脚本 + SQL 一起挂进去：init-db.sh 会先 cd / 再 source sql/install.sql
+      - ./sql:/sql:ro
+      - ./docker/init-db.sh:/docker-entrypoint-initdb.d/10-init-db.sh:ro
+    healthcheck:
+      # 只代表"mysqld 起来了、口令对"。首次初始化时建库脚本可能还在跑，backend 这时会连不上库，
+      # 但它自己的健康检查（打 /app/site/config）要查库，所以 compose 不会让 web 提前起来；
+      # 等建库跑完，backend 的连接池自然恢复、健康检查转绿，不需要人工干预。
+      # $$ 是 compose 的转义，实际传给容器的是 $MYSQL_ROOT_PASSWORD
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 40s
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_NAME: ssy_db
+      DB_USERNAME: root
+      DB_PASSWORD: ${DB_ROOT_PASSWORD:?}
+      # 令牌签名密钥：泄露等于任何人都能自己签后台令牌。openssl rand -hex 32
+      JWT_SECRET: ${JWT_SECRET:?请在 .env 里设置 JWT_SECRET}
+      UPLOAD_PROVIDER: local
+      UPLOAD_DIR: /data/uploads
+      UPLOAD_PUBLIC_BASE_URL: /static
+      SERVER_PORT: 9331
+      TZ: Asia/Shanghai
+      # ${JAVA_OPTS:-<默认值>}：默认值本身以 - 开头，写成 :--Xms... 是合法的
+      JAVA_OPTS: ${JAVA_OPTS:--Xms256m -Xmx512m}
+    volumes:
+      # 头像/封面/轮播图落在这里。**别删这个卷**，删了老图片就全成碎图（库里只存 key）
+      - uploads:/data/uploads
+    ports:
+      # 只绑本机：方便 curl 直接调接口；对外访问一律走 web 的 nginx。
+      # 默认 9331 与本地开发用的后端端口相同，如果开发环境正开着就把它改掉（.env 里的 BACKEND_PORT）
+      - "127.0.0.1:${BACKEND_PORT:-9331}:9331"
+
+  web:
+    build:
+      context: .
+      dockerfile: docker/web.Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${USER_PORT:-80}:80"
+      # 管理端：默认对外开。生产环境建议改成 "127.0.0.1:8081:8081" 只让本机/跳板机访问，
+      # 或者前面再挂一层带 HTTPS 与来源限制的网关。
+      - "${ADMIN_PORT:-8081}:8081"
+
+volumes:
+  # 库数据与上传文件都必须用命名卷：容器层一删数据就没了
+  db-data:
+  uploads:
