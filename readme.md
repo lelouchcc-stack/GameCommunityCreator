@@ -20,8 +20,6 @@
 
 **部署看 [DEPLOY.md](DEPLOY.md)**，一条 `docker compose up -d --build` 就能起来。
 
-开发期的设计稿与需求规范（`pit.md`、数据库设计文档、各 `*设计.json`）以及 AI 辅助开发工具
-（`page-kit/`、`.qwen/`）只留在开发机、不进版本库——它们的结论都已经落到代码与 `sql/` 里。
 
 
 ## 项目开发背景
