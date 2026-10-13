@@ -1,4 +1,4 @@
-# QWEN.md
+# AGENTS.md
 
 可定制游戏社区平台（毕业设计）—— 对标米游社的双端垂直游戏社区。以「板块（= 一款游戏的分区）」组织内容，用「游戏版本」与「玩家进度阶段」两个维度组织帖子；后台可图形化配置站点外观与内容维度，不需要改代码。
 
@@ -14,11 +14,16 @@
 | `sql/seed.sql` | 种子数据 |
 | `sql/ui_*.sql` | 增量脚本：搭建域建表与组件/原子/预设种子、登录页、页面搭建菜单、模板菜单 |
 | `docker-compose.yml` + `docker/` | **一键部署**：MySQL + 后端 + nginx（托管两个前端）三个容器。见 [DEPLOY.md](DEPLOY.md) 快速路径 |
-| `readme.md` | 项目介绍，**不是功能规范** |
+| `deploy.bat` + `deploy.ps1` | Windows 一键部署脚本（双击 `deploy.bat`）。**两者的编码都有硬约束，见下** |
+| `readme.md` | 项目介绍，**不是功能规范**（GitHub 能识别小写名；若要改名 `README.md`，记得同步本行） |
+| `docs/项目背景与需求.md` | 开发背景 / 开发目的 / 功能需求（叙事性说明，从 README 移出） |
 
 > **只进本机、不进版本库**的内容（见 `.gitignore`）：设计叙事与需求规范（`pit.md`、
-> `16-毕设数据库设计.md`、`用例图-mermaid.md`、各 `*设计.json`），以及给 AI 用的页面工具包
-> `page-kit/` 与 `.qwen/`。版本库里只放**部署与运行真正需要**的东西，设计口径在开发机上看这些文件。
+> `16-毕设数据库设计.md`、`用例图-mermaid*.md`、`用例文档与实现核对报告.md`、各 `*设计.json`）、
+> 毕业论文与配套产物（`毕业设计-*`，含 `毕业设计-插图/` 的 UML 图），以及给 AI 用的页面工具包
+> `page-kit/` 与 `.qwen/`。
+> 版本库里只放**部署与运行真正需要**的东西，设计口径在开发机上看这些文件。
+> 注意：上面这些文件此前只是「没被 `git add`」，并未被忽略，规则是后补的——别用 `git add .` 一把梭。
 
 ## 默认社区模板（Default Game Community v2）
 
@@ -52,11 +57,67 @@
 - 提交是 `POST /app/post`，落库状态**恒为待审**；管理员在「内容管理 → 帖子审核」通过后才出现在公开列表与热门里，
   作者自己在个人主页能看到待审/驳回状态与审核意见。
 
+## 举报闭环与个人中心
+
+- 举报入口在帖子详情的互动条里（`builtin:post_actions` 的"举报"按钮，就地展开面板选理由+补充说明），
+  提交走 `POST /app/report`，落库为待处理；管理员在「内容管理 → 举报处理」处理或驳回后可勾选同时下架帖子。
+- 后端会**拒绝三种举报**并给出人话提示：帖子不存在或未发布、举报自己的帖子、同一帖重复举报
+  （最后一条还有 `report.uk_post_member` 唯一键兜底，并发时靠捕获唯一键冲突收尾）。
+  玩家自己在「我的举报」里能看到处理结果与驳回说明。
+- 个人主页（`builtin:profile`）是四个按需加载的面板：**我的帖子 / 我的收藏 / 我的举报 / 我的进度**，
+  分别对应 `/app/member/my-posts`、`/my-favorites`、`/my-reports`、`/progress`。
+  切到哪个面板才请求哪个，不会一进页面就发四个请求。
+- 「我的收藏」与「我的帖子」都**不过滤 status**：收藏/发布之后帖子可能被下架，本人仍要看得见那一条（页面上标状态）。
+- 游戏进度以**板块（= 一款游戏）**为单位，`member_game_progress` 上 `uk_member_board(member_id, board_id)`
+  保证一人一板块一条，`PUT /app/member/progress` 是覆盖写；版本/阶段必须是该板块下启用中的。
+  `is_public` 字段目前是"为将来的公开他人主页预留"，个人主页只对自己可见，所以界面上没有开关，别当成漏做。
+- 后台「系统管理 → 玩家管理」（`/admin/member/**`）管的是用户端注册的玩家（member），
+  与「用户管理」管的后台账号（sys_user）是两套体系；只改 `status` 不做物理删除（玩家名下有帖子/评论/收藏）。
+
+## 逻辑原子与接口的入参约定（踩过的坑）
+
+**原子 `inputs_schema` 里的 key，必须和它 `source_api` 指向的接口参数逐字相同。**
+`logic/atomExecutors.ts` 的 `request()` 是把节点 config 求值后**按原键名**直接当 query（GET）
+或 body（POST/PUT）发出去的，不做任何改名映射；对不上的键会被后端静默忽略，表现成"图跑通了但没生效"。
+
+已经踩过的两次：分页原子原本声明 `page`/`size`，而 `/app/**` 接口读的是 `pageNum`/`pageSize`
+（后果是图上翻页永远拿到第 1 页）；`act.report` 原本声明 `remark`，而接口字段是 `description`
+（后果是补充说明被丢弃）。两处都在 `sql/ui_atom_params_and_presets.sql` 里对齐了。
+
+推论：**新增或改造用户端接口时，先查原子库里有没有对应的 source_api**，两边的参数名一起改。
+数据库里还有几个原子（`data.myFavorites`/`myReports`/`myProgress`/`act.report`/`act.setGameProgress`）
+曾经指向不存在的接口，现在都已经实现，不再是空头承诺。
+
+## 一键部署脚本的编码约束（改之前先看）
+
+`deploy.bat` 与 `deploy.ps1` 的分工是"编码妥协"的结果，两条约束都不能破：
+
+- **`deploy.bat` 必须保持纯 ASCII**（注释也不例外）。cmd.exe 是按字节读批处理文件的，
+  UTF-8 的多字节字符会把它后面的换行吃掉，整份脚本会被解析成乱码命令——
+  实测过一次：只因为在 REM 注释里写了中文，就报出一堆
+  `'xxx' is not recognized as an internal or external command`。
+- **`deploy.ps1` 必须是 UTF-8 with BOM**。Windows PowerShell 5.1 默认按 ANSI 读脚本，
+  没有 BOM 时中文变乱码、脚本直接语法报错（`Missing closing '}'` 之类，看着像代码写错了，其实是编码）。
+  **很多编辑器（包括本项目的文件编辑工具）保存时会抹掉 BOM**，所以 `deploy.bat` 每次运行前都会检查
+  `deploy.ps1` 的头三个字节，丢了就自动补回来；手工改完也可以直接跑一次 `deploy.bat` 让它自愈。
+
+改完脚本自检（不需要 Docker）：
+
+```powershell
+powershell -NoProfile -Command "$e=$null; [void][System.Management.Automation.Language.Parser]::ParseFile('deploy.ps1',[ref]$null,[ref]$e); if($e){$e|%%{$_.Message}}else{'语法通过'}"
+```
+
+顺带两条脚本里踩过的坑（都写进注释了）：`Invoke-Dc` 里**不能 `return $LASTEXITCODE`**
+（会和命令 stdout 混成数组，`if` 判断必然误判成失败）；`docker compose ps` **不支持 `--filter health=`**
+（报 unknown filter health），判健康要用 `--format {{.Health}}` 自己数。
+
 ## 后端写接口的权限校验
 
 `/admin/**` 有两道拦截器：`AuthInterceptor`（校验 ADMIN 令牌）+ `AdminPermInterceptor`
 （非 GET 请求按 URL 前缀查 `sys_menu.perms`）。**新增后台写接口时必须把 URL 前缀登记进
 `AdminPermInterceptor.RULES`**，否则会被 fail-closed 拒绝（提示里会带上方法 + 路径）。
+现有映射见该类里的 `RULES`（内容域 `board/tag/notice/post/report`、系统域
+`user/member/role/menu/log`、站点域 `site/*`、`stat:view` 等）；新菜单的 `perms` 要和它一致。
 
 ## 技术栈
 
@@ -105,8 +166,14 @@ set "MYSQL_PWD=123456" && mysql --default-character-set=utf8mb4 -u root -e "sour
 - **「当前版本」的唯一事实源是 `board.current_version_id`**，`board_version` 没有 `is_current` 字段。
 - 版本过期是**动态判定**（`post.version_id != board.current_version_id`），不存状态字段，历史版本内容不隐藏。
 - 冗余计数 `post.like_count` / `favorite_count` / `comment_count` 必须与明细表在同一事务内保持一致。
+  现状：点赞与收藏已标 `@Transactional(rollbackFor = Exception.class)`，**评论路径 `CommentServiceImpl.create` 尚未标**，
+  是同类路径里的一处一致性缺口（补上只需加一行注解，但要连同测试一起验）。
 - 评论两级：`parent_id` = 被回复的评论 id，`root_id` = 所属一级评论 id。
 - 玩家的游玩版本是**可选**的（`member_game_progress.version_id` 可空），是否公开由用户勾选（`is_public`）。
+- **`home_module` 是历史遗留**：首页早已由 `ui_page`/`ui_node` 驱动（见 `UiNode` 的注释"取代原 home_module"），
+  它的表、种子数据、`/admin/site/home-modules` 接口与 Java 那一套都还在，但后台没有对应菜单、用户端也不读它。
+  之所以没删：`sql/ui_builder.sql` 靠它把旧的首页模块迁移成节点（全新安装时仍会跑一遍，随后被默认模板覆盖），
+  删表会打断那条安装链路。要清理的话得连 schema/seed/ui_builder 三处一起改，属于独立的收尾工作。
 
 ## 协作约定
 
