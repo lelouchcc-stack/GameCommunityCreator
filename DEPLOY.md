@@ -1,7 +1,7 @@
 # 部署说明
 
 面向"把 GameCommunityCreator 装到一台服务器上给玩家用"。
-日常开发（本地跑起来改代码）看 [QWEN.md](QWEN.md)，本文只讲部署。
+日常开发（本地跑起来改代码）看 [Agent.md](Agent.md)，本文只讲部署。
 
 整条链路是：
 
