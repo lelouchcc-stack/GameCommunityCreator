@@ -38,10 +38,14 @@
 > 首次运行自动生成 `.env`（随机口令与密钥，并自动避让被占用的 9331 端口）、构建启动、等三个容器
 > healthy 后打印访问地址与账号。想看它做了什么、或者要在 Linux/Mac 上部署，用下面这三步。
 
+> **下面三条命令必须在仓库根目录执行**（有 `docker-compose.yml` 的那一层）：compose 按当前工作目录找配置文件，
+> 在别处执行会报 `no configuration file provided: docker-compose.yml not found`，`cp` 的相对路径同理。
+
 ```bash
 # 1) 准备唯一一份配置：数据库口令 + 令牌签名密钥
-cp docker/.env.example .env          # Windows: copy docker\.env.example .env
+cp docker/.env.example .env          # PowerShell 的 cp 是 Copy-Item 别名，可直接用；cmd.exe 里没有 cp，用 copy docker\.env.example .env
 #    改 DB_ROOT_PASSWORD，并把 JWT_SECRET 换成 openssl rand -hex 32 的输出
+#    （Windows 没装 openssl 就用 Git 自带的，Git Bash 里直接跑，或 "C:\Program Files\Git\usr\bin\openssl.exe"）
 
 # 2) 起（第一次会构建镜像，慢；之后重启是秒级）
 docker compose up -d --build

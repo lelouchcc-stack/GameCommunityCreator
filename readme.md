@@ -40,11 +40,12 @@ graph LR
 
 **Windows：双击根目录的 `deploy.bat`。** 它会自检 Docker、首次运行自动生成 `.env`（随机口令与密钥）、构建并启动、等容器就绪后把访问地址打出来。
 
-其他平台等价的手动三步：
+**非 Windows、或 `deploy.bat` 用不了时**，手动三步 —— **必须在仓库根目录执行**（有 `docker-compose.yml` 的那一层；在别处跑会报找不到 compose 文件）：
 
 ```bash
-cp docker/.env.example .env        # Windows: copy docker\.env.example .env
-#   改 .env 里两项：DB_ROOT_PASSWORD（数据库口令）、JWT_SECRET（openssl rand -hex 32 的输出）
+cp docker/.env.example .env        # PowerShell 的 cp 是 Copy-Item 别名，可直接用；cmd.exe 里没有 cp，用 copy docker\.env.example .env
+#   改 .env 里两项：DB_ROOT_PASSWORD（数据库口令）、JWT_SECRET（openssl rand -hex 32 的输出；
+#   Windows 没装 openssl 就用 Git 自带的，Git Bash 里直接跑，或 "C:\Program Files\Git\usr\bin\openssl.exe"）
 docker compose up -d --build       # 首次要构建镜像，慢；之后再启动是秒级
 docker compose ps                  # 三个容器都显示 (healthy) 就算好了
 ```

@@ -10,7 +10,7 @@
 | `backend/src/main/resources/templates/` | **社区模板数据**（manifest + 站点配置 + 组件库定义 + 各页面节点树 + 初始内容）；「创建社区」向导读它建站 |
 | `simple-template-f-admin/` | 管理端前端（Vue 3 + Element Plus），Vite 代理 `/api` → 9331 |
 | `simple-template-f-user/` | 用户端前端（Vue 3） |
-| `sql/schema.sql` | 21 张表建表脚本（已执行到 `ssy_db`） |
+| `sql/schema.sql` | 21 张表建表脚本（已执行到 `ssy_db`）；`sql/install.sql` 按序跑完全部脚本后共 **28** 张表（+`banner_slide` 1、`ui_builder` 3、`ui_logic` 3） |
 | `sql/seed.sql` | 种子数据 |
 | `sql/ui_*.sql` | 增量脚本：搭建域建表与组件/原子/预设种子、登录页、页面搭建菜单、模板菜单 |
 | `docker-compose.yml` + `docker/` | **一键部署**：MySQL + 后端 + nginx（托管两个前端）三个容器。见 [DEPLOY.md](DEPLOY.md) 快速路径 |
@@ -122,7 +122,11 @@ powershell -NoProfile -Command "$e=$null; [void][System.Management.Automation.La
 ## 技术栈
 
 后端 Spring Boot 3.5.7 / Java 17（坐标 `com.lelcc:lelcc-backend`）/ MyBatis-Plus 3.5.5 / Hutool 5.8.25；
-数据库 MySQL 9.5；前端 Vue 3 + TypeScript + Vite + Pinia + Element Plus。
+数据库 MySQL **8.4**（Docker 部署镜像，见 `docker-compose.yml`）/ **9.5**（本机开发库，实测服务端 9.5.0）；
+前端 Vue 3 + TypeScript + Vite + Pinia + Element Plus。
+
+> 注意口径：SQL 是在**本机 9.5** 上编写的，但**首次执行发生在容器的 8.4** 上（`db` 容器初始化时跑 `sql/install.sql`）。
+> 这条链路已在真机验过，跑完 `install.sql` 的自检表可核对（见 [DEPLOY.md](DEPLOY.md) 的验证记录与期望值表）。
 
 ## 构建与运行（先看这条）
 
