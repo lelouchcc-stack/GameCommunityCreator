@@ -1,0 +1,759 @@
+/* =========================================================
+   GameCommunityCreator · Global Design System (xAI-inspired)
+   ---------------------------------------------------------
+   ENGINEERED · MINIMAL · DARK · PRECISE
+
+   设计原则：
+   - Near-black canvas（#0a0a0a），用背景层级 + 1px hairline 表达层级
+   - 默认无阴影、无大面积渐变、无玻璃拟态
+   - 卡片圆角 8px，按钮为 pill（9999px）
+   - 技术标签 / 状态 / 版本使用 mono 大写字母 + 增加字距
+   - 强调色仅少量出现：橙 #ff7a17 / 紫 #7c3aed / 浅紫 #c4b5fd / 蓝 #a0c3ec
+
+   兼容说明（不要删）：
+   - 运行时组件与页面配置主题仍通过 --gcc-primary / --gcc-accent / --gcc-bg /
+     --gcc-surface / --gcc-text / --gcc-muted 取色；页面主题会以内联变量覆盖。
+   - 管理端主题作用域 [data-admin-theme='light'] 继续使用同一套变量名。
+   ========================================================= */
+
+:root {
+  /* ---- xAI 设计令牌（新代码优先使用 --x-*） ---- */
+  --x-canvas: #0a0a0a;
+  --x-canvas-soft: #111214;
+  --x-surface: #141518;
+  --x-surface-2: #191a1d;
+  --x-surface-3: #212327;
+  --x-border: #212327;
+  --x-border-strong: #363a3f;
+  --x-text: #ffffff;
+  --x-text-secondary: #dadbdf;
+  --x-muted: #7d8187;
+  --x-accent: #ff7a17;
+  --x-accent-soft: rgba(255, 122, 23, 0.14);
+  --x-purple: #7c3aed;
+  --x-violet: #c4b5fd;
+  --x-blue: #a0c3ec;
+  --x-success: #3ddc97;
+  --x-danger: #f25f5c;
+  --x-warning: #ffb020;
+  --x-radius: 8px;
+  --x-radius-pill: 9999px;
+  --x-font:
+    'Inter', 'Inter var', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --x-mono:
+    'JetBrains Mono', 'Geist Mono', 'Cascadia Code', 'SFMono-Regular', Consolas, 'Liberation Mono',
+    monospace;
+
+  /* ---- 兼容变量（编辑器和运行时组件继续使用） ---- */
+  --gcc-primary: #e8e8ea;
+  --gcc-accent: #ff7a17;
+  --gcc-bg: #0a0a0a;
+  --gcc-surface: #141518;
+  --gcc-text: #ffffff;
+  --gcc-muted: #7d8187;
+  --gcc-radius: 8px;
+  --gcc-border: #212327;
+  --gcc-border-strong: #363a3f;
+  --gcc-success: #3ddc97;
+  --gcc-danger: #f25f5c;
+  --gcc-warning: #ffb020;
+  --gcc-shadow: none;
+  --gcc-font: var(--x-font);
+  --gcc-panel: #111214;
+  --gcc-header-bg: rgba(10, 10, 10, 0.92);
+  --gcc-elevated: #17181b;
+  --gcc-input-bg: #0f1012;
+  --gcc-hover: rgba(255, 255, 255, 0.045);
+  --gcc-hover-strong: rgba(255, 255, 255, 0.09);
+  --gcc-mask: rgba(0, 0, 0, 0.72);
+  --gcc-card-bg: #141518;
+  --gcc-code-bg: #0d0e10;
+  --gcc-table-head-bg: rgba(255, 255, 255, 0.025);
+  --gcc-scrollbar: #2b2d31;
+  color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--x-font);
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--x-text);
+  background: var(--x-canvas);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure {
+  margin: 0;
+  font-weight: 500;
+}
+
+a {
+  color: var(--x-text-secondary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover {
+  color: var(--x-text);
+}
+
+button {
+  font-family: inherit;
+}
+
+input,
+textarea,
+select {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+::selection {
+  background: rgba(255, 122, 23, 0.28);
+  color: #fff;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--gcc-scrollbar);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #3f4247;
+  background-clip: content-box;
+}
+
+/* =========================================================
+   排版工具（xAI 风格：大号轻字重标题 / mono 技术标签）
+   ========================================================= */
+
+/* 大号展示标题：48–72px，字重 400，负字距 */
+.x-display {
+  font-size: clamp(38px, 4.6vw, 68px);
+  font-weight: 400;
+  line-height: 1.04;
+  letter-spacing: -0.03em;
+  color: var(--x-text);
+}
+
+.x-display-sm {
+  font-size: clamp(28px, 3vw, 42px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  color: var(--x-text);
+}
+
+/* 分区标题：常规字重 + 紧凑字距 */
+.x-title {
+  font-size: 20px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--x-text);
+}
+
+/* 顶部小标签：mono 大写 + 宽字距 */
+.x-kicker,
+.gcc-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--x-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--x-muted);
+}
+
+/* mono 元信息（状态、版本、日期、统计） */
+.x-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--x-mono);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--x-muted);
+}
+
+.x-mono {
+  font-family: var(--x-mono);
+}
+
+.gcc-mono {
+  font-family: var(--x-mono);
+}
+
+.x-muted {
+  color: var(--x-muted);
+}
+
+.x-secondary {
+  color: var(--x-text-secondary);
+}
+
+/* hairline 分割线 */
+.x-hairline {
+  border: none;
+  border-top: 1px solid var(--x-border);
+  margin: 0;
+}
+
+/* =========================================================
+   布局工具
+   ========================================================= */
+.gcc-container {
+  width: min(1280px, calc(100% - 64px));
+  margin: 0 auto;
+}
+
+.gcc-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gcc-col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gcc-spacer {
+  flex: 1;
+}
+
+.gcc-muted {
+  color: var(--gcc-muted);
+}
+
+.gcc-small {
+  font-size: 12px;
+}
+
+.x-page {
+  padding: 40px 0 96px;
+}
+
+.x-page-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 28px;
+  margin-bottom: 32px;
+  border-bottom: 1px solid var(--x-border);
+}
+
+.x-page-header__left {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.x-page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+/* =========================================================
+   按钮：默认 Outline Pill；仅主 CTA 使用白底黑字
+   ========================================================= */
+.gcc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 18px;
+  border-radius: var(--x-radius-pill);
+  border: 1px solid var(--x-border-strong);
+  background: transparent;
+  color: var(--x-text);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+  white-space: nowrap;
+  user-select: none;
+  text-decoration: none;
+}
+
+.gcc-btn:hover:not(:disabled) {
+  border-color: #565a60;
+  background: var(--gcc-hover);
+  color: var(--x-text);
+}
+
+.gcc-btn:active:not(:disabled) {
+  background: var(--gcc-hover-strong);
+}
+
+.gcc-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.gcc-btn-primary {
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #0a0a0a;
+  font-weight: 500;
+}
+
+.gcc-btn-primary:hover:not(:disabled) {
+  border-color: #e6e6e6;
+  background: #e6e6e6;
+  color: #0a0a0a;
+}
+
+.gcc-btn-ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--x-muted);
+}
+
+.gcc-btn-ghost:hover:not(:disabled) {
+  color: var(--x-text);
+  background: var(--gcc-hover);
+}
+
+.gcc-btn-danger {
+  border-color: rgba(242, 95, 92, 0.45);
+  background: transparent;
+  color: #ff8d8b;
+}
+
+.gcc-btn-danger:hover:not(:disabled) {
+  background: rgba(242, 95, 92, 0.1);
+  border-color: rgba(242, 95, 92, 0.7);
+}
+
+.gcc-btn-sm {
+  padding: 5px 12px;
+  border-radius: var(--x-radius-pill);
+  font-size: 12px;
+}
+
+.gcc-btn-icon {
+  padding: 7px 10px;
+  min-width: 34px;
+}
+
+/* =========================================================
+   表单：深色近黑输入框 + hairline 边框，focus 不发光
+   ========================================================= */
+.gcc-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.gcc-label {
+  font-family: var(--x-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--x-muted);
+}
+
+.gcc-input,
+.gcc-textarea,
+.gcc-select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: var(--x-radius);
+  border: 1px solid var(--gcc-border);
+  background: var(--gcc-input-bg);
+  color: var(--x-text);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.gcc-input::placeholder,
+.gcc-textarea::placeholder {
+  color: #565a60;
+}
+
+.gcc-input:focus,
+.gcc-textarea:focus,
+.gcc-select:focus {
+  border-color: #565a60;
+}
+
+.gcc-textarea {
+  min-height: 96px;
+  resize: vertical;
+  line-height: 1.6;
+}
+
+.gcc-checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--x-text-secondary);
+  cursor: pointer;
+  user-select: none;
+}
+
+.gcc-checkbox input {
+  width: 15px;
+  height: 15px;
+  accent-color: var(--x-accent);
+}
+
+.gcc-color-input {
+  width: 40px;
+  height: 32px;
+  padding: 2px;
+  border-radius: var(--x-radius);
+  border: 1px solid var(--gcc-border);
+  background: transparent;
+  cursor: pointer;
+}
+
+/* =========================================================
+   卡片 / 徽标 / 状态
+   ========================================================= */
+.gcc-card {
+  border: 1px solid var(--x-border);
+  border-radius: var(--x-radius);
+  background: var(--x-surface);
+  box-shadow: none;
+}
+
+.x-panel {
+  border: 1px solid var(--x-border);
+  border-radius: var(--x-radius);
+  background: var(--x-surface);
+}
+
+.gcc-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: var(--x-radius-pill);
+  font-family: var(--x-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border: 1px solid var(--x-border-strong);
+  color: var(--x-muted);
+  background: transparent;
+}
+
+.x-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--x-muted);
+  flex: none;
+}
+
+.x-dot--success {
+  background: var(--x-success);
+}
+
+.x-dot--warning {
+  background: var(--x-warning);
+}
+
+.x-dot--danger {
+  background: var(--x-danger);
+}
+
+.x-dot--accent {
+  background: var(--x-accent);
+}
+
+.gcc-badge-primary {
+  color: #ffe3cf;
+  border-color: rgba(255, 122, 23, 0.45);
+  background: var(--x-accent-soft);
+}
+
+.gcc-badge-success {
+  color: #a7f3d0;
+  border-color: rgba(61, 220, 151, 0.35);
+  background: rgba(61, 220, 151, 0.08);
+}
+
+.gcc-badge-warning {
+  color: #fde68a;
+  border-color: rgba(255, 176, 32, 0.35);
+  background: rgba(255, 176, 32, 0.08);
+}
+
+.gcc-badge-danger {
+  color: #fecaca;
+  border-color: rgba(242, 95, 92, 0.35);
+  background: rgba(242, 95, 92, 0.08);
+}
+
+/* =========================================================
+   状态提示 / 骨架屏
+   ========================================================= */
+.gcc-empty,
+.gcc-error,
+.gcc-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 16px;
+  border-radius: var(--x-radius);
+  border: 1px dashed var(--x-border-strong);
+  color: var(--x-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.gcc-error {
+  border-color: rgba(242, 95, 92, 0.4);
+  color: #ff8d8b;
+  background: rgba(242, 95, 92, 0.04);
+}
+
+.gcc-skeleton {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--x-radius);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.gcc-skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.05), transparent);
+  animation: gcc-shimmer 1.4s infinite;
+}
+
+@keyframes gcc-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.gcc-fade-in {
+  animation: gcc-fade-in 0.3s ease both;
+}
+
+@keyframes gcc-fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* =========================================================
+   管理端主题作用域（v3 保留）：
+   - 默认深色 = 近黑 xAI 主题
+   - [data-admin-theme='light'] 为浅色适配，仍使用同一变量名
+   - 与游戏门户主题完全分离，不影响公开端
+   ========================================================= */
+.admin-theme-scope {
+  min-height: 100vh;
+  color: var(--gcc-text);
+  background: var(--gcc-bg);
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.admin-theme-scope[data-admin-theme='light'] {
+  --gcc-bg: #f7f7f8;
+  --gcc-surface: #ffffff;
+  --gcc-text: #0a0a0a;
+  --gcc-muted: #6b6e75;
+  --gcc-border: #e4e4e7;
+  --gcc-border-strong: #c9c9cf;
+  --gcc-shadow: none;
+  --gcc-panel: #ffffff;
+  --gcc-header-bg: rgba(247, 247, 248, 0.92);
+  --gcc-elevated: #ffffff;
+  --gcc-input-bg: #ffffff;
+  --gcc-hover: rgba(0, 0, 0, 0.04);
+  --gcc-hover-strong: rgba(0, 0, 0, 0.07);
+  --gcc-mask: rgba(20, 20, 20, 0.38);
+  --gcc-card-bg: #ffffff;
+  --gcc-code-bg: #0a0a0a;
+  --gcc-table-head-bg: rgba(0, 0, 0, 0.03);
+  --gcc-scrollbar: #c9c9cf;
+  color-scheme: light;
+  --x-canvas: #f7f7f8;
+  --x-canvas-soft: #ffffff;
+  --x-surface: #ffffff;
+  --x-surface-2: #f2f2f3;
+  --x-surface-3: #e9e9ec;
+  --x-border: #e4e4e7;
+  --x-border-strong: #c9c9cf;
+  --x-text: #0a0a0a;
+  --x-text-secondary: #3f4147;
+  --x-muted: #6b6e75;
+  --x-accent-soft: rgba(255, 122, 23, 0.1);
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-btn:not(.gcc-btn-primary):not(.gcc-btn-danger) {
+  background: #ffffff;
+  border-color: var(--gcc-border-strong);
+  color: var(--gcc-text);
+}
+
+.admin-theme-scope[data-admin-theme='light']
+  .gcc-btn:not(.gcc-btn-primary):not(.gcc-btn-danger):hover:not(:disabled) {
+  background: #f2f2f3;
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-btn-primary {
+  background: #0a0a0a;
+  border-color: #0a0a0a;
+  color: #ffffff;
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-btn-primary:hover:not(:disabled) {
+  background: #242427;
+  border-color: #242427;
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-btn-danger {
+  color: #b42318;
+  border-color: rgba(180, 35, 24, 0.35);
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-btn-ghost {
+  background: transparent;
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-input::placeholder,
+.admin-theme-scope[data-admin-theme='light'] .gcc-textarea::placeholder {
+  color: #9a9ca3;
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-card,
+.admin-theme-scope[data-admin-theme='light'] .x-panel {
+  border-color: var(--gcc-border);
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-empty,
+.admin-theme-scope[data-admin-theme='light'] .gcc-loading {
+  background: rgba(0, 0, 0, 0.015);
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-badge {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--gcc-muted);
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-badge-primary {
+  color: #9a3412;
+  border-color: rgba(154, 52, 18, 0.28);
+  background: rgba(255, 122, 23, 0.1);
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-badge-success {
+  color: #0f7a4e;
+  border-color: rgba(15, 122, 78, 0.28);
+  background: rgba(15, 122, 78, 0.06);
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-badge-warning {
+  color: #8a5a00;
+  border-color: rgba(138, 90, 0, 0.28);
+  background: rgba(255, 176, 32, 0.12);
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-badge-danger {
+  color: #b42318;
+  border-color: rgba(180, 35, 24, 0.28);
+  background: rgba(242, 95, 92, 0.08);
+}
+
+.admin-theme-scope[data-admin-theme='light'] .gcc-skeleton {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+/* 半透明遮罩上的弹窗层级（保留工具类） */
+.x-mask {
+  position: fixed;
+  inset: 0;
+  background: var(--gcc-mask);
+  backdrop-filter: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 60;
+}
+
+.toast-item {
+  border: 1px solid var(--x-border-strong);
+  background: var(--x-surface-2);
+  color: var(--x-text);
+  box-shadow: none;
+}
+
+.admin-theme-scope[data-admin-theme='light'] .toast-item {
+  background: #ffffff;
+  border-color: var(--gcc-border-strong);
+  color: var(--gcc-text);
+}

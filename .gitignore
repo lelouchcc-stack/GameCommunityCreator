@@ -1,0 +1,44 @@
+# dependencies
+node_modules/
+frontend/node_modules/
+
+# build output
+frontend/dist/
+backend/target/
+*.class
+
+# 运行时上传的图片（Markdown 编辑器插图，本地生成，不入库）
+backend/data/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# logs / runtime
+*.log
+logs/
+.env
+
+# OS
+Thumbs.db
+.DS_Store
+
+# E2E 浏览器验收产物（截图/摘要，不提交）
+.e2e-artifacts/
+
+# UML 渲染临时目录（.mmd 源文件与 export/ 图片需要提交）
+docs/uml/.render/
+
+# 用户提供的毕业论文 Word 模板（本机参考文件，不纳入版本库）
+docs/（2024级）*.docx
+
+# Python 缓存
+__pycache__/
+*.pyc
+
+# Office 临时锁文件
+~$*
+
+# DSH 沙箱文件权限诊断/恢复记录（本机环境产物，不纳入版本库）
+.dsh-acl-recovery/

@@ -1,0 +1,98 @@
+{
+  "schemaVersion": 2,
+  "pageId": "{{pageId}}",
+  "pageTitle": "{{pageTitle}}",
+  "projectSlug": "{{slug}}",
+  "theme": {
+    "primaryColor": "#5B8CFF",
+    "accentColor": "#9B5CFF",
+    "backgroundColor": "#0B1020",
+    "surfaceColor": "#151B33",
+    "textColor": "#E8ECFF",
+    "mutedTextColor": "#9AA6CC",
+    "fontFamily": "system",
+    "borderRadius": 16
+  },
+  "components": [
+    {
+      "id": "cmp_default_hero",
+      "type": "hero",
+      "title": "游戏介绍横幅",
+      "visible": true,
+      "dataSource": "game_info",
+      "props": {
+        "headline": "",
+        "subheadline": "欢迎来到 {{gameName}} 玩家社区",
+        "backgroundImage": "",
+        "showGameName": true,
+        "align": "center"
+      }
+    },
+    {
+      "id": "cmp_default_about",
+      "type": "about",
+      "title": "游戏简介",
+      "visible": true,
+      "dataSource": "game_info",
+      "props": {
+        "body": "",
+        "showTagline": true
+      }
+    },
+    {
+      "id": "cmp_default_notices",
+      "type": "notice_list",
+      "title": "社区公告",
+      "visible": true,
+      "dataSource": "announcements",
+      "props": {
+        "limit": 3,
+        "showPinned": true
+      }
+    },
+    {
+      "id": "cmp_default_issue_progress",
+      "type": "issue_progress",
+      "title": "问题处理进展",
+      "visible": true,
+      "dataSource": "issues_progress",
+      "props": {
+        "limit": 5,
+        "emptyText": "暂无已公开的问题处理进展"
+      }
+    },
+    {
+      "id": "cmp_default_changelogs",
+      "type": "changelog_list",
+      "title": "更新日志",
+      "visible": true,
+      "dataSource": "changelogs",
+      "props": {
+        "limit": 3,
+        "showVersion": true
+      }
+    },
+    {
+      "id": "cmp_default_docs",
+      "type": "docs_list",
+      "title": "公开文档",
+      "visible": true,
+      "dataSource": "docs",
+      "props": {
+        "limit": 3,
+        "category": ""
+      }
+    },
+    {
+      "id": "cmp_default_footer",
+      "type": "footer",
+      "title": "页脚",
+      "visible": true,
+      "dataSource": null,
+      "props": {
+        "copyright": "© 2025 {{gameName}} 社区",
+        "note": "由 GameCommunityCreator 可视化搭建"
+      }
+    }
+  ]
+}
